@@ -1,0 +1,6 @@
+@IpManager_HostAddress = http://localhost:5202
+
+GET {{IpManager_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
