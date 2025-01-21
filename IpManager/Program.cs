@@ -77,12 +77,10 @@ namespace IpManager
             
             foreach(var path in ApiMiddleWare)
             {
-                /*
                 app.UseWhen(context => context.Request.Path.StartsWithSegments(path), appBuilder =>
                 {
-                    appBuilder.UseMiddleware<LoginMiddleWare>();
+                    appBuilder.UseMiddleware<TokenMiddleWare>();
                 });
-                */
             }
 
             //app.UseHttpsRedirection();
