@@ -13,7 +13,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 namespace IpManager
 {
-
     public class Program
     {
         public static void Main(string[] args)
@@ -72,8 +71,8 @@ namespace IpManager
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:authSigningKey"]!)),
                     ValidateIssuer = true,
                     ValidateAudience = true,
-                    ValidIssuer = "https://example.com/",
-                    ValidAudience = "https://example.com/",
+                    ValidIssuer = builder.Configuration["JWT:Issuer"],
+                    ValidAudience = builder.Configuration["JWT:Audience"],
 
                     // RoleClaimType을 "role"로 지정
                     RoleClaimType = "Role"

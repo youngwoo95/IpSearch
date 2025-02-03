@@ -17,6 +17,6 @@ namespace IpManager.Services.Login
         /// </summary>
         /// <param name="accesstoken"></param>
         /// <returns></returns>
-        public Task<ResponseUnit<TokenDTO>?> RefreshTokenService(RefreshTokenDTO accesstoken);
+        public Task<ResponseUnit<TokenDTO>?> RefreshTokenService(ReTokenDTO accesstoken);
     }
 }

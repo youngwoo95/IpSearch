@@ -1,15 +1,15 @@
 ﻿namespace IpManager.DTO
 {
-    public class RefreshTokenDTO
+    public class ReTokenDTO
     {
         /// <summary>
         /// 사용자 ID
         /// </summary>
-        public string UserId { get; set; } = String.Empty;
+        public string? UserId { get; set; }
 
         /// <summary>
         /// Refresh Token
         /// </summary>
-        public string RefreshToken { get; set; } = String.Empty;
+        public string? RefreshToken { get; set; }
     }
 }

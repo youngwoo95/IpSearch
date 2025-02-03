@@ -55,8 +55,8 @@ namespace IpManager.Controllers
         /// <param name="refresh"></param>
         /// <returns>AccessToken 발행</returns>
         [HttpPost]
-        [Route("sign/v1/Refresh")]
-        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDTO refresh)
+        [Route("v1/Refresh")]
+        public async Task<IActionResult> RefreshToken([FromBody] ReTokenDTO refresh)
         {
             try
             {

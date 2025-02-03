@@ -11,7 +11,9 @@ namespace IpManager
         private ITokenComm TokenComm;
         private readonly string? _authSigningkey;
 
-        public TokenMiddleWare(RequestDelegate _next, ITokenComm _tokencomm, IConfiguration configuration)
+        public TokenMiddleWare(RequestDelegate _next,
+            ITokenComm _tokencomm,
+            IConfiguration configuration)
         {
             this.Next = _next;
             this.TokenComm = _tokencomm;
@@ -23,7 +25,6 @@ namespace IpManager
             if(!context.Request.Headers.TryGetValue("Authorization", out var extractedApiKey))
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                //await context.Response.WriteAsync("Api Key was not provided. (Using ApiKeyMiddleware)");
                 return;
             }
 
@@ -31,7 +32,6 @@ namespace IpManager
             if(String.IsNullOrWhiteSpace(accessToken))
             {
                 context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                //await context.Response.WriteAsync("Jwt Token Validation Failed");
                 return;
             }
 
@@ -60,12 +60,14 @@ namespace IpManager
                 if (jobj is null)
                     return;
 
-                if (jobj["Id"] == null || jobj["Name"] == null || jobj["Role"] == null)
+                if (jobj["Id"] == null || 
+                    jobj["Name"] == null || 
+                    jobj["Role"] == null)
                 {
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 }
 
-
+                context.Items.Add("Id", jobj["Name"]!.ToString());
                 context.Items.Add("Name", jobj["Name"]!.ToString());
                 context.Items.Add("Role", jobj["Role"]!.ToString());
                 

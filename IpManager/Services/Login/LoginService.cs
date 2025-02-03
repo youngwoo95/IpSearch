@@ -84,7 +84,7 @@ namespace IpManager.Services.Login
             }
         }
 
-        public async Task<ResponseUnit<TokenDTO>?> RefreshTokenService(RefreshTokenDTO accesstoken)
+        public async Task<ResponseUnit<TokenDTO>?> RefreshTokenService(ReTokenDTO accesstoken)
         {
             try
             {

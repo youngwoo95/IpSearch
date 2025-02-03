@@ -9,8 +9,6 @@ namespace IpManager.Services
         private readonly IServiceScopeFactory ScopeFactory;
         private readonly ILoggerModels Logger;
         
-
-
         public BackgroundManager(IServiceScopeFactory _scopeFactory,
             ILoggers _loggerFactory)
         {
@@ -48,9 +46,7 @@ namespace IpManager.Services
                     {
                         Console.WriteLine("Delay가 취소된 경우 처리");
                     }
-
                 }
-
             }
             catch(Exception ex)
             {
