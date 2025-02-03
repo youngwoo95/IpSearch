@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using IpManager.Comm.Logger.LogFactory;
+using IpManager.Comm.Logger.LogFactory.LoggerSelect;
+using IpManager.DTO;
+using IpManager.Services.Login;
 using Microsoft.AspNetCore.Mvc;
 
-using ILoggerFactory = IpManager.Comm.Logger.ILoggerFactory;
 
 namespace IpManager.Controllers
 {
@@ -9,23 +11,73 @@ namespace IpManager.Controllers
     [ApiController]
     public class LoginController : ControllerBase
     {
-        private readonly ILoggerFactory LoggerFactory;
+        private readonly ILoggerModels Logger;
+        private ILoginService LoginService;
 
-        public LoginController(ILoggerFactory _loggerFactory)
+
+        public LoginController(ILoggers _loggerFactory,
+            ILoginService _loginservice)
         {
-            this.LoggerFactory = _loggerFactory;
+            this.Logger = _loggerFactory.CreateLogger(false);
+            this.LoginService = _loginservice;
         }
 
+        /// <summary>
+        /// 로그인
+        /// </summary>
+        /// <param name="logininfo"></param>
+        /// <returns>AccessToken 발행</returns>
         [HttpPost]
-        [Route("Login")]
-        public async Task<IActionResult> Login()
+        [Route("v1/Login")]
+        public async Task<IActionResult> AccessToken([FromBody]LoginDTO logininfo)
         {
-            var consoleLogger = LoggerFactory.CreateLogger(false);
-            consoleLogger.LogMessage("Logging to console.");
-            //consoleLogger.ErrorMessage("Logging to console.");
+            try
+            {
+                ResponseUnit<TokenDTO>? model = await LoginService.AccessTokenService(logininfo);
+                if (model is null)
+                    return BadRequest();
 
-            return Ok("123123");
+                if (model.Code == 204)
+                    return NoContent();
+                else
+                    return Ok(model.data);
+            }
+            catch(Exception ex)
+            {
+                Logger.ErrorMessage(ex.ToString());
+                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+            }
         }
+
+        /// <summary>
+        /// Refresh 토큰 발행
+        /// </summary>
+        /// <param name="refresh"></param>
+        /// <returns>AccessToken 발행</returns>
+        [HttpPost]
+        [Route("sign/v1/Refresh")]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenDTO refresh)
+        {
+            try
+            {
+                ResponseUnit<TokenDTO>? model = await LoginService.RefreshTokenService(refresh);
+                if (model is null)
+                    return BadRequest();
+
+                if (model.Code == 204)
+                    return NoContent();
+                else if (model.Code == 401)
+                    return Unauthorized(new { Error = "인증 토큰이 만료되었습니다." });
+                else
+                    return Ok(model.data);
+            }
+            catch(Exception ex)
+            {
+                Logger.ErrorMessage(ex.ToString());
+                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+            }
+        }
+
 
     }
 }

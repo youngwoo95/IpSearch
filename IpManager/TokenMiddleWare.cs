@@ -1,6 +1,5 @@
 ﻿using IpManager.Comm.Tokens;
 using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json.Linq;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
@@ -61,15 +60,13 @@ namespace IpManager
                 if (jobj is null)
                     return;
 
-                if (jobj["UserIdx"] == null ||
-                    jobj["jti"] == null ||
-                    jobj["Role"] == null)
+                if (jobj["Id"] == null || jobj["Name"] == null || jobj["Role"] == null)
                 {
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 }
 
-                context.Items.Add("UserIdx", jobj["UserIdx"]!.ToString());
-                context.Items.Add("jti", jobj["jti"]!.ToString());
+
+                context.Items.Add("Name", jobj["Name"]!.ToString());
                 context.Items.Add("Role", jobj["Role"]!.ToString());
                 
                 await Next(context);

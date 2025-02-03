@@ -1,6 +1,6 @@
-﻿namespace IpManager.Comm.Logger
+﻿namespace IpManager.Comm.Logger.LogFactory.LoggerSelect
 {
-    public class ConsoleLogger : ICustomLogger
+    public class ConsoleLoggers : ILoggerModels
     {
         /// <summary>
         /// 로그 메시지
