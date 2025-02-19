@@ -3,6 +3,7 @@ using IpManager.Comm.Logger.LogFactory.LoggerSelect;
 using IpManager.DTO;
 using IpManager.Services.Login;
 using Microsoft.AspNetCore.Mvc;
+using System.Runtime.Intrinsics;
 
 
 namespace IpManager.Controllers
@@ -21,6 +22,26 @@ namespace IpManager.Controllers
             this.Logger = _loggerFactory.CreateLogger(false);
             this.LoginService = _loginservice;
         }
+        
+        [HttpPost]
+        [Route("v1/AddUser")]
+        public async Task<IActionResult> AddUser([FromBody]RegistrationDTO dto)
+        {
+            try
+            {
+              
+
+                // 아닐시에 회원가입 로직타면됨.
+
+
+            }
+            catch(Exception ex)
+            {
+                Logger.ErrorMessage(ex.ToString());
+                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+            }
+        }
+
 
         /// <summary>
         /// 로그인

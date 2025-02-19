@@ -84,6 +84,8 @@ namespace IpManager.Services.Login
             }
         }
 
+
+
         public async Task<ResponseUnit<TokenDTO>?> RefreshTokenService(ReTokenDTO accesstoken)
         {
             try
@@ -148,5 +150,38 @@ namespace IpManager.Services.Login
                 return new ResponseUnit<TokenDTO>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, Code = 500 };
             }
         }
+
+        /// <summary>
+        /// 회원가입
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>
+        public async Task<ResponseUnit<bool>> AddUserService(RegistrationDTO dto)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(dto.UserID) && dto.UserID.Any(char.IsWhiteSpace)) // NULL 검사 + 공백검사
+                {
+                    // 안에 공백이든 NULL임.
+                    return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, Code = 400 }; // Bad Request
+                }
+
+                if (!string.IsNullOrEmpty(dto.PassWord) && dto.PassWord.Any(char.IsWhiteSpace)) // NULL 검사 + 공백검사
+                {
+                    // 안에 공백이든 NULL임.
+                    return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, Code = 400 }; // Bad Request
+                }
+
+
+
+
+            }
+            catch(Exception ex)
+            {
+                Logger.ErrorMessage(ex.ToString());
+                return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, Code = 500 };
+            }
+        }
+
     }
 }

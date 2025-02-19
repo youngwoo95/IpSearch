@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Pomelo.EntityFrameworkCore.MySql.Scaffolding.Internal;
 
-namespace IpManager.Repository;
+namespace IpManager.DBModel;
 
-public partial class dbcontext : DbContext
+public partial class IpanalyzeContext : DbContext
 {
-    public dbcontext()
+    public IpanalyzeContext()
     {
     }
 
-    public dbcontext(DbContextOptions<dbcontext> options)
+    public IpanalyzeContext(DbContextOptions<IpanalyzeContext> options)
         : base(options)
     {
     }
@@ -31,7 +31,13 @@ public partial class dbcontext : DbContext
     public virtual DbSet<TownTb> TownTbs { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseMySql("server=127.0.0.1;port=3306;database=ipanalyze;user=root;password=rladyddn!!95", Microsoft.EntityFrameworkCore.ServerVersion.Parse("11.4.5-mariadb"));
+        => optionsBuilder.UseMySql("server=127.0.0.1;port=3306;database=ipanalyze;user=root;password=rladyddn!!95", ServerVersion.Parse("11.4.5-mariadb"),
+            mariaSqlOption =>
+            {
+                mariaSqlOption.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null); // 자동 재시작
+                mariaSqlOption.CommandTimeout(60);
+                mariaSqlOption.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery); // 쿼리분할 사용
+            });
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace IpManager.Repository;
+namespace IpManager.DBModel;
 
 public partial class PcroomTb
 {

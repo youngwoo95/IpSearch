@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace IpManager.Repository;
+namespace IpManager.DBModel;
 
-/// <summary>
-/// (도/시) 정보
-/// </summary>
-public partial class CountryTb
+public partial class TownTb
 {
     public int Pid { get; set; }
 
     /// <summary>
-    /// (도/시)명칭
+    /// (읍/면/동) 명칭
     /// </summary>
     public string Name { get; set; } = null!;
 
@@ -35,11 +32,21 @@ public partial class CountryTb
     /// </summary>
     public DateTime? DeleteDt { get; set; }
 
-    public virtual ICollection<CityTb> CityTbs { get; set; } = new List<CityTb>();
+    /// <summary>
+    /// (도/시) 테이블 키
+    /// </summary>
+    public int CountytbId { get; set; }
+
+    /// <summary>
+    /// (시/군/구) 테이블 키
+    /// </summary>
+    public int CitytbId { get; set; }
+
+    public virtual CityTb Citytb { get; set; } = null!;
+
+    public virtual CountryTb Countytb { get; set; } = null!;
 
     public virtual ICollection<PcroomTb> PcroomTbs { get; set; } = new List<PcroomTb>();
 
     public virtual ICollection<PinglogTb> PinglogTbs { get; set; } = new List<PinglogTb>();
-
-    public virtual ICollection<TownTb> TownTbs { get; set; } = new List<TownTb>();
 }

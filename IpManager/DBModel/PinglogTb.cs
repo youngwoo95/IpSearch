@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace IpManager.Repository;
+namespace IpManager.DBModel;
 
 /// <summary>
 /// 핑 정보

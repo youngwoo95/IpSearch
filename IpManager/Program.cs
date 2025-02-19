@@ -1,6 +1,9 @@
 using IpManager.Comm.Logger.LogFactory;
 using IpManager.Comm.Logger.LogFactory.LoggerSelect;
 using IpManager.Comm.Tokens;
+using IpManager.DBModel;
+using IpManager.Repository;
+using IpManager.RunningSet;
 using IpManager.Services;
 using IpManager.Services.Login;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -42,13 +45,23 @@ namespace IpManager
             builder.Services.AddTransient<ConsoleLoggers>();
             builder.Services.AddTransient<FileLoggers>();
 
+            builder.Services.AddSingleton<IpanalyzeContext>();
             builder.Services.AddTransient<ITokenComm, TokenComm>();
 
+            // 프로그램 시작시 로직 반영
+            builder.Services.AddSingleton<RunningsSetting>();
+
             /* Service DI */
+            // DB
+            builder.Services.AddTransient<IUserRepository, UserRepository>();
+            // Service
             builder.Services.AddTransient<ILoginService, LoginService>();
+
 
             /* 백그라운드 서비스 등록 */
             builder.Services.AddHostedService<BackgroundManager>();
+            builder.Services.AddHostedService<StartupTask>();
+
 
             /* 메모리 캐시 등록 */
             builder.Services.AddMemoryCache();

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace IpManager.Repository;
+namespace IpManager.DBModel;
 
 /// <summary>
 /// (시/군/구) 정보
