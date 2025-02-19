@@ -1,0 +1,2 @@
+﻿-- 데이터베이스 스캐폴드
+Scaffold-DbContext "Server=127.0.0.1;Port=3306;Database=ipanalyze;User=root;Password=rladyddn!!95;" Pomelo.EntityFrameworkCore.MySql -OutputDir Repository -ContextDir Repository -Context ipanalyze -Force

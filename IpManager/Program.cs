@@ -169,7 +169,6 @@ namespace IpManager
                     }
                 }
             });
-
             
             string[]? ApiMiddleWare = new string[]
             {
