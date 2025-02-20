@@ -1,5 +1,6 @@
 ﻿using IpManager.Comm.Logger.LogFactory.LoggerSelect;
 using IpManager.DBModel;
+using IpManager.DTO.Login;
 using Microsoft.EntityFrameworkCore;
 using MySqlConnector;
 
@@ -57,7 +58,7 @@ namespace IpManager.Repository
                 }
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "SELECT COUNT(*) FROM login_tb WHERE UID = @userid";
+                    command.CommandText = "SELECT COUNT(*) FROM login_tb WHERE UID = @userid AND DEL_YN != true";
                     var parameter = command.CreateParameter();
                     parameter.ParameterName = "@userid";
                     parameter.Value = userid;
@@ -79,6 +80,72 @@ namespace IpManager.Repository
         }
 
         /// <summary>
+        /// 사용자 정보 수정
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>
+        public async Task<int> EditUserAsync(LoginTb model)
+        {
+            try
+            {
+                // 이미 같은 PID를 가진 엔터티가 DbContext의 Local 캐시에 있는지 확인
+                var trackedEntity = context.LoginTbs.Local.FirstOrDefault(e => e.Pid == model.Pid);
+                if (trackedEntity != null)
+                {
+                    // 이미 추적 중인 엔터티가 있다면, 해당 엔터티의 현재 값을 새 모델 값으로 업데이트합니다.
+                    context.Entry(trackedEntity).CurrentValues.SetValues(model);
+                }
+                else
+                {
+                    // 추적 중인 엔터티가 없다면, 모델을 Attach하고 상태를 Modified로 설정합니다.
+                    context.LoginTbs.Attach(model);
+                    context.Entry(model).State = EntityState.Modified;
+                }
+
+                int result = await context.SaveChangesAsync().ConfigureAwait(false);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return -1;
+            }
+        }
+
+        /// <summary>
+        /// 사용자 정보 삭제
+        /// </summary>
+        /// <param name="pid"></param>
+        /// <returns></returns>
+        public async Task<int> DeleteUserAsync(LoginTb model)
+        {
+            try
+            {
+                // 이미 같은 PID를 가진 엔터티가 DbContext의 Local 캐시에 있는지 확인
+                var trackedEntity = context.LoginTbs.Local.FirstOrDefault(e => e.Pid == model.Pid);
+                if (trackedEntity != null)
+                {
+                    // 이미 추적 중인 엔터티가 있다면, 해당 엔터티의 현재 값을 새 모델 값으로 업데이트합니다.
+                    context.Entry(trackedEntity).CurrentValues.SetValues(model);
+                }
+                else
+                {
+                    // 추적 중인 엔터티가 없다면, 모델을 Attach하고 상태를 Modified로 설정합니다.
+                    context.LoginTbs.Attach(model);
+                    context.Entry(model).State = EntityState.Modified;
+                }
+
+                int result = await context.SaveChangesAsync().ConfigureAwait(false);
+                return result;
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return -1;
+            }
+        }
+
+        /// <summary>
         /// 로그인
         /// </summary>
         /// <param name="userid"></param>
@@ -96,7 +163,7 @@ namespace IpManager.Repository
                 using (var command = connection.CreateCommand())
                 {
                     // SQL 조건 결합에는 AND를 사용합니다.
-                    command.CommandText = "SELECT * FROM login_tb WHERE UID = @userid AND PWD = @password LIMIT 1";
+                    command.CommandText = "SELECT * FROM login_tb WHERE UID = @userid AND PWD = @password AND DEL_YN != true LIMIT 1";
 
                     // 각 파라미터를 별도로 생성하여 추가합니다.
                     var paramUser = command.CreateParameter();
@@ -153,7 +220,7 @@ namespace IpManager.Repository
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "SELECT * FROM login_tb WHERE UID = @userid LIMIT 1";
+                    command.CommandText = "SELECT * FROM login_tb WHERE UID = @userid AND DEL_YN != true LIMIT 1";
                     var parameter = command.CreateParameter();
                     parameter.ParameterName = "@userid";
                     parameter.Value = userid;
@@ -198,7 +265,7 @@ namespace IpManager.Repository
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "SELECT * FROM login_tb WHERE UID = @userid LIMIT 1";
+                    command.CommandText = "SELECT * FROM login_tb WHERE UID = @userid AND DEL_YN != true LIMIT 1";
                     var parameter = command.CreateParameter();
                     parameter.ParameterName = "@userid";
                     parameter.Value = userid;
@@ -238,6 +305,128 @@ namespace IpManager.Repository
         }
 
         /// <summary>
+        /// PID에 해당하는 UserModel 반환
+        /// </summary>
+        /// <param name="pid"></param>
+        /// <returns></returns>
+        public async Task<LoginTb?> GetUserInfoAsyncById(int pid)
+        {
+            try
+            {
+                var connection = context.Database.GetDbConnection();
+                if (connection.State != System.Data.ConnectionState.Open)
+                {
+                    await connection.OpenAsync();
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT * FROM login_tb WHERE PID = @pid AND DEL_YN != true LIMIT 1";
+                    var parameter = command.CreateParameter();
+                    parameter.ParameterName = "@pid";
+                    parameter.Value = pid;
+                    command.Parameters.Add(parameter);
+
+                    using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            // LoginTb에 매핑 (여기서는 예시로 몇 가지 컬럼만 매핑)
+                            var login = new LoginTb
+                            {
+                                Pid = reader.IsDBNull(reader.GetOrdinal("PID")) ? 0 : reader.GetInt32(reader.GetOrdinal("PID")),
+                                Uid = reader.IsDBNull(reader.GetOrdinal("UID")) ? string.Empty : reader.GetString(reader.GetOrdinal("UID")),
+                                Pwd = reader.IsDBNull(reader.GetOrdinal("PWD")) ? string.Empty : reader.GetString(reader.GetOrdinal("PWD")),
+                                MasterYn = reader.IsDBNull(reader.GetOrdinal("MASTER_YN")) ? false : Convert.ToBoolean(reader["MASTER_YN"]),
+                                AdminYn = reader.IsDBNull(reader.GetOrdinal("ADMIN_YN")) ? false : Convert.ToBoolean(reader["ADMIN_YN"]),
+                                UseYn = reader.IsDBNull(reader.GetOrdinal("USE_YN")) ? false : Convert.ToBoolean(reader["USE_YN"]),
+                                CreateDt = reader.IsDBNull(reader.GetOrdinal("CREATE_DT")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("CREATE_DT")),
+                                UpdateDt = reader.IsDBNull(reader.GetOrdinal("UPDATE_DT")) ? (DateTime?)null : Convert.ToDateTime(reader["UPDATE_DT"]),
+                                DelYn = reader.IsDBNull(reader.GetOrdinal("DEL_YN")) ? false : Convert.ToBoolean(reader["DEL_YN"]),
+                                DeleteDt = reader.IsDBNull(reader.GetOrdinal("DELETE_DT")) ? (DateTime?)null : Convert.ToDateTime(reader["DELETE_DT"])
+                            };
+
+                            return login;
+                        }
+                    }
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 사용자 전체리스트 반환
+        /// </summary>
+        /// <returns></returns>
+        public async Task<List<LoginTb>?> GetUserListAsync(int pageIndex, int pagenumber)
+        {
+            try
+            {
+                var results = new List<LoginTb>();
+
+                var connection = context.Database.GetDbConnection();
+                if(connection.State != System.Data.ConnectionState.Open)
+                {
+                    await connection.OpenAsync();
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    //command.CommandText = "SELECT * FROM login_tb WHERE MASTER_YN != true AND DEL_YN != true ORDER BY PID LIMIT @pageSize OFFSET @offset";
+                    //command.CommandText = "SELECT * FROM login_tb WHERE MASTER_YN = 0 AND DEL_YN = 0 ORDER BY PID LIMIT @pageSize OFFSET @offset";
+                    command.CommandText = "SELECT * FROM login_tb WHERE MASTER_YN != true AND DEL_YN != true ORDER BY PID LIMIT @pageIndex OFFSET @offset";
+
+
+                    var pageSizeParam = command.CreateParameter();
+                    pageSizeParam.ParameterName = "@pageIndex";
+                    pageSizeParam.Value = pageIndex;
+
+                    command.Parameters.Add(pageSizeParam);
+
+                    var offsetParam = command.CreateParameter();
+                    offsetParam.ParameterName = "@offset";
+                    offsetParam.Value = pageIndex * pagenumber;
+
+                    command.Parameters.Add(offsetParam);
+
+                    using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                    {
+                        while(await reader.ReadAsync())
+                        {
+                            var login = new LoginTb
+                            {
+                                Pid = reader.IsDBNull(reader.GetOrdinal("PID")) ? 0 : reader.GetInt32(reader.GetOrdinal("PID")),
+                                Uid = reader.IsDBNull(reader.GetOrdinal("UID")) ? string.Empty : reader.GetString(reader.GetOrdinal("UID")),
+                                Pwd = reader.IsDBNull(reader.GetOrdinal("PWD")) ? string.Empty : reader.GetString(reader.GetOrdinal("PWD")),
+                                MasterYn = reader.IsDBNull(reader.GetOrdinal("MASTER_YN")) ? false : Convert.ToBoolean(reader["MASTER_YN"]),
+                                AdminYn = reader.IsDBNull(reader.GetOrdinal("ADMIN_YN")) ? false : Convert.ToBoolean(reader["ADMIN_YN"]),
+                                UseYn = reader.IsDBNull(reader.GetOrdinal("USE_YN")) ? false : Convert.ToBoolean(reader["USE_YN"]),
+                                CreateDt = reader.IsDBNull(reader.GetOrdinal("CREATE_DT")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("CREATE_DT")),
+                                UpdateDt = reader.IsDBNull(reader.GetOrdinal("UPDATE_DT")) ? (DateTime?)null : Convert.ToDateTime(reader["UPDATE_DT"]),
+                                DelYn = reader.IsDBNull(reader.GetOrdinal("DEL_YN")) ? false : Convert.ToBoolean(reader["DEL_YN"]),
+                                DeleteDt = reader.IsDBNull(reader.GetOrdinal("DELETE_DT")) ? (DateTime?)null : Convert.ToDateTime(reader["DELETE_DT"])
+                            };
+                            results.Add(login);
+                        }
+                    }
+
+                }
+                return results;
+            }
+            catch (Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return null;
+            }
+        }
+
+        /// <summary>
         /// 데드락 감지 코드
         /// </summary>
         /// <param name="ex"></param>
@@ -253,5 +442,7 @@ namespace IpManager.Repository
 
             return false;
         }
+
+        
     }
 }

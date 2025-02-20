@@ -105,17 +105,26 @@ namespace IpManager.Controllers
 
 
         /// <summary>
-        /// 계정관리 - 조회
+        /// 계정관리 - 조회 - 15개씩 끊어서 준다
+        /// 첫페이지 --> 1페이지 1을 주면됨
+        /// 두번째 --> 2페이지 2를 주면됨
         /// </summary>
         /// <returns></returns>
         [Authorize(Roles = "Master")] // Master만 접근가능
         [HttpGet]
         [Route("sign/v1/AccountList")]
-        public async Task<IActionResult> AccountList()
+        public async Task<IActionResult> AccountList([FromQuery]int pagenumber)
         {
             try
             {
-                return Ok();
+                ResponseList<UserListDTO>? model = await LoginService.GetUserListService(15, pagenumber - 1);
+                if (model is null)
+                    return BadRequest();
+
+                if (model.code == 200)
+                    return Ok(model);
+                else
+                    return BadRequest();
             }
             catch(Exception ex)
             {
@@ -129,15 +138,47 @@ namespace IpManager.Controllers
         /// </summary>
         /// <returns></returns>
         [Authorize(Roles = "Master")] // Master만 접근가능
-        [HttpPut]
+        [HttpPost]
         [Route("sign/v1/AccountManagement")]
-        public async Task<IActionResult> AccountManagement()
+        public async Task<IActionResult> AccountManagement([FromBody] UserUpdateDTO dto)
+        {
+            try
+            { 
+                ResponseUnit<bool> model = await LoginService.UpdateUserService(dto);
+                if (model is null)
+                    return BadRequest();
+
+                if (model.Code == 200)
+                    return Ok(model);
+                else
+                    return BadRequest();
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+            }
+        }
+
+        /// <summary>
+        /// 계정 삭제
+        /// </summary>
+        /// <returns></returns>
+        [Authorize(Roles ="Master")] // Master만 접근가능
+        [HttpPut]
+        [Route("sign/v1/AccountDelete")]
+        public async Task<IActionResult> AccountDelete([FromBody] int pid)
         {
             try
             {
+                ResponseUnit<bool> model = await LoginService.DeleteUserService(pid);
+                if (model is null)
+                    return BadRequest();
 
-
-                return Ok();
+                if (model.Code == 200)
+                    return Ok(model);
+                else
+                    return BadRequest();
             }
             catch(Exception ex)
             {
@@ -147,8 +188,8 @@ namespace IpManager.Controllers
         }
 
 
-
         #region 웹전용 로그인 - Regacy
+        /*
         /// <summary>
         /// 로그인 - Regacy (현재 프로젝트에서 사용되지 않음)
         /// </summary>
@@ -204,7 +245,7 @@ namespace IpManager.Controllers
                 return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
             }
         }
+        */
         #endregion
-
     }
 }

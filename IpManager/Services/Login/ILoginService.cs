@@ -1,5 +1,4 @@
-﻿using IpManager.Controllers;
-using IpManager.DTO.Login;
+﻿using IpManager.DTO.Login;
 
 namespace IpManager.Services.Login
 {
@@ -17,14 +16,14 @@ namespace IpManager.Services.Login
         /// </summary>
         /// <param name="dto"></param>
         /// <returns></returns>
-        public Task<ResponseUnit<WebTokenDTO>?> WebAccessTokenService(LoginDTO dto);
+        //public Task<ResponseUnit<WebTokenDTO>?> WebAccessTokenService(LoginDTO dto);
 
         /// <summary>
         /// REFRESH_TOKEN 발행 _ 로그인 서비스
         /// </summary>
         /// <param name="accesstoken"></param>
         /// <returns></returns>
-        public Task<ResponseUnit<WebTokenDTO>?> WebRefreshTokenService(ReTokenDTO accesstoken);
+        //public Task<ResponseUnit<WebTokenDTO>?> WebRefreshTokenService(ReTokenDTO accesstoken);
 
         /// <summary>
         /// 회원가입
@@ -39,5 +38,25 @@ namespace IpManager.Services.Login
         /// <param name="userid"></param>
         /// <returns></returns>
         public Task<ResponseUnit<bool>> CheckUserIdService(UserIDCheckDTO dto);
+
+        /// <summary>
+        /// 사용자 전체 LIST 반환
+        /// </summary>
+        /// <returns></returns>
+        public Task<ResponseList<UserListDTO>?> GetUserListService(int pageIndex, int pageSize);
+
+        /// <summary>
+        /// 사용자 정보 수정
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>
+        public Task<ResponseUnit<bool>> UpdateUserService(UserUpdateDTO dto);
+
+        /// <summary>
+        /// 사용자 삭제
+        /// </summary>
+        /// <param name="pid"></param>
+        /// <returns></returns>
+        public Task<ResponseUnit<bool>> DeleteUserService(int pid);
     }
 }

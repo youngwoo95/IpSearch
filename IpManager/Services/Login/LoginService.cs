@@ -3,6 +3,7 @@ using IpManager.Comm.Tokens;
 using IpManager.DBModel;
 using IpManager.DTO.Login;
 using IpManager.Repository;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -80,8 +81,8 @@ namespace IpManager.Services.Login
                 JwtSecurityToken token = new JwtSecurityToken(
                     issuer: Configuration["JWT:Issuer"],
                     audience: Configuration["JWT:Audience"],
-                    //expires: DateTime.Now.AddDays(30), // 30일 후 만료
-                    expires: DateTime.Now.AddSeconds(30), // 테스트 30초
+                    expires: DateTime.Now.AddDays(30), // 30일 후 만료
+                    //expires: DateTime.Now.AddSeconds(30), // 테스트 30초
                     claims: authClaims,
                     signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256));
 
@@ -102,130 +103,131 @@ namespace IpManager.Services.Login
         }
 
         #region Regacy
-        public async Task<ResponseUnit<WebTokenDTO>?> WebAccessTokenService(LoginDTO dto)
-        {
-            try
-            {
-                /*
-                 DB 조회 - ID SELECT 기능추가해야 함.
-                 */
-                if (String.IsNullOrWhiteSpace(dto.LoginID))
-                {
-                    return new ResponseUnit<WebTokenDTO>() { message = "아이디를 입력하지 않았습니다.", data = null, Code = 204 };
-                }
-
-                List<Claim> authClaims = new List<Claim>();
-                authClaims.Add(new Claim("Id", dto.LoginID));
-                authClaims.Add(new Claim("Name", "마스터유저"));
-                authClaims.Add(new Claim("Role", "Admin"));
-
-                // JWT 인증 페이로드 사인 비밀키
-                var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:authSigningKey"]!));
-
-                JwtSecurityToken token = new JwtSecurityToken(
-                    issuer: Configuration["JWT:Issuer"],
-                    audience: Configuration["JWT:Audience"],
-                    expires: DateTime.Now.AddMinutes(15), // 15분 후 만료
-                    claims: authClaims,
-                    signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256));
-
-                // accessToken
-                string accessToken = new JwtSecurityTokenHandler().WriteToken(token);
-
-                // RefreshToken
-                string refreshToken = TokenComm.GenerateRefreshToken();
-
-                /*
-                 * 메모리 캐쉬에 Refresh토큰 저장
-                 * Key : 사용자 ID
-                 * Value : RefreshToken
-                */
-                var cacheEntryOptions = new MemoryCacheEntryOptions
-                {
-                    AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(7)
-                };
-                MemoryCache.Set(dto.LoginID, refreshToken, cacheEntryOptions);
-
-                var tokenResult = new WebTokenDTO
-                {
-                    AccessToken = accessToken,
-                    RefreshToken = refreshToken
-                };
-                return new ResponseUnit<WebTokenDTO>() { message = "요청이 정상처리되었습니다.", data = tokenResult, Code = 200 };
-            }
-            catch(Exception ex)
-            {
-                LoggerService.FileErrorMessage(ex.ToString());
-                return new ResponseUnit<WebTokenDTO>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, Code = 500 };
-            }
-        }
-
-
-
-        public async Task<ResponseUnit<WebTokenDTO>?> WebRefreshTokenService(ReTokenDTO accesstoken)
-        {
-            try
-            {
-                if (String.IsNullOrWhiteSpace(accesstoken.UserId))
-                {
-                    return new ResponseUnit<WebTokenDTO>() { message = "요청이 잘못되었습니다.", data = null, Code = 204 };
-                }
-
-                // 메모리 캐시에서 저장된 Refresh 토큰을 조회
-                // Key는 사용자ID
-                if (!MemoryCache.TryGetValue(accesstoken.UserId, out string storedRefreshToken))
-                {
-                    Console.WriteLine("리프레쉬 토큰이 없습니다.");
-                    return new ResponseUnit<WebTokenDTO>() { message = "리프레쉬 토큰이 없습니다.", data = null, Code = 401 };
-                }
-
-                // 클라이언트가 보낸 Refresh 토큰과 저장된 토큰 비교
-                if(storedRefreshToken != accesstoken.RefreshToken)
-                {
-                    return new ResponseUnit<WebTokenDTO>() { message = "토큰이 올바르지 않습니다.", data = null, Code = 401 };
-                }
-
-                // UserId로 DB조회
-                List<Claim> authClaims = new List<Claim>();
-                authClaims.Add(new Claim("Id", accesstoken.UserId)); // USERID
-                authClaims.Add(new Claim("Name", "마스터유저"));
-                authClaims.Add(new Claim("Role", "Admin"));
-
-                // JWT 인증 페이로드 사인 비밀키
-                var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:authSigningKey"]!));
-                JwtSecurityToken newToken = new JwtSecurityToken(
-                    issuer: Configuration["JWT:Issuer"],
-                    audience: Configuration["JWT:Audience"],
-                    expires: DateTime.Now.AddMinutes(15),
-                    claims: authClaims,
-                    signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256));
-
-                string newAccessToken = new JwtSecurityTokenHandler().WriteToken(newToken);
-
-                // (선택 사항) Refresh Token 회전: 기존 Refresh Token 무효화 후 새 Refresh Token 발급
-                string newRefreshToken = TokenComm.GenerateRefreshToken();
-
-                // (선택사항) 기존의 Refresh 토큰 무효화 및 새 토큰으로 교체
-                MemoryCache.Remove(accesstoken.UserId);
-                MemoryCache.Set(accesstoken.UserId, newRefreshToken, new MemoryCacheEntryOptions
-                {
-                    AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(7)
-                });
-
-                var tokenResult = new WebTokenDTO
-                {
-                    AccessToken = newAccessToken,
-                    RefreshToken = newRefreshToken
-                };
-
-                return new ResponseUnit<WebTokenDTO>() { message = "요청이 정상처리되었습니다.", data = tokenResult, Code = 200 };
-            }
-            catch(Exception ex)
-            {
-                LoggerService.FileErrorMessage(ex.ToString());
-                return new ResponseUnit<WebTokenDTO>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, Code = 500 };
-            }
-        }
+        
+        //public async Task<ResponseUnit<WebTokenDTO>?> WebAccessTokenService(LoginDTO dto)
+        //{
+        //    try
+        //    {
+        //        /*
+        //         DB 조회 - ID SELECT 기능추가해야 함.
+        //         */
+        //        if (String.IsNullOrWhiteSpace(dto.LoginID))
+        //        {
+        //            return new ResponseUnit<WebTokenDTO>() { message = "아이디를 입력하지 않았습니다.", data = null, Code = 204 };
+        //        }
+        //
+        //        List<Claim> authClaims = new List<Claim>();
+        //        authClaims.Add(new Claim("Id", dto.LoginID));
+        //        authClaims.Add(new Claim("Name", "마스터유저"));
+        //        authClaims.Add(new Claim("Role", "Admin"));
+        //
+        //        // JWT 인증 페이로드 사인 비밀키
+        //        var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:authSigningKey"]!));
+        //
+        //        JwtSecurityToken token = new JwtSecurityToken(
+        //            issuer: Configuration["JWT:Issuer"],
+        //            audience: Configuration["JWT:Audience"],
+        //            expires: DateTime.Now.AddMinutes(15), // 15분 후 만료
+        //            claims: authClaims,
+        //            signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256));
+        //
+        //        // accessToken
+        //        string accessToken = new JwtSecurityTokenHandler().WriteToken(token);
+        //
+        //        // RefreshToken
+        //        string refreshToken = TokenComm.GenerateRefreshToken();
+        //
+        //        /*
+        //         * 메모리 캐쉬에 Refresh토큰 저장
+        //         * Key : 사용자 ID
+        //         * Value : RefreshToken
+        //        */
+        //        var cacheEntryOptions = new MemoryCacheEntryOptions
+        //        {
+        //            AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(7)
+        //        };
+        //        MemoryCache.Set(dto.LoginID, refreshToken, cacheEntryOptions);
+        //
+        //        var tokenResult = new WebTokenDTO
+        //        {
+        //            AccessToken = accessToken,
+        //            RefreshToken = refreshToken
+        //        };
+        //        return new ResponseUnit<WebTokenDTO>() { message = "요청이 정상처리되었습니다.", data = tokenResult, Code = 200 };
+        //    }
+        //    catch(Exception ex)
+        //    {
+        //        LoggerService.FileErrorMessage(ex.ToString());
+        //        return new ResponseUnit<WebTokenDTO>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, Code = 500 };
+        //    }
+        //}
+        //
+        //
+        //
+        //public async Task<ResponseUnit<WebTokenDTO>?> WebRefreshTokenService(ReTokenDTO accesstoken)
+        //{
+        //    try
+        //    {
+        //        if (String.IsNullOrWhiteSpace(accesstoken.UserId))
+        //        {
+        //            return new ResponseUnit<WebTokenDTO>() { message = "요청이 잘못되었습니다.", data = null, Code = 204 };
+        //        }
+        //
+        //        // 메모리 캐시에서 저장된 Refresh 토큰을 조회
+        //        // Key는 사용자ID
+        //        if (!MemoryCache.TryGetValue(accesstoken.UserId, out string storedRefreshToken))
+        //        {
+        //            Console.WriteLine("리프레쉬 토큰이 없습니다.");
+        //            return new ResponseUnit<WebTokenDTO>() { message = "리프레쉬 토큰이 없습니다.", data = null, Code = 401 };
+        //        }
+        //
+        //        // 클라이언트가 보낸 Refresh 토큰과 저장된 토큰 비교
+        //        if(storedRefreshToken != accesstoken.RefreshToken)
+        //        {
+        //            return new ResponseUnit<WebTokenDTO>() { message = "토큰이 올바르지 않습니다.", data = null, Code = 401 };
+        //        }
+        //
+        //        // UserId로 DB조회
+        //        List<Claim> authClaims = new List<Claim>();
+        //        authClaims.Add(new Claim("Id", accesstoken.UserId)); // USERID
+        //        authClaims.Add(new Claim("Name", "마스터유저"));
+        //        authClaims.Add(new Claim("Role", "Admin"));
+        //
+        //        // JWT 인증 페이로드 사인 비밀키
+        //        var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:authSigningKey"]!));
+        //        JwtSecurityToken newToken = new JwtSecurityToken(
+        //            issuer: Configuration["JWT:Issuer"],
+        //            audience: Configuration["JWT:Audience"],
+        //            expires: DateTime.Now.AddMinutes(15),
+        //            claims: authClaims,
+        //            signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256));
+        //
+        //        string newAccessToken = new JwtSecurityTokenHandler().WriteToken(newToken);
+        //
+        //        // (선택 사항) Refresh Token 회전: 기존 Refresh Token 무효화 후 새 Refresh Token 발급
+        //        string newRefreshToken = TokenComm.GenerateRefreshToken();
+        //
+        //        // (선택사항) 기존의 Refresh 토큰 무효화 및 새 토큰으로 교체
+        //        MemoryCache.Remove(accesstoken.UserId);
+        //        MemoryCache.Set(accesstoken.UserId, newRefreshToken, new MemoryCacheEntryOptions
+        //        {
+        //            AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(7)
+        //        });
+        //
+        //        var tokenResult = new WebTokenDTO
+        //        {
+        //            AccessToken = newAccessToken,
+        //            RefreshToken = newRefreshToken
+        //        };
+        //
+        //        return new ResponseUnit<WebTokenDTO>() { message = "요청이 정상처리되었습니다.", data = tokenResult, Code = 200 };
+        //    }
+        //    catch(Exception ex)
+        //    {
+        //        LoggerService.FileErrorMessage(ex.ToString());
+        //        return new ResponseUnit<WebTokenDTO>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, Code = 500 };
+        //    }
+        //}
         #endregion
 
         /// <summary>
@@ -323,6 +325,114 @@ namespace IpManager.Services.Login
             }
         }
 
-     
+        /// <summary>
+        /// 사용자 전체 리스트 반환
+        /// </summary>
+        /// <returns></returns>
+        public async Task<ResponseList<UserListDTO>?> GetUserListService(int pageIndex, int pageSize)
+        {
+            try
+            {
+                var model = await UserRepository.GetUserListAsync(pageIndex, pageSize);
+                if (model is null)
+                    return new ResponseList<UserListDTO>() { message = "조회된 데이터가 없습니다.", data = null, code = 200 };
+
+                List<UserListDTO> dto = model.Select( m => new UserListDTO
+                {
+                    PID = m.Pid,
+                    UID = m.Uid,
+                    AdminYN = m.AdminYn,
+                    UseYN = m.UseYn,
+                    CreateDT = m.CreateDt.ToString("HH:mm:ss")
+                }).ToList();
+
+                return new ResponseList<UserListDTO>() { message = "요청이 정상 처리되었습니다.", data = dto, code = 200 };
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return new ResponseList<UserListDTO>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, code = 500 };
+            }
+        }
+
+        /// <summary>
+        /// 사용자 정보 수정
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>
+        public async Task<ResponseUnit<bool>> UpdateUserService(UserUpdateDTO dto)
+        {
+            try
+            {
+                if (dto is null)
+                    return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, Code = 200 };
+
+                if(dto.PID == 0)
+                    return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, Code = 200 };
+
+                if(dto.UID is null)
+                    return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, Code = 200 };
+
+                if (dto.PWD is null)
+                    return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, Code = 200 };
+
+                var UserModelCheck = await UserRepository.GetUserInfoAsyncById(dto.PID);
+                if (UserModelCheck is null)
+                    return new ResponseUnit<bool>() { message = "해당 아이디가 존재하지 않습니다.", data = false, Code = 200 };
+
+                if(UserModelCheck.Uid != dto.UID)
+                    return new ResponseUnit<bool>() { message = "해당 아이디가 존재하지 않습니다.", data = false, Code = 200 };
+
+
+                UserModelCheck.Pwd = dto.PWD;
+                UserModelCheck.AdminYn = dto.AdminYN;
+                UserModelCheck.UseYn = dto.UseYN;
+                UserModelCheck.UpdateDt = DateTime.Now;
+              
+                int result = await UserRepository.EditUserAsync(UserModelCheck);
+                if (result != -1)
+                    return new ResponseUnit<bool>() { message = "수정이 완료되었습니다.", data = true, Code = 200 };
+                else
+                    return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, Code = 500 };
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, Code = 500 };
+            }
+        }
+
+        /// <summary>
+        /// 사용자 정보 삭제
+        /// </summary>
+        /// <param name="pid"></param>
+        /// <returns></returns>
+        public async Task<ResponseUnit<bool>> DeleteUserService(int pid)
+        {
+            try
+            {
+                if(pid == 0)
+                    return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, Code = 200 };
+
+                var UserModelCheck = await UserRepository.GetUserInfoAsyncById(pid);
+                if (UserModelCheck is null)
+                    return new ResponseUnit<bool>() { message = "해당 아이디가 존재하지 않습니다.", data = false, Code = 200 };
+
+                UserModelCheck.UpdateDt = DateTime.Now;
+                UserModelCheck.DelYn = true;
+                UserModelCheck.DeleteDt = DateTime.Now;
+
+                int result = await UserRepository.DeleteUserAsync(UserModelCheck);
+                if (result != -1)
+                    return new ResponseUnit<bool>() { message = "수정이 완료되었습니다.", data = true, Code = 200 };
+                else
+                    return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, Code = 500 };
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, Code = 500 };
+            }
+        }
     }
 }

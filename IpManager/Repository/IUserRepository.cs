@@ -1,5 +1,6 @@
 ﻿using IpManager.DBModel;
 using IpManager.DTO;
+using IpManager.DTO.Login;
 
 namespace IpManager.Repository
 {
@@ -40,5 +41,33 @@ namespace IpManager.Repository
         /// <param name="userid"></param>
         /// <returns></returns>
         Task<LoginTb?> GetUserInfoAsync(string userid);
+
+        /// <summary>
+        /// PID에 해당하는 LoginModel 반환
+        /// </summary>
+        /// <param name="pid"></param>
+        /// <returns></returns>
+        Task<LoginTb?> GetUserInfoAsyncById(int pid);
+
+        /// <summary>
+        /// 사용자 전체리스트 반환 - PageNation
+        /// </summary>
+        /// <returns></returns>
+        Task<List<LoginTb>?> GetUserListAsync(int pageIndex, int pagenumber);
+
+        /// <summary>
+        /// 사용자 정보 수정
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>
+        Task<int> EditUserAsync(LoginTb model);
+
+        /// <summary>
+        /// 사용자 정보 삭제
+        /// </summary>
+        /// <param name="pid"></param>
+        /// <returns></returns>
+        Task<int> DeleteUserAsync(LoginTb model);
+
     }
 }

@@ -190,8 +190,8 @@ namespace IpManager
             var token = new JwtSecurityToken(
                 issuer: Issuer,
                 audience: Audience,
-                //expires: DateTime.Now.AddDays(30), // 한달 뒤 만료
-                expires: DateTime.Now.AddSeconds(30), // 한달 뒤 만료
+                expires: DateTime.Now.AddDays(30), // 한달 뒤 만료
+                //expires: DateTime.Now.AddSeconds(30), // 한달 뒤 만료
                 claims: claims,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
             );
