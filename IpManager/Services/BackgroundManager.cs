@@ -1,18 +1,16 @@
-﻿
-using IpManager.Comm.Logger.LogFactory;
-using IpManager.Comm.Logger.LogFactory.LoggerSelect;
+﻿using IpManager.Comm.Logger.LogFactory.LoggerSelect;
 
 namespace IpManager.Services
 {
     public class BackgroundManager : BackgroundService
     {
         private readonly IServiceScopeFactory ScopeFactory;
-        private readonly ILoggerModels Logger;
+        private readonly ILoggerService LoggerService;
         
         public BackgroundManager(IServiceScopeFactory _scopeFactory,
-            ILoggers _loggerFactory)
+            ILoggerService _loggerservice)
         {
-            this.Logger = _loggerFactory.CreateLogger(false);
+            this.LoggerService = _loggerservice;
             this.ScopeFactory = _scopeFactory;
         }
 
@@ -35,7 +33,7 @@ namespace IpManager.Services
                     }
                     catch(Exception ex)
                     {
-                        Logger.ErrorMessage(ex.ToString());
+                        LoggerService.FileErrorMessage(ex.ToString());
                     }
 
                     try
@@ -50,7 +48,7 @@ namespace IpManager.Services
             }
             catch(Exception ex)
             {
-                Logger.ErrorMessage(ex.ToString());
+                LoggerService.FileErrorMessage(ex.ToString());
             }
         }
 

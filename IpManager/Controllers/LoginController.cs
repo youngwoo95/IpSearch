@@ -1,10 +1,8 @@
-﻿using IpManager.Comm.Logger.LogFactory;
-using IpManager.Comm.Logger.LogFactory.LoggerSelect;
-using IpManager.DTO;
+﻿using IpManager.Comm.Logger.LogFactory.LoggerSelect;
+using IpManager.DTO.Login;
 using IpManager.Services.Login;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Runtime.Intrinsics;
-
 
 namespace IpManager.Controllers
 {
@@ -12,49 +10,157 @@ namespace IpManager.Controllers
     [ApiController]
     public class LoginController : ControllerBase
     {
-        private readonly ILoggerModels Logger;
+        private readonly ILoggerService LoggerService;
         private ILoginService LoginService;
 
 
-        public LoginController(ILoggers _loggerFactory,
+        public LoginController(ILoggerService _loggerservice,
             ILoginService _loginservice)
         {
-            this.Logger = _loggerFactory.CreateLogger(false);
+            this.LoggerService = _loggerservice;
             this.LoginService = _loginservice;
         }
         
+        /// <summary>
+        /// 회원가입
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("v1/AddUser")]
         public async Task<IActionResult> AddUser([FromBody]RegistrationDTO dto)
         {
             try
             {
-              
+                ResponseUnit<bool> model = await LoginService.AddUserService(dto).ConfigureAwait(false);
 
-                // 아닐시에 회원가입 로직타면됨.
+                if(model is null)
+                    return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
 
-
+                if (model.Code == 200)
+                    return Ok(model);
+                else
+                    return BadRequest();
             }
             catch(Exception ex)
             {
-                Logger.ErrorMessage(ex.ToString());
+                LoggerService.FileErrorMessage(ex.ToString());
+                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+            }
+        }
+
+        /// <summary>
+        /// 사용자 ID 검사
+        /// </summary>
+        /// <param name="userid"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("v1/CheckUserId")]
+        public async Task<IActionResult> UserIdCheck([FromBody]UserIDCheckDTO dto)
+        {
+            try
+            {
+                //CheckUserIdService
+                ResponseUnit<bool> model = await LoginService.CheckUserIdService(dto).ConfigureAwait(false);
+                if (model is null)
+                    return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+
+                if (model.Code == 200)
+                    return Ok(model);
+                else
+                    return BadRequest();
+            }
+            catch (Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+            }
+        }
+
+        /// <summary>
+        /// 로그인 - AccessToken 발급
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("v1/Login")]
+        public async Task<IActionResult> AccessToken([FromBody] LoginDTO logininfo)
+        {
+            try
+            {
+                ResponseUnit<TokenDTO>? model = await LoginService.AccessTokenService(logininfo);
+                if (model is null)
+                    return BadRequest();
+
+                if (model.Code == 200)
+                    return Ok(model);
+                else
+                    return BadRequest();
+            }
+            catch(Exception ex) 
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
                 return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
             }
         }
 
 
         /// <summary>
-        /// 로그인
+        /// 계정관리 - 조회
+        /// </summary>
+        /// <returns></returns>
+        [Authorize(Roles = "Master")] // Master만 접근가능
+        [HttpGet]
+        [Route("sign/v1/AccountList")]
+        public async Task<IActionResult> AccountList()
+        {
+            try
+            {
+                return Ok();
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+            }
+        }
+
+        /// <summary>
+        /// 계정관리 - 수정
+        /// </summary>
+        /// <returns></returns>
+        [Authorize(Roles = "Master")] // Master만 접근가능
+        [HttpPut]
+        [Route("sign/v1/AccountManagement")]
+        public async Task<IActionResult> AccountManagement()
+        {
+            try
+            {
+
+
+                return Ok();
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+            }
+        }
+
+
+
+        #region 웹전용 로그인 - Regacy
+        /// <summary>
+        /// 로그인 - Regacy (현재 프로젝트에서 사용되지 않음)
         /// </summary>
         /// <param name="logininfo"></param>
         /// <returns>AccessToken 발행</returns>
         [HttpPost]
-        [Route("v1/Login")]
-        public async Task<IActionResult> AccessToken([FromBody]LoginDTO logininfo)
+        [Route("v1/WebLogin")]
+        public async Task<IActionResult> WebAccessToken([FromBody]LoginDTO logininfo)
         {
             try
             {
-                ResponseUnit<TokenDTO>? model = await LoginService.AccessTokenService(logininfo);
+                ResponseUnit<WebTokenDTO>? model = await LoginService.WebAccessTokenService(logininfo);
                 if (model is null)
                     return BadRequest();
 
@@ -65,23 +171,23 @@ namespace IpManager.Controllers
             }
             catch(Exception ex)
             {
-                Logger.ErrorMessage(ex.ToString());
+                LoggerService.FileErrorMessage(ex.ToString());
                 return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
             }
         }
 
         /// <summary>
-        /// Refresh 토큰 발행
+        /// Refresh 토큰 발행 - Regacy (현재 프로젝트에서 사용되지 않음)
         /// </summary>
         /// <param name="refresh"></param>
         /// <returns>AccessToken 발행</returns>
         [HttpPost]
-        [Route("v1/Refresh")]
-        public async Task<IActionResult> RefreshToken([FromBody] ReTokenDTO refresh)
+        [Route("v1/WebRefresh")]
+        public async Task<IActionResult> WebRefreshToken([FromBody] ReTokenDTO refresh)
         {
             try
             {
-                ResponseUnit<TokenDTO>? model = await LoginService.RefreshTokenService(refresh);
+                ResponseUnit<WebTokenDTO>? model = await LoginService.WebRefreshTokenService(refresh);
                 if (model is null)
                     return BadRequest();
 
@@ -94,11 +200,11 @@ namespace IpManager.Controllers
             }
             catch(Exception ex)
             {
-                Logger.ErrorMessage(ex.ToString());
+                LoggerService.FileErrorMessage(ex.ToString());
                 return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
             }
         }
-
+        #endregion
 
     }
 }

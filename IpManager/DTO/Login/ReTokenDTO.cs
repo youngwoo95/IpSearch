@@ -1,4 +1,4 @@
-﻿namespace IpManager.DTO
+﻿namespace IpManager.DTO.Login
 {
     public class ReTokenDTO
     {

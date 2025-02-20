@@ -1,4 +1,4 @@
-﻿using IpManager.Comm.Logger.LogFactory;
+﻿
 using IpManager.Comm.Logger.LogFactory.LoggerSelect;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json.Linq;
@@ -11,13 +11,13 @@ namespace IpManager.Comm.Tokens
     public class TokenComm : ITokenComm
     {
         private readonly string? _authSigningKey;
-        private readonly ILoggerModels Logger;
+        private readonly ILoggerService LoggerService;
 
         public TokenComm(IConfiguration configuration,
-            ILoggers _loggerFactory)
+            ILoggerService _loggerservice)
         {
             this._authSigningKey = configuration["JWT:AuthSigningKey"];
-            this.Logger = _loggerFactory.CreateLogger(false);
+            this.LoggerService = _loggerservice;
         }
 
         public JObject? TokenConvert(HttpRequest? token)
@@ -51,7 +51,7 @@ namespace IpManager.Comm.Tokens
             }
             catch(Exception ex)
             {
-                Logger.ErrorMessage(ex.ToString());
+                LoggerService.FileErrorMessage(ex.ToString());
                 throw;
             }
         }

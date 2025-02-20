@@ -1,4 +1,4 @@
-﻿namespace IpManager.DTO
+﻿namespace IpManager.DTO.Login
 {
     /// <summary>
     /// 회원가입 DTO

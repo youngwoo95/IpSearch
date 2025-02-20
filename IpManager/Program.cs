@@ -41,9 +41,8 @@ namespace IpManager
             #endregion
 
             // Add services to the container.
-            builder.Services.AddSingleton<ILoggers, CustomLoggerFactorys>();
-            builder.Services.AddTransient<ConsoleLoggers>();
-            builder.Services.AddTransient<FileLoggers>();
+
+            builder.Services.AddTransient<ILoggerService, LoggerService>();
 
             builder.Services.AddSingleton<IpanalyzeContext>();
             builder.Services.AddTransient<ITokenComm, TokenComm>();
@@ -86,9 +85,22 @@ namespace IpManager
                     ValidateAudience = true,
                     ValidIssuer = builder.Configuration["JWT:Issuer"],
                     ValidAudience = builder.Configuration["JWT:Audience"],
+                    RoleClaimType = "Role",
+                    ClockSkew = TimeSpan.Zero,
+                };
 
-                    // RoleClaimType을 "role"로 지정
-                    RoleClaimType = "Role"
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        // Authorization 헤더가 "Bearer " 접두어 없이 단순 토큰일 경우 처리
+                        var authHeader = context.Request.Headers["Authorization"].ToString();
+                        if (!string.IsNullOrEmpty(authHeader) && !authHeader.StartsWith("Bearer "))
+                        {
+                            context.Token = authHeader;
+                        }
+                        return Task.CompletedTask;
+                    }
                 };
             });
 
@@ -185,7 +197,7 @@ namespace IpManager
             
             string[]? ApiMiddleWare = new string[]
             {
-                "/api/Store/sign"
+                "/api/Login/sign"
             };
             
             foreach(var path in ApiMiddleWare)

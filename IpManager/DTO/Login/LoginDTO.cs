@@ -1,4 +1,4 @@
-﻿namespace IpManager.DTO
+﻿namespace IpManager.DTO.Login
 {
     /// <summary>
     /// 로그인 DTO
@@ -17,7 +17,7 @@
             set
             {
                 // 소문자로 변환
-                loginid = value?.ToLower(); 
+                loginid = value?.ToLower();
             }
         }
 
@@ -30,7 +30,7 @@
             set
             {
                 // 소문자로 변환
-                loginpw = value?.ToLower(); 
+                loginpw = value?.ToLower();
             }
         }
 

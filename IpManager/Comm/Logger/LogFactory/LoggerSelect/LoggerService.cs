@@ -1,12 +1,12 @@
 ﻿namespace IpManager.Comm.Logger.LogFactory.LoggerSelect
 {
-    public class FileLoggers : ILoggerModels
+    public class LoggerService : ILoggerService
     {
         /// <summary>
         /// 로그 메시지
         /// </summary>
         /// <param name="message"></param>
-        public void LogMessage(string message)
+        public void FileLogMessage(string message)
         {
             try
             {
@@ -61,7 +61,7 @@
         /// 에러 메시지
         /// </summary>
         /// <param name="message"></param>
-        public void ErrorMessage(string message)
+        public void FileErrorMessage(string message)
         {
             try
             {
@@ -112,5 +112,35 @@
             }
         }
 
+        /// <summary>
+        /// 로그 메시지
+        /// </summary>
+        /// <param name="message"></param>
+        public void ConsoleLogMessage(string message)
+        {
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.ForegroundColor = ConsoleColor.Green;
+
+            // 로그 출력
+            Console.WriteLine($"[Info] {message}");
+
+            Console.ResetColor();
+        }
+
+        /// <summary>
+        /// 에러 메시지
+        /// </summary>
+        /// <param name="message"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        public void ConsoleErrorMessage(string message)
+        {
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.ForegroundColor = ConsoleColor.Red;
+
+            Console.WriteLine($"[Error] {message}");
+
+            Console.ResetColor();
+
+        }
     }
 }
