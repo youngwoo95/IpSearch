@@ -1,9 +1,9 @@
 /*M!999999\- enable the sandbox mode */ 
--- MariaDB dump 10.19-11.4.5-MariaDB, for Win64 (AMD64)
+-- MariaDB dump 10.19  Distrib 10.6.21-MariaDB, for Win64 (AMD64)
 --
 -- Host: localhost    Database: ipanalyze
 -- ------------------------------------------------------
--- Server version	11.4.5-MariaDB
+-- Server version	10.6.21-MariaDB
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -14,7 +14,7 @@
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*M!100616 SET @OLD_NOTE_VERBOSITY=@@NOTE_VERBOSITY, NOTE_VERBOSITY=0 */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
 -- Table structure for table `city_tb`
@@ -35,7 +35,7 @@ CREATE TABLE `city_tb` (
   UNIQUE KEY `UK` (`NAME`),
   KEY `fk_countrytb202502191016` (`COUNTRYTB_ID`),
   CONSTRAINT `fk_countrytb202502191016` FOREIGN KEY (`COUNTRYTB_ID`) REFERENCES `country_tb` (`PID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci COMMENT='(시/군/구) 정보';
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='(시/군/구) 정보';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -44,6 +44,7 @@ CREATE TABLE `city_tb` (
 
 LOCK TABLES `city_tb` WRITE;
 /*!40000 ALTER TABLE `city_tb` DISABLE KEYS */;
+INSERT INTO `city_tb` VALUES (1,'하남시','2025-02-21 12:57:49',NULL,0,NULL,1),(2,'사상구','2025-02-21 13:00:13',NULL,0,NULL,3),(3,'북구','2025-02-21 13:01:09',NULL,0,NULL,3),(4,'강남구','2025-02-21 13:01:50',NULL,0,NULL,4);
 /*!40000 ALTER TABLE `city_tb` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -63,7 +64,7 @@ CREATE TABLE `country_tb` (
   `DELETE_DT` datetime DEFAULT NULL COMMENT '삭제일',
   PRIMARY KEY (`PID`),
   UNIQUE KEY `UK` (`NAME`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci COMMENT='(도/시) 정보';
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='(도/시) 정보';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -72,6 +73,7 @@ CREATE TABLE `country_tb` (
 
 LOCK TABLES `country_tb` WRITE;
 /*!40000 ALTER TABLE `country_tb` DISABLE KEYS */;
+INSERT INTO `country_tb` VALUES (1,'경기도','2025-02-21 12:57:49',NULL,0,NULL),(3,'부산광역시','2025-02-21 13:00:13',NULL,0,NULL),(4,'서울시','2025-02-21 13:01:50',NULL,0,NULL);
 /*!40000 ALTER TABLE `country_tb` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -95,7 +97,7 @@ CREATE TABLE `login_tb` (
   `DELETE_DT` datetime DEFAULT NULL COMMENT '삭제일',
   PRIMARY KEY (`PID`),
   UNIQUE KEY `UK` (`UID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -104,6 +106,7 @@ CREATE TABLE `login_tb` (
 
 LOCK TABLES `login_tb` WRITE;
 /*!40000 ALTER TABLE `login_tb` DISABLE KEYS */;
+INSERT INTO `login_tb` VALUES (1,'Master','1234',1,0,1,'2025-02-20 08:48:03',NULL,0,NULL),(2,'user','1234',0,0,1,'2025-02-20 09:32:54','2025-02-20 09:32:54',0,NULL),(3,'user01','1234',0,0,0,'2025-02-20 16:36:47','2025-02-20 16:36:47',0,NULL),(4,'user02','5555111',0,0,1,'2025-02-20 16:36:58','2025-02-20 16:57:15',1,'2025-02-20 16:57:15'),(6,'Manager','1234',0,1,1,'2025-02-21 10:51:17','2025-02-21 10:51:17',0,NULL);
 /*!40000 ALTER TABLE `login_tb` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -126,22 +129,22 @@ CREATE TABLE `pcroom_tb` (
   `PC_SPEC` varchar(100) DEFAULT NULL COMMENT 'PC 사양',
   `TELECOM` varchar(30) DEFAULT NULL COMMENT '통신사',
   `MEMO` varchar(255) DEFAULT NULL COMMENT '메모',
-  `CREATE_DT` varchar(255) NOT NULL DEFAULT current_timestamp() COMMENT '생성일',
-  `UPDATE_DT` varchar(255) DEFAULT NULL COMMENT '수정일',
+  `CREATE_DT` datetime NOT NULL DEFAULT current_timestamp() COMMENT '생성일',
+  `UPDATE_DT` datetime DEFAULT NULL COMMENT '수정일',
   `DEL_YN` tinyint(1) DEFAULT 0 COMMENT '삭제유무',
-  `DELETE_DT` varchar(255) DEFAULT NULL COMMENT '삭제일',
+  `DELETE_DT` datetime DEFAULT NULL COMMENT '삭제일',
   `COUNTRYTB_ID` int(11) NOT NULL COMMENT '(도/시) 테이블 키',
   `CITYTB_ID` int(11) NOT NULL COMMENT '(시/군/구) 테이블 키',
   `TOWNTB_ID` int(11) NOT NULL COMMENT '(읍/면/동) 테이블 키',
   PRIMARY KEY (`PID`),
-  UNIQUE KEY `UK` (`IP`),
+  UNIQUE KEY `UK` (`IP`,`NAME`,`PORT`,`ADDR`) USING BTREE,
   KEY `fk_pcroom_city` (`CITYTB_ID`),
   KEY `fk_pcroom_country` (`COUNTRYTB_ID`),
   KEY `fk_pcroom_town` (`TOWNTB_ID`),
   CONSTRAINT `fk_pcroom_city` FOREIGN KEY (`CITYTB_ID`) REFERENCES `city_tb` (`PID`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_pcroom_country` FOREIGN KEY (`COUNTRYTB_ID`) REFERENCES `country_tb` (`PID`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_pcroom_town` FOREIGN KEY (`TOWNTB_ID`) REFERENCES `town_tb` (`PID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -150,6 +153,7 @@ CREATE TABLE `pcroom_tb` (
 
 LOCK TABLES `pcroom_tb` WRITE;
 /*!40000 ALTER TABLE `pcroom_tb` DISABLE KEYS */;
+INSERT INTO `pcroom_tb` VALUES (1,'123.2.156.148',5245,'테스트상호','경기도 하남시 미사대로',30,3000,'30%','몰라','SK','테스트용','2025-02-21 12:57:49',NULL,0,NULL,1,1,1),(2,'123.2.156.148',5245,'테스트상호1','경기도 하남시 미사대로',30,3000,'30%','몰라','SK','테스트용','2025-02-21 12:58:34',NULL,0,NULL,1,1,2),(3,'123.2.123.123',2222,'부산사업장','부산광역시 사상구 주례동',30,3000,'30%','몰라','SK','테스트2','2025-02-21 13:00:13',NULL,0,NULL,3,2,3),(4,'123.2.123.123',2222,'부산 화명사업장','부산광역시 북구 화명동',30,3000,'30%','몰라','SK','테스트3','2025-02-21 13:01:09',NULL,0,NULL,3,3,4),(5,'123.2.123.123',2222,'서울 개포 사업장','서울시 강남구 개포동',30,3000,'30%','몰라','SK','테스트3','2025-02-21 13:01:50',NULL,0,NULL,4,4,5);
 /*!40000 ALTER TABLE `pcroom_tb` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -184,7 +188,7 @@ CREATE TABLE `pinglog_tb` (
   CONSTRAINT `fk_PLINGLOG_country202502191020` FOREIGN KEY (`COUNTRYTB_ID`) REFERENCES `country_tb` (`PID`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_PLINGLOG_time202502191020` FOREIGN KEY (`TIMETB_ID`) REFERENCES `time_tb` (`PID`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_PLINGLOG_town202502191020` FOREIGN KEY (`TOWNTB_ID`) REFERENCES `town_tb` (`PID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci COMMENT='핑 정보';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='핑 정보';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -207,7 +211,7 @@ CREATE TABLE `time_tb` (
   `PID` int(11) NOT NULL AUTO_INCREMENT,
   `TIME` time DEFAULT NULL COMMENT '00:00:00 ~ 24:00:00 / 30분단위',
   PRIMARY KEY (`PID`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -216,6 +220,7 @@ CREATE TABLE `time_tb` (
 
 LOCK TABLES `time_tb` WRITE;
 /*!40000 ALTER TABLE `time_tb` DISABLE KEYS */;
+INSERT INTO `time_tb` VALUES (1,'00:00:00'),(2,'00:30:00'),(3,'01:00:00'),(4,'01:30:00'),(5,'02:00:00'),(6,'02:30:00'),(7,'03:00:00'),(8,'03:30:00'),(9,'04:00:00'),(10,'04:30:00'),(11,'05:00:00'),(12,'05:30:00'),(13,'06:00:00'),(14,'06:30:00'),(15,'07:00:00'),(16,'07:30:00'),(17,'08:00:00'),(18,'08:30:00'),(19,'09:00:00'),(20,'09:30:00'),(21,'10:00:00'),(22,'10:30:00'),(23,'11:00:00'),(24,'11:30:00'),(25,'12:00:00'),(26,'12:30:00'),(27,'13:00:00'),(28,'13:30:00'),(29,'14:00:00'),(30,'14:30:00'),(31,'15:00:00'),(32,'15:30:00'),(33,'16:00:00'),(34,'16:30:00'),(35,'17:00:00'),(36,'17:30:00'),(37,'18:00:00'),(38,'18:30:00'),(39,'19:00:00'),(40,'19:30:00'),(41,'20:00:00'),(42,'20:30:00'),(43,'21:00:00'),(44,'21:30:00'),(45,'22:00:00'),(46,'22:30:00'),(47,'23:00:00'),(48,'23:30:00');
 /*!40000 ALTER TABLE `time_tb` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -241,7 +246,7 @@ CREATE TABLE `town_tb` (
   KEY `fk_city202502192215` (`CITYTB_ID`),
   CONSTRAINT `fk_city202502192215` FOREIGN KEY (`CITYTB_ID`) REFERENCES `city_tb` (`PID`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_country202502192215` FOREIGN KEY (`COUNTYTB_ID`) REFERENCES `country_tb` (`PID`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -250,6 +255,7 @@ CREATE TABLE `town_tb` (
 
 LOCK TABLES `town_tb` WRITE;
 /*!40000 ALTER TABLE `town_tb` DISABLE KEYS */;
+INSERT INTO `town_tb` VALUES (1,'망월동','2025-02-21 12:57:49',NULL,0,NULL,1,1),(2,'상일동','2025-02-21 12:58:34',NULL,0,NULL,1,1),(3,'주례동동','2025-02-21 13:00:13',NULL,0,NULL,3,2),(4,'화명동동','2025-02-21 13:01:09',NULL,0,NULL,3,3),(5,'개포동','2025-02-21 13:01:50',NULL,0,NULL,4,4);
 /*!40000 ALTER TABLE `town_tb` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -260,6 +266,6 @@ UNLOCK TABLES;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-02-19 22:38:43
+-- Dump completed on 2025-02-21 16:02:44

@@ -3,6 +3,7 @@ using IpManager.DTO.Login;
 using IpManager.Services.Login;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 
 namespace IpManager.Controllers
 {
@@ -37,7 +38,7 @@ namespace IpManager.Controllers
                 if(model is null)
                     return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
 
-                if (model.Code == 200)
+                if (model.code == 200)
                     return Ok(model);
                 else
                     return BadRequest();
@@ -65,7 +66,7 @@ namespace IpManager.Controllers
                 if (model is null)
                     return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
 
-                if (model.Code == 200)
+                if (model.code == 200)
                     return Ok(model);
                 else
                     return BadRequest();
@@ -91,7 +92,7 @@ namespace IpManager.Controllers
                 if (model is null)
                     return BadRequest();
 
-                if (model.Code == 200)
+                if (model.code == 200)
                     return Ok(model);
                 else
                     return BadRequest();
@@ -117,6 +118,9 @@ namespace IpManager.Controllers
         {
             try
             {
+                if (pagenumber == 0)
+                    return BadRequest();
+
                 ResponseList<UserListDTO>? model = await LoginService.GetUserListService(15, pagenumber - 1);
                 if (model is null)
                     return BadRequest();
@@ -148,7 +152,7 @@ namespace IpManager.Controllers
                 if (model is null)
                     return BadRequest();
 
-                if (model.Code == 200)
+                if (model.code == 200)
                     return Ok(model);
                 else
                     return BadRequest();
@@ -175,7 +179,7 @@ namespace IpManager.Controllers
                 if (model is null)
                     return BadRequest();
 
-                if (model.Code == 200)
+                if (model.code == 200)
                     return Ok(model);
                 else
                     return BadRequest();

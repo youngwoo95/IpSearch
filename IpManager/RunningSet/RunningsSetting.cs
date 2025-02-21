@@ -57,7 +57,58 @@ namespace IpManager.RunningSet
                         Console.WriteLine("마스터 생성완료");
                     }
                 }
-            }catch(Exception ex)
+
+                using (var scope = ServiceProvider.CreateScope())
+                {
+                    var context = scope.ServiceProvider.GetRequiredService<IpanalyzeContext>();
+
+                    /* TIME CHECK */
+                    // 00:00 / 00:30 / ... / 23:30
+                    List<string> timeList = new List<string>();
+                    TimeOnly start = new TimeOnly(0, 0, 0);
+
+                    // 48개의 데이터를 생성 (0분부터 47*30 = 1410분까지)
+                    for (int i = 0; i < 48; i++)
+                    {
+                        TimeOnly time = start.AddMinutes(i * 30);
+                        timeList.Add(time.ToString("HH:mm:ss"));
+                    }
+
+                    Console.WriteLine(timeList.Count);
+
+                    // DB에서 Time 값이 있는 레코드를 "HH:mm:ss" 형식의 문자열로 조회
+                    var existingTimes = await context.TimeTbs
+                        .Where(x => x.Time.HasValue)
+                        .Select(x => x.Time!.Value.ToString("HH:mm:ss"))
+                        .ToListAsync();
+
+                    // DB에 없는 시간 문자열 계산
+                     var missingTimes = timeList.Except(existingTimes).ToList();
+
+                    foreach (var timeStr in missingTimes)
+                    {
+                        // 문자열을 다시 TimeOnly로 변환
+                        TimeOnly time = TimeOnly.ParseExact(timeStr, "HH:mm:ss", null);
+                        var newRecord = new TimeTb
+                        {
+                            Time = time,
+                        };
+                        await context.TimeTbs.AddAsync(newRecord);
+                    }
+
+                    if (missingTimes.Any())
+                    {
+                        await context.SaveChangesAsync();
+                        Console.WriteLine("누락된 시간이 추가되었습니다.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("모든 시간이 이미 DB에 존재합니다.");
+                    }
+                }
+
+            }
+            catch(Exception ex)
             {
                 LoggerService.FileErrorMessage(ex.ToString());
             }

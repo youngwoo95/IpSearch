@@ -2,7 +2,7 @@
 using IpManager.DTO;
 using IpManager.DTO.Login;
 
-namespace IpManager.Repository
+namespace IpManager.Repository.Login
 {
     public interface IUserRepository
     {

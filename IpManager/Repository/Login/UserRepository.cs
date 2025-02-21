@@ -4,7 +4,7 @@ using IpManager.DTO.Login;
 using Microsoft.EntityFrameworkCore;
 using MySqlConnector;
 
-namespace IpManager.Repository
+namespace IpManager.Repository.Login
 {
     public class UserRepository : IUserRepository
     {
@@ -14,8 +14,8 @@ namespace IpManager.Repository
         public UserRepository(IpanalyzeContext _context,
             ILoggerService _loggerservice)
         {
-            this.context = _context;
-            this.LoggerService = _loggerservice;
+            context = _context;
+            LoggerService = _loggerservice;
         }
 
 
@@ -35,7 +35,7 @@ namespace IpManager.Repository
                 else
                     return 0;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 LoggerService.FileErrorMessage(ex.ToString());
                 return -1;
@@ -72,7 +72,7 @@ namespace IpManager.Repository
                         return 1; // 해당 UID로 검색했을때 NULL이 아니면 사용중인 아이디가 있으므로 1 반환
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 LoggerService.FileErrorMessage(ex.ToString());
                 return -1; // 서버에 문제가 있을때 -1 반환해서 서비스 로직에 알림.
@@ -138,7 +138,7 @@ namespace IpManager.Repository
                 int result = await context.SaveChangesAsync().ConfigureAwait(false);
                 return result;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 LoggerService.FileErrorMessage(ex.ToString());
                 return -1;
@@ -156,7 +156,7 @@ namespace IpManager.Repository
             try
             {
                 var connection = context.Database.GetDbConnection();
-                if(connection.State != System.Data.ConnectionState.Open)
+                if (connection.State != System.Data.ConnectionState.Open)
                 {
                     await connection.OpenAsync();
                 }
@@ -190,9 +190,9 @@ namespace IpManager.Repository
                                 AdminYn = reader.IsDBNull(reader.GetOrdinal("ADMIN_YN")) ? false : Convert.ToBoolean(reader["ADMIN_YN"]),
                                 UseYn = reader.IsDBNull(reader.GetOrdinal("USE_YN")) ? false : Convert.ToBoolean(reader["USE_YN"]),
                                 CreateDt = reader.IsDBNull(reader.GetOrdinal("CREATE_DT")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("CREATE_DT")),
-                                UpdateDt = reader.IsDBNull(reader.GetOrdinal("UPDATE_DT")) ? (DateTime?)null : Convert.ToDateTime(reader["UPDATE_DT"]),
+                                UpdateDt = reader.IsDBNull(reader.GetOrdinal("UPDATE_DT")) ? null : Convert.ToDateTime(reader["UPDATE_DT"]),
                                 DelYn = reader.IsDBNull(reader.GetOrdinal("DEL_YN")) ? false : Convert.ToBoolean(reader["DEL_YN"]),
-                                DeleteDt = reader.IsDBNull(reader.GetOrdinal("DELETE_DT")) ? (DateTime?)null : Convert.ToDateTime(reader["DELETE_DT"])
+                                DeleteDt = reader.IsDBNull(reader.GetOrdinal("DELETE_DT")) ? null : Convert.ToDateTime(reader["DELETE_DT"])
                             };
 
                             return login;
@@ -201,7 +201,7 @@ namespace IpManager.Repository
                 }
                 return null; //조회 결과가 없다면 null을 반환한다.
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 LoggerService.FileErrorMessage(ex.ToString());
                 return null;
@@ -213,7 +213,7 @@ namespace IpManager.Repository
             try
             {
                 var connection = context.Database.GetDbConnection();
-                if(connection.State != System.Data.ConnectionState.Open)
+                if (connection.State != System.Data.ConnectionState.Open)
                 {
                     await connection.OpenAsync();
                 }
@@ -241,7 +241,7 @@ namespace IpManager.Repository
                 }
                 return 0; // ID가 존재하지않음 == 로그인 허용안되어있음
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 LoggerService.FileErrorMessage(ex.ToString());
                 return -1;
@@ -258,7 +258,7 @@ namespace IpManager.Repository
             try
             {
                 var connection = context.Database.GetDbConnection();
-                if(connection.State != System.Data.ConnectionState.Open)
+                if (connection.State != System.Data.ConnectionState.Open)
                 {
                     await connection.OpenAsync();
                 }
@@ -285,9 +285,9 @@ namespace IpManager.Repository
                                 AdminYn = reader.IsDBNull(reader.GetOrdinal("ADMIN_YN")) ? false : Convert.ToBoolean(reader["ADMIN_YN"]),
                                 UseYn = reader.IsDBNull(reader.GetOrdinal("USE_YN")) ? false : Convert.ToBoolean(reader["USE_YN"]),
                                 CreateDt = reader.IsDBNull(reader.GetOrdinal("CREATE_DT")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("CREATE_DT")),
-                                UpdateDt = reader.IsDBNull(reader.GetOrdinal("UPDATE_DT")) ? (DateTime?)null : Convert.ToDateTime(reader["UPDATE_DT"]),
+                                UpdateDt = reader.IsDBNull(reader.GetOrdinal("UPDATE_DT")) ? null : Convert.ToDateTime(reader["UPDATE_DT"]),
                                 DelYn = reader.IsDBNull(reader.GetOrdinal("DEL_YN")) ? false : Convert.ToBoolean(reader["DEL_YN"]),
-                                DeleteDt = reader.IsDBNull(reader.GetOrdinal("DELETE_DT")) ? (DateTime?)null : Convert.ToDateTime(reader["DELETE_DT"])
+                                DeleteDt = reader.IsDBNull(reader.GetOrdinal("DELETE_DT")) ? null : Convert.ToDateTime(reader["DELETE_DT"])
                             };
 
                             return login;
@@ -297,7 +297,7 @@ namespace IpManager.Repository
 
                 return null;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 LoggerService.FileErrorMessage(ex.ToString());
                 return null;
@@ -341,9 +341,9 @@ namespace IpManager.Repository
                                 AdminYn = reader.IsDBNull(reader.GetOrdinal("ADMIN_YN")) ? false : Convert.ToBoolean(reader["ADMIN_YN"]),
                                 UseYn = reader.IsDBNull(reader.GetOrdinal("USE_YN")) ? false : Convert.ToBoolean(reader["USE_YN"]),
                                 CreateDt = reader.IsDBNull(reader.GetOrdinal("CREATE_DT")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("CREATE_DT")),
-                                UpdateDt = reader.IsDBNull(reader.GetOrdinal("UPDATE_DT")) ? (DateTime?)null : Convert.ToDateTime(reader["UPDATE_DT"]),
+                                UpdateDt = reader.IsDBNull(reader.GetOrdinal("UPDATE_DT")) ? null : Convert.ToDateTime(reader["UPDATE_DT"]),
                                 DelYn = reader.IsDBNull(reader.GetOrdinal("DEL_YN")) ? false : Convert.ToBoolean(reader["DEL_YN"]),
-                                DeleteDt = reader.IsDBNull(reader.GetOrdinal("DELETE_DT")) ? (DateTime?)null : Convert.ToDateTime(reader["DELETE_DT"])
+                                DeleteDt = reader.IsDBNull(reader.GetOrdinal("DELETE_DT")) ? null : Convert.ToDateTime(reader["DELETE_DT"])
                             };
 
                             return login;
@@ -371,15 +371,13 @@ namespace IpManager.Repository
                 var results = new List<LoginTb>();
 
                 var connection = context.Database.GetDbConnection();
-                if(connection.State != System.Data.ConnectionState.Open)
+                if (connection.State != System.Data.ConnectionState.Open)
                 {
                     await connection.OpenAsync();
                 }
 
                 using (var command = connection.CreateCommand())
                 {
-                    //command.CommandText = "SELECT * FROM login_tb WHERE MASTER_YN != true AND DEL_YN != true ORDER BY PID LIMIT @pageSize OFFSET @offset";
-                    //command.CommandText = "SELECT * FROM login_tb WHERE MASTER_YN = 0 AND DEL_YN = 0 ORDER BY PID LIMIT @pageSize OFFSET @offset";
                     command.CommandText = "SELECT * FROM login_tb WHERE MASTER_YN != true AND DEL_YN != true ORDER BY PID LIMIT @pageIndex OFFSET @offset";
 
 
@@ -397,7 +395,7 @@ namespace IpManager.Repository
 
                     using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
                     {
-                        while(await reader.ReadAsync())
+                        while (await reader.ReadAsync())
                         {
                             var login = new LoginTb
                             {
@@ -408,9 +406,9 @@ namespace IpManager.Repository
                                 AdminYn = reader.IsDBNull(reader.GetOrdinal("ADMIN_YN")) ? false : Convert.ToBoolean(reader["ADMIN_YN"]),
                                 UseYn = reader.IsDBNull(reader.GetOrdinal("USE_YN")) ? false : Convert.ToBoolean(reader["USE_YN"]),
                                 CreateDt = reader.IsDBNull(reader.GetOrdinal("CREATE_DT")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("CREATE_DT")),
-                                UpdateDt = reader.IsDBNull(reader.GetOrdinal("UPDATE_DT")) ? (DateTime?)null : Convert.ToDateTime(reader["UPDATE_DT"]),
+                                UpdateDt = reader.IsDBNull(reader.GetOrdinal("UPDATE_DT")) ? null : Convert.ToDateTime(reader["UPDATE_DT"]),
                                 DelYn = reader.IsDBNull(reader.GetOrdinal("DEL_YN")) ? false : Convert.ToBoolean(reader["DEL_YN"]),
-                                DeleteDt = reader.IsDBNull(reader.GetOrdinal("DELETE_DT")) ? (DateTime?)null : Convert.ToDateTime(reader["DELETE_DT"])
+                                DeleteDt = reader.IsDBNull(reader.GetOrdinal("DELETE_DT")) ? null : Convert.ToDateTime(reader["DELETE_DT"])
                             };
                             results.Add(login);
                         }
@@ -443,6 +441,6 @@ namespace IpManager.Repository
             return false;
         }
 
-        
+
     }
 }

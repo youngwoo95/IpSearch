@@ -1,9 +1,7 @@
 ﻿using IpManager.Comm.Logger.LogFactory.LoggerSelect;
-using IpManager.Comm.Tokens;
 using IpManager.DBModel;
 using IpManager.DTO.Login;
-using IpManager.Repository;
-using Microsoft.AspNetCore.Identity;
+using IpManager.Repository.Login;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -41,24 +39,24 @@ namespace IpManager.Services.Login
             try
             {
                 if (dto is null)
-                    return new ResponseUnit<TokenDTO>() { message = "잘못된 입력값이 존재합니다.", data = null, Code = 200 };
+                    return new ResponseUnit<TokenDTO>() { message = "잘못된 입력값이 존재합니다.", data = null, code = 200 };
 
                 if (dto.LoginID is null || dto.LoginPW is null)
-                    return new ResponseUnit<TokenDTO>() { message = "잘못된 입력값이 존재합니다.", data = null, Code = 200 };
+                    return new ResponseUnit<TokenDTO>() { message = "잘못된 입력값이 존재합니다.", data = null, code = 200 };
 
                 if (!String.IsNullOrEmpty(dto.LoginID) && dto.LoginID.Any(char.IsWhiteSpace)) // NULL 검사 + 공백검사
                 {
-                    return new ResponseUnit<TokenDTO>() { message = "잘못된 입력값이 존재합니다.", data = null, Code = 200 };
+                    return new ResponseUnit<TokenDTO>() { message = "잘못된 입력값이 존재합니다.", data = null, code = 200 };
                 }
 
                 // 사용허가 검사
                 int LoginPermission = await UserRepository.GetLoginPermission(dto.LoginID);
                 if (LoginPermission < 1)
-                    return new ResponseUnit<TokenDTO>() { message = "승인되지 않은 아이디입니다.", data = null, Code = 200 };
+                    return new ResponseUnit<TokenDTO>() { message = "승인되지 않은 아이디입니다.", data = null, code = 200 };
 
                 LoginTb? model = await UserRepository.GetLoginAsync(dto.LoginID, dto.LoginPW);
                 if(model is null)
-                    return new ResponseUnit<TokenDTO>() { message = "해당 아이디가 존재하지 않습니다.", data = null, Code = 200};
+                    return new ResponseUnit<TokenDTO>() { message = "해당 아이디가 존재하지 않습니다.", data = null, code = 200};
 
 
                 // Claim 생성
@@ -93,12 +91,12 @@ namespace IpManager.Services.Login
                     AccessToken = accessToken
                 };
 
-                return new ResponseUnit<TokenDTO>() { message = "요청이 정상 처리되었습니다.", data = tokenResult, Code = 200 };
+                return new ResponseUnit<TokenDTO>() { message = "요청이 정상 처리되었습니다.", data = tokenResult, code = 200 };
             }
             catch(Exception ex)
             {
                 LoggerService.FileErrorMessage(ex.ToString());
-                return new ResponseUnit<TokenDTO>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, Code = 500 };
+                return new ResponseUnit<TokenDTO>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, code = 500 };
             }
         }
 
@@ -240,18 +238,18 @@ namespace IpManager.Services.Login
             try
             {
                 if(dto is null)
-                    return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, Code = 200 }; // Bad Request
+                    return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, code = 200 }; // Bad Request
 
                 if (!string.IsNullOrEmpty(dto.UserID) && dto.UserID.Any(char.IsWhiteSpace)) // NULL 검사 + 공백검사
                 {
                     // 안에 공백이든 NULL임.
-                    return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, Code = 200 }; // Bad Request
+                    return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, code = 200 }; // Bad Request
                 }
 
                 if (!string.IsNullOrEmpty(dto.PassWord) && dto.PassWord.Any(char.IsWhiteSpace)) // NULL 검사 + 공백검사
                 {
                     // 안에 공백이든 NULL임.
-                    return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, Code = 200 }; // Bad Request
+                    return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, code = 200 }; // Bad Request
                 }
 
                 DateTime ThisDate = DateTime.Now;
@@ -272,23 +270,23 @@ namespace IpManager.Services.Login
                 /* 사용자 ID 중복검사 */
                 int UesrIDCheck = await UserRepository.CheckUserIdAsync(model.Uid).ConfigureAwait(false);
                 if (UesrIDCheck > 0)
-                    return new ResponseUnit<bool>() { message = "이미 존재하는 아이디입니다.", data = false, Code = 200 };
+                    return new ResponseUnit<bool>() { message = "이미 존재하는 아이디입니다.", data = false, code = 200 };
                 else if(UesrIDCheck < 0)
-                    return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, Code = 500 };
+                    return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
                 
                 /* 사용자 ID 등록 */
                 int result = await UserRepository.AddUserAsync(model).ConfigureAwait(false);
                 if (result > 0)
-                    return new ResponseUnit<bool>() { message = "회원가입이 완료되었습니다.", data = true, Code = 200 };
+                    return new ResponseUnit<bool>() { message = "회원가입이 완료되었습니다.", data = true, code = 200 };
                 else if (result == 0)
-                    return new ResponseUnit<bool>() { message = "회원가입에 실패했습니다.", data = false, Code = 200 };
+                    return new ResponseUnit<bool>() { message = "회원가입에 실패했습니다.", data = false, code = 200 };
                 else
-                    return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, Code = 500 };
+                    return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
             }
             catch(Exception ex)
             {
                 LoggerService.FileErrorMessage(ex.ToString());
-                return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, Code = 500 };
+                return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
             }
         }
 
@@ -302,26 +300,26 @@ namespace IpManager.Services.Login
             try
             {
                 if(dto is null)
-                    return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, Code = 200 }; // Bad Request
+                    return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, code = 200 }; // Bad Request
 
                 if (!string.IsNullOrEmpty(dto.UserID) && dto.UserID.Any(char.IsWhiteSpace)) // NULL 검사 + 공백검사
                 {
                     // 안에 공백이든 NULL임.
-                    return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, Code = 200 }; // Bad Request
+                    return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, code = 200 }; // Bad Request
                 }
 
                 int result = await UserRepository.CheckUserIdAsync(dto.UserID!).ConfigureAwait(false);
                 if (result > 0)
-                    return new ResponseUnit<bool>() { message = "이미 존재하는 아이디입니다.", data = false, Code = 200 };
+                    return new ResponseUnit<bool>() { message = "이미 존재하는 아이디입니다.", data = false, code = 200 };
                 else if (result < 0)
-                    return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, Code = 500 };
+                    return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
                 else
-                    return new ResponseUnit<bool>() { message = "사용가능한 아이디입니다.", data = true, Code = 200 };
+                    return new ResponseUnit<bool>() { message = "사용가능한 아이디입니다.", data = true, code = 200 };
             }
             catch (Exception ex) 
             {
                 LoggerService.FileErrorMessage(ex.ToString());
-                return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, Code = 500 };
+                return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
             }
         }
 
@@ -365,23 +363,23 @@ namespace IpManager.Services.Login
             try
             {
                 if (dto is null)
-                    return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, Code = 200 };
+                    return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, code = 200 };
 
                 if(dto.PID == 0)
-                    return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, Code = 200 };
+                    return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, code = 200 };
 
                 if(dto.UID is null)
-                    return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, Code = 200 };
+                    return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, code = 200 };
 
                 if (dto.PWD is null)
-                    return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, Code = 200 };
+                    return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, code = 200 };
 
                 var UserModelCheck = await UserRepository.GetUserInfoAsyncById(dto.PID);
                 if (UserModelCheck is null)
-                    return new ResponseUnit<bool>() { message = "해당 아이디가 존재하지 않습니다.", data = false, Code = 200 };
+                    return new ResponseUnit<bool>() { message = "해당 아이디가 존재하지 않습니다.", data = false, code = 200 };
 
                 if(UserModelCheck.Uid != dto.UID)
-                    return new ResponseUnit<bool>() { message = "해당 아이디가 존재하지 않습니다.", data = false, Code = 200 };
+                    return new ResponseUnit<bool>() { message = "해당 아이디가 존재하지 않습니다.", data = false, code = 200 };
 
 
                 UserModelCheck.Pwd = dto.PWD;
@@ -391,14 +389,14 @@ namespace IpManager.Services.Login
               
                 int result = await UserRepository.EditUserAsync(UserModelCheck);
                 if (result != -1)
-                    return new ResponseUnit<bool>() { message = "수정이 완료되었습니다.", data = true, Code = 200 };
+                    return new ResponseUnit<bool>() { message = "수정이 완료되었습니다.", data = true, code = 200 };
                 else
-                    return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, Code = 500 };
+                    return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
             }
             catch(Exception ex)
             {
                 LoggerService.FileErrorMessage(ex.ToString());
-                return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, Code = 500 };
+                return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
             }
         }
 
@@ -412,11 +410,11 @@ namespace IpManager.Services.Login
             try
             {
                 if(pid == 0)
-                    return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, Code = 200 };
+                    return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, code = 200 };
 
                 var UserModelCheck = await UserRepository.GetUserInfoAsyncById(pid);
                 if (UserModelCheck is null)
-                    return new ResponseUnit<bool>() { message = "해당 아이디가 존재하지 않습니다.", data = false, Code = 200 };
+                    return new ResponseUnit<bool>() { message = "해당 아이디가 존재하지 않습니다.", data = false, code = 200 };
 
                 UserModelCheck.UpdateDt = DateTime.Now;
                 UserModelCheck.DelYn = true;
@@ -424,14 +422,14 @@ namespace IpManager.Services.Login
 
                 int result = await UserRepository.DeleteUserAsync(UserModelCheck);
                 if (result != -1)
-                    return new ResponseUnit<bool>() { message = "수정이 완료되었습니다.", data = true, Code = 200 };
+                    return new ResponseUnit<bool>() { message = "수정이 완료되었습니다.", data = true, code = 200 };
                 else
-                    return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, Code = 500 };
+                    return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
             }
             catch(Exception ex)
             {
                 LoggerService.FileErrorMessage(ex.ToString());
-                return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, Code = 500 };
+                return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
             }
         }
     }

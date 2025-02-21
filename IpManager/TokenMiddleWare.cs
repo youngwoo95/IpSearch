@@ -1,7 +1,7 @@
 ﻿using IpManager.Comm.Logger.LogFactory.LoggerSelect;
 using IpManager.Comm.Tokens;
 using IpManager.DTO.Login;
-using IpManager.Repository;
+using IpManager.Repository.Login;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -163,7 +163,7 @@ namespace IpManager
                     {
                         message = "토큰이 재발급되었습니다.",
                         data = dto,
-                        Code = 201
+                        code = 201
                     }));
                     return;
                 }

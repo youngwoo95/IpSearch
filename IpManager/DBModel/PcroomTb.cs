@@ -60,12 +60,12 @@ public partial class PcroomTb
     /// <summary>
     /// 생성일
     /// </summary>
-    public string CreateDt { get; set; } = null!;
+    public DateTime CreateDt { get; set; }
 
     /// <summary>
     /// 수정일
     /// </summary>
-    public string? UpdateDt { get; set; }
+    public DateTime? UpdateDt { get; set; }
 
     /// <summary>
     /// 삭제유무
@@ -75,7 +75,7 @@ public partial class PcroomTb
     /// <summary>
     /// 삭제일
     /// </summary>
-    public string? DeleteDt { get; set; }
+    public DateTime? DeleteDt { get; set; }
 
     /// <summary>
     /// (도/시) 테이블 키
