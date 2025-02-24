@@ -108,6 +108,23 @@ namespace IpManager.Controllers
 
 
         // Update
+        [Authorize(Roles = "Manager,Visitor")]
+        [HttpPost]
+        [Route("sign/v1/UpdateStore")]
+        public async Task<IActionResult> UpdateStoreInfo([FromBody] UpdateStoreDTO dto)
+        {
+            try
+            {
+                return Ok();
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+            }
+        }
+
+
         // Delete
 
 

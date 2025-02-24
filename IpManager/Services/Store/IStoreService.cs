@@ -25,5 +25,12 @@ namespace IpManager.Services.Store
         /// <returns></returns>
         public Task<ResponseUnit<StoreDetailDTO>?> GetPCRoomDetailService(int pid);
 
+        /// <summary>
+        /// PC방 정보 수정
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>
+        public Task<ResponseUnit<bool>> UpdateStoreService(UpdateStoreDTO dto);
+
     }
 }

@@ -1,7 +1,12 @@
 ﻿namespace IpManager.DTO.Store
 {
-    public class StoreDTO
+    public class UpdateStoreDTO
     {
+        /// <summary>
+        /// PID
+        /// </summary>
+        public int PID { get; set; }
+
         /// <summary>
         /// IP
         /// </summary>
@@ -53,20 +58,33 @@
         public string? Memo { get; set; }
 
         /// <summary>
+        /// (도/시) ID
+        /// </summary>
+        public int CountryId { get; set; }
+
+        /// <summary>
         /// (도/시) 명
         /// </summary>
         public string? CountryName { get; set; }
 
+        /// <summary>
+        /// (시/군/구) ID
+        /// </summary>
+        public int CityId { get; set; }
+        
         /// <summary>
         /// (시/군/구) 명
         /// </summary>
         public string? CityName { get; set; }
 
         /// <summary>
+        /// (읍/면/동) ID
+        /// </summary>
+        public int TownId { get; set; }
+
+        /// <summary>
         /// (읍/면/동) 명
         /// </summary>
         public string? TownName { get; set; }
-
-
     }
 }

@@ -9,12 +9,12 @@ namespace IpManager.RunningSet
         private readonly ILoggerService LoggerService;
 
         // 서비스 프로바이더 _ 의존성 주입
-        private readonly IServiceProvider ServiceProvider;
+        private readonly IServiceScopeFactory ScopeFactory;
 
-        public RunningsSetting(IServiceProvider _serviceProvider,
+        public RunningsSetting(IServiceScopeFactory _scopefactory,
             ILoggerService _loggerservice)
         {
-            this.ServiceProvider = _serviceProvider;
+            this.ScopeFactory = _scopefactory;
             this.LoggerService = _loggerservice;
         }
 
@@ -30,7 +30,7 @@ namespace IpManager.RunningSet
                 LoggerService.FileLogMessage("프로그램 실행");
 #endif
                 // 스코프 단위로 진행
-                using (var scope = ServiceProvider.CreateScope())
+                using (var scope = ScopeFactory.CreateScope())
                 {
                     var context = scope.ServiceProvider.GetRequiredService<IpanalyzeContext>();
 
@@ -58,7 +58,7 @@ namespace IpManager.RunningSet
                     }
                 }
 
-                using (var scope = ServiceProvider.CreateScope())
+                using (var scope = ScopeFactory.CreateScope())
                 {
                     var context = scope.ServiceProvider.GetRequiredService<IpanalyzeContext>();
 
