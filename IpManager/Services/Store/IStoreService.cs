@@ -19,6 +19,13 @@ namespace IpManager.Services.Store
         public Task<ResponseList<StoreListDTO>?> GetPCRoomListService(string? search, int pageIndex, int pagenumber);
 
         /// <summary>
+        /// PC방 지역별 그룹핑 개수 카운팅
+        /// </summary>
+        /// <returns></returns>
+        public Task<ResponseList<StoreRegionDTO>?> GetPcRoomRegionListService();
+
+
+        /// <summary>
         /// PC방 정보 상세조회
         /// </summary>
         /// <param name="pid"></param>

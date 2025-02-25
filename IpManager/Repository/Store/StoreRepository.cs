@@ -125,6 +125,8 @@ namespace IpManager.Repository.Store
             });
         }
 
+
+
         /// <summary>
         /// PC방 정보 상세보기
         /// </summary>
@@ -360,6 +362,75 @@ namespace IpManager.Repository.Store
                 }
 
                 return result;
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// PC방 지역별 그룹핑 개수 카운팅
+        /// </summary>
+        /// <returns></returns>
+        public async Task<List<StoreRegionDTO>?> GetPcRoomRegionCountAsync()
+        {
+            try
+            {
+                var connection = context.Database.GetDbConnection();
+                if(connection.State != System.Data.ConnectionState.Open)
+                {
+                    await connection.OpenAsync();
+                }
+
+                var storeRegions = new List<StoreRegionDTO>();
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT " +
+                        $"country.PID as COUNTRY_PID," +
+                        $"country.NAME as COUNTRY_NAME," +
+                        $"city.PID as CITY_PID," +
+                        $"city.NAME as CITY_NAME," +
+                        $"town.PID as TOWN_PID," +
+                        $"town.NAME as TOWN_NAME," +
+                        $"CONCAT(country.NAME, ' ', city.NAME, ' ',town.NAME) as Region," +
+                        $"( " +
+                        $"SELECT COUNT(*) FROM pcroom_tb AS pcroom " +
+                        $"WHERE pcroom.DEL_YN != true AND " +
+                        $"pcroom.COUNTRYTB_ID = country.PID AND " +
+                        $"pcroom.CITYTB_ID = city.PID AND " +
+                        $"pcroom.TOWNTB_ID = town.PID" +
+                        $") as Counter " +
+                        $"FROM country_tb as country " +
+                        $"INNER JOIN city_tb as city ON country.PID = city.COUNTRYTB_ID " +
+                        $"INNER JOIN town_tb as town ON city.PID = town.CITYTB_ID " +
+                        $"WHERE country.DEL_YN != true AND " +
+                        $"city.DEL_YN != true AND " +
+                        $"town.DEL_YN != true " +
+                        $"GROUP BY country.PID, city.PID, town.PID";
+
+                    using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                    {
+                        while (await reader.ReadAsync().ConfigureAwait(false))
+                        {
+                            var dto = new StoreRegionDTO
+                            {
+                                Country_PID = reader.GetInt32(reader.GetOrdinal("COUNTRY_PID")),
+                                Country_Name = reader["COUNTRY_NAME"] as string,
+                                City_PID = reader.GetInt32(reader.GetOrdinal("CITY_PID")),
+                                City_Name = reader["CITY_NAME"] as string,
+                                Town_PID = reader.GetInt32(reader.GetOrdinal("TOWN_PID")),
+                                Town_Name = reader["TOWN_NAME"] as string,
+                                Region = reader["Region"] as string,
+                                Count = reader.GetInt32(reader.GetOrdinal("Counter"))
+                            };
+
+                            storeRegions.Add(dto);
+                        }
+                    }
+                    return storeRegions;
+                }
             }
             catch(Exception ex)
             {

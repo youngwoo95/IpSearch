@@ -2,7 +2,6 @@
 using IpManager.DBModel;
 using IpManager.DTO.Store;
 using IpManager.Repository.Store;
-using Microsoft.AspNetCore.Mvc.Core.Infrastructure;
 
 namespace IpManager.Services.Store
 {
@@ -173,7 +172,7 @@ namespace IpManager.Services.Store
                 StoreTB.Pcspec = dto.Pcspec; // PC 사양
                 StoreTB.Telecom = dto.Telecom; // 통신사
                 StoreTB.Memo = dto.Memo; // 메모
-
+                
 
                 return new ResponseUnit<bool>() { message = "요청이 정상 처리되었습니다.", data = true, code = 200 };
 
@@ -184,6 +183,28 @@ namespace IpManager.Services.Store
             {
                 LoggerService.FileErrorMessage(ex.ToString());
                 return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
+            }
+        }
+
+        /// <summary>
+        /// PC방 지역별 그룹핑 개수 카운팅
+        /// </summary>
+        /// <returns></returns>
+        public async Task<ResponseList<StoreRegionDTO>?> GetPcRoomRegionListService()
+        {
+            try
+            {
+                var RegionList = await StoreRepository.GetPcRoomRegionCountAsync();
+                if (RegionList is null)
+                    return new ResponseList<StoreRegionDTO>() { message = "데이터가 존재하지 않습니다.", data = null, code = 200 };
+                else
+                    return new ResponseList<StoreRegionDTO>() { message = "조회가 성공하였습니다.", data = RegionList, code = 200 };
+
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return new ResponseList<StoreRegionDTO>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, code = 500 };
             }
         }
 

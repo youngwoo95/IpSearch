@@ -23,6 +23,13 @@ namespace IpManager.Repository.Store
         Task<List<StoreListDTO>?> GetPcRoomListAsync(string? search, int pageIndex, int pagenumber);
 
         /// <summary>
+        /// PC방 지역별 그룹핑 개수 카운팅
+        /// </summary>
+        /// <returns></returns>
+        Task<List<StoreRegionDTO>?> GetPcRoomRegionCountAsync();
+
+
+        /// <summary>
         /// PC방 정보 상세보기
         /// </summary>
         /// <param name="pid"></param>

@@ -1,4 +1,5 @@
 ﻿using IpManager.Comm.Logger.LogFactory.LoggerSelect;
+using IpManager.DBModel;
 using IpManager.DTO.Store;
 using IpManager.Services.Store;
 using Microsoft.AspNetCore.Authorization;
@@ -79,6 +80,32 @@ namespace IpManager.Controllers
         }
 
         /// <summary>
+        /// PC방 그룹핑 개수 카운팅
+        /// </summary>
+        /// <returns></returns>
+        [Authorize(Roles = "Manager,Visitor")]
+        [HttpGet]
+        [Route("sign/v1/GetStoreGroupList")]
+        public async Task<IActionResult> GetStoreGroupList()
+        {
+            try
+            {
+                ResponseList<StoreRegionDTO>? model = await StoreService.GetPcRoomRegionListService();
+                if (model is null)
+                    return BadRequest();
+                if (model.code == 200)
+                    return Ok(model);
+                else
+                    return BadRequest();
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+            }
+        }
+
+        /// <summary>
         /// 상세정보 보기
         /// </summary>
         /// <param name="pid"></param>
@@ -109,7 +136,7 @@ namespace IpManager.Controllers
 
         // Update
         [Authorize(Roles = "Manager,Visitor")]
-        [HttpPost]
+        [HttpPut]
         [Route("sign/v1/UpdateStore")]
         public async Task<IActionResult> UpdateStoreInfo([FromBody] UpdateStoreDTO dto)
         {
@@ -126,9 +153,23 @@ namespace IpManager.Controllers
 
 
         // Delete
+        [Authorize(Roles = "Manger,Visitor")]
+        [HttpPost]
+        [Route("sign/v1/DeleteStore")]
+        public async Task<IActionResult> DeleteStoreInfo( )
+        {
+            try
+            {
+                return Ok();
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+            }
+        }
 
-
-
+       
 
     }
 }
