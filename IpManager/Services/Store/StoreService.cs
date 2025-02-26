@@ -208,5 +208,79 @@ namespace IpManager.Services.Store
             }
         }
 
+        /// <summary>
+        /// (도/시)별 PC방 리스트 반환
+        /// </summary>
+        /// <param name="countryid"></param>
+        /// <returns></returns>
+        public async Task<ResponseList<StoreListDTO>?> GetPcRoomCountryListService(int countryid)
+        {
+            try
+            {
+                if (countryid <= 0)
+                    return new ResponseList<StoreListDTO>() { message = "잘못된 요청입니다.", data = null, code = 200 };
+
+                var model = await StoreRepository.GetPcRoomCountryListAsync(countryid).ConfigureAwait(false);
+                if (model is null)
+                    return new ResponseList<StoreListDTO>() { message = "조회된 데이터가 없습니다.", data = null, code = 200 };
+                else
+                    return new ResponseList<StoreListDTO>() { message = "조회가 성공하였습니다.", data = model, code = 200 };
+            }
+            catch (Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return new ResponseList<StoreListDTO>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, code = 500 };
+            }
+        }
+
+        /// <summary>
+        /// (시/군/구)별 PC방 리스트 반환
+        /// </summary>
+        /// <param name="cityid"></param>
+        /// <returns></returns>
+        public async Task<ResponseList<StoreListDTO>?> GetPcRoomCityListService(int cityid)
+        {
+            try
+            {
+                if (cityid <= 0)
+                    return new ResponseList<StoreListDTO>() { message = "잘못된 요청입니다.", data = null, code = 200 };
+
+                var model = await StoreRepository.GetPcRoomCityListAsync(cityid).ConfigureAwait(false);
+                if (model is null)
+                    return new ResponseList<StoreListDTO>() { message = "조회된 데이터가 없습니다.", data = null, code = 200 };
+                else
+                    return new ResponseList<StoreListDTO>() { message = "조회가 성공하였습니다.", data = model, code = 200 };
+            }
+            catch (Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return new ResponseList<StoreListDTO>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, code = 500 };
+            }
+        }
+
+        /// <summary>
+        /// (읍/면/동)별 PC방 리스트 반환
+        /// </summary>
+        /// <param name="townid"></param>
+        /// <returns></returns>
+        public async Task<ResponseList<StoreListDTO>?> GetPcRoomTownListService(int townid)
+        {
+            try
+            {
+                if (townid <= 0)
+                    return new ResponseList<StoreListDTO>() { message = "잘못된 요청입니다.", data = null, code = 200 };
+
+                var model = await StoreRepository.GetPcRoomTownListAsync(townid).ConfigureAwait(false);
+                if (model is null)
+                    return new ResponseList<StoreListDTO>() { message = "조회된 데이터가 없습니다.", data = null, code = 200 };
+                else
+                    return new ResponseList<StoreListDTO>() { message = "조회가 성공하였습니다.", data = model, code = 200 };
+            }
+            catch (Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return new ResponseList<StoreListDTO>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, code = 500 };
+            }
+        }
     }
 }

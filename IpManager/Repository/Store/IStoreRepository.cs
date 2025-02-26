@@ -23,6 +23,27 @@ namespace IpManager.Repository.Store
         Task<List<StoreListDTO>?> GetPcRoomListAsync(string? search, int pageIndex, int pagenumber);
 
         /// <summary>
+        /// (도/시)별 PC방 List 반환
+        /// </summary>
+        /// <param name="countryid"></param>
+        /// <returns></returns>
+        Task<List<StoreListDTO>?> GetPcRoomCountryListAsync(int countryid);
+
+        /// <summary>
+        /// (시/군/구)별 PC방 List 반환
+        /// </summary>
+        /// <param name="cityid"></param>
+        /// <returns></returns>
+        Task<List<StoreListDTO>?> GetPcRoomCityListAsync(int cityid);
+
+        /// <summary>
+        /// (읍/면/동)별 PC방 List 반환
+        /// </summary>
+        /// <param name="townid"></param>
+        /// <returns></returns>
+        Task<List<StoreListDTO>?> GetPcRoomTownListAsync(int townid);
+
+        /// <summary>
         /// PC방 지역별 그룹핑 개수 카운팅
         /// </summary>
         /// <returns></returns>

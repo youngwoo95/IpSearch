@@ -1,5 +1,4 @@
 ﻿using IpManager.Comm.Logger.LogFactory.LoggerSelect;
-using IpManager.DBModel;
 using IpManager.DTO.Store;
 using IpManager.Services.Store;
 using Microsoft.AspNetCore.Authorization;
@@ -25,9 +24,9 @@ namespace IpManager.Controllers
         /// <param name="dto"></param>
         /// <returns></returns>
         [Authorize(Roles ="Manager")] // 매니저만 등록가능
-        [HttpGet]
+        [HttpPost]
         [Route("sign/v1/AddStore")]
-        public async Task<IActionResult> AddStore(StoreDTO dto)
+        public async Task<IActionResult> AddStore([FromBody]StoreDTO dto)
         {
             try
             {
@@ -133,6 +132,84 @@ namespace IpManager.Controllers
             }
         }
 
+        // (도/시) 별 조회 Pc방 List
+        [Authorize(Roles = "Manage,Visitor")]
+        [HttpGet]
+        [Route("sign/v1/GetCountryStoreList")]
+        public async Task<IActionResult> GetCountryStoreList([FromQuery]int countryid)
+        {
+            try
+            {
+                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomCountryListService(countryid);
+                if (model is null)
+                    return BadRequest();
+
+                if (model.code == 200)
+                    return Ok(model);
+                else
+                    return BadRequest();
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+            }
+        }
+
+        // (시/군/구) 별 조회 Pc방 List
+        [Authorize(Roles = "Manage,Visitor")]
+        [HttpGet]
+        [Route("sign/v1/GetCityStoreList")]
+        public async Task<IActionResult> GetCityStoreList([FromQuery]int cityid)
+        {
+            try
+            {
+                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomCityListService(cityid);
+                if (model is null)
+                    return BadRequest();
+
+                if (model.code == 200)
+                    return Ok(model);
+                else
+                    return BadRequest();
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+            }
+        }
+
+
+
+        // (읍/면/동) 별 조회 Pc방 List
+        [Authorize(Roles ="Manage,Visitor")]
+        [HttpGet]
+        [Route("sign/v1/GetTownStoreList")]
+        public async Task<IActionResult> GetTownStoreList([FromQuery]int townid)
+        {
+            try
+            {
+                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomTownListService(townid);
+                if (model is null)
+                    return BadRequest();
+
+                if (model.code == 200)
+                    return Ok(model);
+                else
+                    return BadRequest();
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+            }
+        }
+
+
+        // pc방 이름으로 정보 검색
+        // 주소로 PC방 정보 검색
+
 
         // Update
         [Authorize(Roles = "Manager,Visitor")]
@@ -156,7 +233,7 @@ namespace IpManager.Controllers
         [Authorize(Roles = "Manger,Visitor")]
         [HttpPost]
         [Route("sign/v1/DeleteStore")]
-        public async Task<IActionResult> DeleteStoreInfo( )
+        public async Task<IActionResult> DeleteStoreInfo()
         {
             try
             {

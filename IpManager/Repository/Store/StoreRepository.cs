@@ -3,6 +3,7 @@ using IpManager.DBModel;
 using IpManager.DTO.Store;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging.Abstractions;
 using System.Diagnostics;
 
 namespace IpManager.Repository.Store
@@ -125,7 +126,270 @@ namespace IpManager.Repository.Store
             });
         }
 
+        /// <summary>
+        /// (도/시)별 PC방 리스트 반환
+        /// </summary>
+        /// <param name="countryid"></param>
+        /// <returns></returns>
+        public async Task<List<StoreListDTO>?> GetPcRoomCountryListAsync(int countryid)
+        {
+            try
+            {
+                var result = new List<StoreListDTO>();
 
+                var connection = context.Database.GetDbConnection();
+                if(connection.State != System.Data.ConnectionState.Open)
+                {
+                    await connection.OpenAsync();
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT " +
+                        $"pc.PID as PID," +
+                        $"pc.IP as IP," +
+                        $"pc.PORT as PORT," +
+                        $"pc.NAME as NAME," +
+                        $"pc.ADDR as ADDR," +
+                        $"pc.SEATNUMBER as SEATNUMBER," +
+                        $"pc.PRICE as PRICE," +
+                        $"pc.PRICE_PERCENT as PRICE_PERCENT," +
+                        $"pc.PC_SPEC as PC_SPEC," +
+                        $"pc.TELECOM as TELECOM," +
+                        $"pc.MEMO as MEMO," +
+                        $"pc.CREATE_DT as CREATE_DT," +
+                        $"pc.COUNTRYTB_ID as COUNTRYTB_ID," +
+                        $"pc.CITYTB_ID as CITYTB_ID," +
+                        $"pc.TOWNTB_ID as TOWNTB_ID " +
+                        $"FROM pcroom_tb as pc " +
+                        $"INNER JOIN country_tb as country on pc.COUNTRYTB_ID = country.PID " +
+                        $"INNER JOIN city_Tb as city on PC.CITYTB_ID = city.PID " +
+                        $"INNER JOIN town_tb as town on pc.TOWNTB_ID = town.PID " +
+                        $"WHERE pc.DEL_YN != true " +
+                        $"AND country.DEL_YN != true " +
+                        $"AND city.DEL_YN != true " +
+                        $"AND town.DEL_YN != true " +
+                        $"AND pc.COUNTRYTB_ID = @countryid";
+
+                    var countryParam = command.CreateParameter();
+                    countryParam.ParameterName = "@countryid";
+                    countryParam.Value = countryid;
+
+                    command.Parameters.Add(countryParam);
+
+
+                    using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                    {
+                        while(await reader.ReadAsync())
+                        {
+                            var store = new StoreListDTO
+                            {
+                                Pid = reader.GetInt32(reader.GetOrdinal("PID")),
+                                Ip = reader.GetString(reader.GetOrdinal("IP")),
+                                Port = reader.GetInt32(reader.GetOrdinal("PORT")),
+                                Name = reader.GetString(reader.GetOrdinal("NAME")),
+                                Addr = reader.GetString(reader.GetOrdinal("ADDR")),
+                                SeatNumber = reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
+                                Price = (float)reader.GetDouble(reader.GetOrdinal("PRICE")), // 필요한 경우 형변환 처리
+                                PricePercent = reader["PRICE_PERCENT"] as string,
+                                Pcspec = reader["PC_SPEC"] as string,
+                                Telecom = reader["TELECOM"] as string,
+                                Memo = reader["MEMO"] as string,
+                                CountryTbId = reader.GetInt32(reader.GetOrdinal("COUNTRYTB_ID")),
+                                CityTbId = reader.GetInt32(reader.GetOrdinal("CITYTB_ID")),
+                                TownTbId = reader.GetInt32(reader.GetOrdinal("TOWNTB_ID"))
+                            };
+                            result.Add(store);
+                        }
+                    }
+
+                }
+
+                return result;
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// (시/군/구)별 PC방 리스트 반환
+        /// </summary>
+        /// <param name="cityid"></param>
+        /// <returns></returns>
+        public async Task<List<StoreListDTO>?> GetPcRoomCityListAsync(int cityid)
+        {
+            try
+            {
+                var result = new List<StoreListDTO>();
+
+                var connection = context.Database.GetDbConnection();
+                if (connection.State != System.Data.ConnectionState.Open)
+                {
+                    await connection.OpenAsync();
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT " +
+                        $"pc.PID as PID," +
+                        $"pc.IP as IP," +
+                        $"pc.PORT as PORT," +
+                        $"pc.NAME as NAME," +
+                        $"pc.ADDR as ADDR," +
+                        $"pc.SEATNUMBER as SEATNUMBER," +
+                        $"pc.PRICE as PRICE," +
+                        $"pc.PRICE_PERCENT as PRICE_PERCENT," +
+                        $"pc.PC_SPEC as PC_SPEC," +
+                        $"pc.TELECOM as TELECOM," +
+                        $"pc.MEMO as MEMO," +
+                        $"pc.CREATE_DT as CREATE_DT," +
+                        $"pc.COUNTRYTB_ID as COUNTRYTB_ID," +
+                        $"pc.CITYTB_ID as CITYTB_ID," +
+                        $"pc.TOWNTB_ID as TOWNTB_ID " +
+                        $"FROM pcroom_tb as pc " +
+                        $"INNER JOIN country_tb as country on pc.COUNTRYTB_ID = country.PID " +
+                        $"INNER JOIN city_Tb as city on PC.CITYTB_ID = city.PID " +
+                        $"INNER JOIN town_tb as town on pc.TOWNTB_ID = town.PID " +
+                        $"WHERE pc.DEL_YN != true " +
+                        $"AND country.DEL_YN != true " +
+                        $"AND city.DEL_YN != true " +
+                        $"AND town.DEL_YN != true " +
+                        $"AND pc.CITYTB_ID = @cityid";
+
+                    var countryParam = command.CreateParameter();
+                    countryParam.ParameterName = "@cityid";
+                    countryParam.Value = cityid;
+
+                    command.Parameters.Add(countryParam);
+
+
+                    using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            var store = new StoreListDTO
+                            {
+                                Pid = reader.GetInt32(reader.GetOrdinal("PID")),
+                                Ip = reader.GetString(reader.GetOrdinal("IP")),
+                                Port = reader.GetInt32(reader.GetOrdinal("PORT")),
+                                Name = reader.GetString(reader.GetOrdinal("NAME")),
+                                Addr = reader.GetString(reader.GetOrdinal("ADDR")),
+                                SeatNumber = reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
+                                Price = (float)reader.GetDouble(reader.GetOrdinal("PRICE")), // 필요한 경우 형변환 처리
+                                PricePercent = reader["PRICE_PERCENT"] as string,
+                                Pcspec = reader["PC_SPEC"] as string,
+                                Telecom = reader["TELECOM"] as string,
+                                Memo = reader["MEMO"] as string,
+                                CountryTbId = reader.GetInt32(reader.GetOrdinal("COUNTRYTB_ID")),
+                                CityTbId = reader.GetInt32(reader.GetOrdinal("CITYTB_ID")),
+                                TownTbId = reader.GetInt32(reader.GetOrdinal("TOWNTB_ID"))
+                            };
+                            result.Add(store);
+                        }
+                    }
+
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return null;
+            }
+        }
+
+
+        /// <summary>
+        /// (읍/면/동) 별 PC방 리스트 반환
+        /// </summary>
+        /// <param name="townid"></param>
+        /// <returns></returns>
+        public async Task<List<StoreListDTO>?> GetPcRoomTownListAsync(int townid)
+        {
+            try
+            {
+                var result = new List<StoreListDTO>();
+
+                var connection = context.Database.GetDbConnection();
+                if (connection.State != System.Data.ConnectionState.Open)
+                {
+                    await connection.OpenAsync();
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT " +
+                        $"pc.PID as PID," +
+                        $"pc.IP as IP," +
+                        $"pc.PORT as PORT," +
+                        $"pc.NAME as NAME," +
+                        $"pc.ADDR as ADDR," +
+                        $"pc.SEATNUMBER as SEATNUMBER," +
+                        $"pc.PRICE as PRICE," +
+                        $"pc.PRICE_PERCENT as PRICE_PERCENT," +
+                        $"pc.PC_SPEC as PC_SPEC," +
+                        $"pc.TELECOM as TELECOM," +
+                        $"pc.MEMO as MEMO," +
+                        $"pc.CREATE_DT as CREATE_DT," +
+                        $"pc.COUNTRYTB_ID as COUNTRYTB_ID," +
+                        $"pc.CITYTB_ID as CITYTB_ID," +
+                        $"pc.TOWNTB_ID as TOWNTB_ID " +
+                        $"FROM pcroom_tb as pc " +
+                        $"INNER JOIN country_tb as country on pc.COUNTRYTB_ID = country.PID " +
+                        $"INNER JOIN city_Tb as city on PC.CITYTB_ID = city.PID " +
+                        $"INNER JOIN town_tb as town on pc.TOWNTB_ID = town.PID " +
+                        $"WHERE pc.DEL_YN != true " +
+                        $"AND country.DEL_YN != true " +
+                        $"AND city.DEL_YN != true " +
+                        $"AND town.DEL_YN != true " +
+                        $"AND pc.TOWNTB_ID = @townid";
+
+                    var countryParam = command.CreateParameter();
+                    countryParam.ParameterName = "@townid";
+                    countryParam.Value = townid;
+
+                    command.Parameters.Add(countryParam);
+
+
+                    using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            var store = new StoreListDTO
+                            {
+                                Pid = reader.GetInt32(reader.GetOrdinal("PID")),
+                                Ip = reader.GetString(reader.GetOrdinal("IP")),
+                                Port = reader.GetInt32(reader.GetOrdinal("PORT")),
+                                Name = reader.GetString(reader.GetOrdinal("NAME")),
+                                Addr = reader.GetString(reader.GetOrdinal("ADDR")),
+                                SeatNumber = reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
+                                Price = (float)reader.GetDouble(reader.GetOrdinal("PRICE")), // 필요한 경우 형변환 처리
+                                PricePercent = reader["PRICE_PERCENT"] as string,
+                                Pcspec = reader["PC_SPEC"] as string,
+                                Telecom = reader["TELECOM"] as string,
+                                Memo = reader["MEMO"] as string,
+                                CountryTbId = reader.GetInt32(reader.GetOrdinal("COUNTRYTB_ID")),
+                                CityTbId = reader.GetInt32(reader.GetOrdinal("CITYTB_ID")),
+                                TownTbId = reader.GetInt32(reader.GetOrdinal("TOWNTB_ID"))
+                            };
+                            result.Add(store);
+                        }
+                    }
+
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return null;
+            }
+        }
 
         /// <summary>
         /// PC방 정보 상세보기
@@ -166,7 +430,11 @@ namespace IpManager.Repository.Store
                         $"INNER JOIN country_tb as country on pc.COUNTRYTB_ID = country.PID " +
                         $"INNER JOIN city_tb as city on pc.CITYTB_ID = city.PID " +
                         $"INNER JOIN town_tb as town on pc.TOWNTB_ID = town.PID " +
-                        $"WHERE pc.PID = @pid";
+                        $"WHERE pc.PID = @pid " +
+                        $"AND pc.DEL_YN != true " +
+                        $"AND country.DEL_YN != true " +
+                        $"AND city.DEL_YN != true " +
+                        $"AND town.DEL_YN != true";
 
                     var pidparam = command.CreateParameter();
                     pidparam.ParameterName = "@pid";
@@ -268,6 +536,10 @@ namespace IpManager.Repository.Store
                             $"INNER JOIN country_tb as country on pc.COUNTRYTB_ID = country.PID " +
                             $"INNER JOIN city_tb as city on pc.CITYTB_ID = city.PID " +
                             $"INNER JOIN town_tb as town on pc.TOWNTB_ID = town.PID " +
+                            $"WHERE pc.DEL_YN != true " +
+                            $"AND country.DEL_YN != true " +
+                            $"AND city.DEL_YN != true " +
+                            $"AND town.DEL_YN != true " +
                             $"ORDER BY pc.PID ASC " +
                             $"LIMIT @pageIndex " +
                             $"OFFSET @offset";
@@ -311,6 +583,10 @@ namespace IpManager.Repository.Store
                             $"INNER JOIN city_tb as city on pc.CITYTB_ID = city.PID " +
                             $"INNER JOIN town_tb as town on pc.TOWNTB_ID = town.PID " +
                             $"WHERE pc.NAME LIKE @search " +
+                            $"AND pc.DEL_YN != true " +
+                            $"AND country.DEL_YN != true " +
+                            $"AND city.DEL_YN != true " +
+                            $"AND town.DEL_YN != true " +
                             $"ORDER BY pc.PID ASC " +
                             $"LIMIT @pageIndex " +
                             $"OFFSET @offset";
@@ -439,5 +715,6 @@ namespace IpManager.Repository.Store
             }
         }
 
+       
     }
 }

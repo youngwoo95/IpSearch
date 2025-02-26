@@ -24,6 +24,27 @@ namespace IpManager.Services.Store
         /// <returns></returns>
         public Task<ResponseList<StoreRegionDTO>?> GetPcRoomRegionListService();
 
+        /// <summary>
+        /// (도/시)별 PC방 리스트 반환
+        /// </summary>
+        /// <param name="countryid"></param>
+        /// <returns></returns>
+        public Task<ResponseList<StoreListDTO>?> GetPcRoomCountryListService(int countryid);
+
+        /// <summary>
+        /// (시/군/구)별 PC방 리스트 반환
+        /// </summary>
+        /// <param name="cityid"></param>
+        /// <returns></returns>
+        public Task<ResponseList<StoreListDTO>?> GetPcRoomCityListService(int cityid);
+
+        /// <summary>
+        /// (읍/면/동)별 PC방 리스트 반환
+        /// </summary>
+        /// <param name="townid"></param>
+        /// <returns></returns>
+        public Task<ResponseList<StoreListDTO>?> GetPcRoomTownListService(int townid);
+            
 
         /// <summary>
         /// PC방 정보 상세조회
