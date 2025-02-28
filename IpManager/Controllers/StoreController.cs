@@ -146,7 +146,7 @@ namespace IpManager.Controllers
         {
             try
             {
-                ResponseList<StoreRegionDTO>? model = await StoreService.GetPcRoomRegionListService();
+                ResponseList<StoreRegionDTO>? model = await StoreService.GetPcRoomRegionListService().ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
                 if (model.code == 200)
@@ -173,7 +173,7 @@ namespace IpManager.Controllers
         {
             try
             {
-                ResponseUnit<StoreDetailDTO>? model = await StoreService.GetPCRoomDetailService(pid);
+                ResponseUnit<StoreDetailDTO>? model = await StoreService.GetPCRoomDetailService(pid).ConfigureAwait(false);
                 
                 if (model is null)
                     return BadRequest();
@@ -197,7 +197,7 @@ namespace IpManager.Controllers
         {
             try
             {
-                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomCountryListService(countryid);
+                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomCountryListService(countryid).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
 
@@ -221,7 +221,7 @@ namespace IpManager.Controllers
         {
             try
             {
-                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomCityListService(cityid);
+                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomCityListService(cityid).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
 
@@ -247,7 +247,7 @@ namespace IpManager.Controllers
         {
             try
             {
-                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomTownListService(townid);
+                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomTownListService(townid).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
 
@@ -273,7 +273,7 @@ namespace IpManager.Controllers
         {
             try
             {
-                ResponseUnit<bool> model = await StoreService.UpdateStoreService(dto);
+                ResponseUnit<bool> model = await StoreService.UpdateStoreService(dto).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
 
@@ -298,7 +298,7 @@ namespace IpManager.Controllers
         {
             try
             {
-                ResponseUnit<bool> model = await StoreService.DeleteStoreService(pid);
+                ResponseUnit<bool> model = await StoreService.DeleteStoreService(pid).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
 

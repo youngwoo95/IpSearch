@@ -193,7 +193,7 @@ namespace IpManager.Services.Store
         {
             try
             {
-                var RegionList = await StoreRepository.GetPcRoomRegionCountAsync();
+                var RegionList = await StoreRepository.GetPcRoomRegionCountAsync().ConfigureAwait(false);
                 if (RegionList is null)
                     return new ResponseList<StoreRegionDTO>() { message = "데이터가 존재하지 않습니다.", data = null, code = 200 };
                 else
@@ -348,7 +348,7 @@ namespace IpManager.Services.Store
                 if (pid == 0)
                     return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, code = 200 };
 
-                var PcroomTB = await StoreRepository.GetPcRoomInfoTB(pid);
+                var PcroomTB = await StoreRepository.GetPcRoomInfoTB(pid).ConfigureAwait(false);
                 if (PcroomTB is null)
                     return new ResponseUnit<bool>() { message = "해당 아이디가 존재하지 않습니다.", data = false, code = 200 };
 
@@ -356,7 +356,7 @@ namespace IpManager.Services.Store
                 PcroomTB.DelYn = true;
                 PcroomTB.DeleteDt = DateTime.Now;
 
-                int result = await StoreRepository.DeletePcRoomInfo(PcroomTB);
+                int result = await StoreRepository.DeletePcRoomInfo(PcroomTB).ConfigureAwait(false);
                 if (result != -1)
                     return new ResponseUnit<bool>() { message = "수정이 완료되었습니다.", data = true, code = 200 };
                 else

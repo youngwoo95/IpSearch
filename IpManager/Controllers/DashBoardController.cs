@@ -31,7 +31,7 @@ namespace IpManager.Controllers
         {
             try
             {
-                ResponseUnit<AnalysisDataDTO>? model = await DashBoardService.GetThisTimeDataService();
+                ResponseUnit<AnalysisDataDTO>? model = await DashBoardService.GetThisTimeDataService().ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
                 if (model.code == 200)
@@ -53,13 +53,15 @@ namespace IpManager.Controllers
         [Authorize(Roles = "Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetTodayDataList")]
-        public async Task<IActionResult> GetTodayDataList()
+        public async Task<IActionResult> GetTodayDataList([FromQuery] DateTime Target)
+        //public async Task<IActionResult> GetTodayDataList([FromQuery]DateTime Target)
         {
             try
             {
-                DateTime Target = DateTime.Now.AddDays(-1); // FromQuery절로 올라가야함.
+                //DateTime Target = DateTime.Now; // FromQuery절로 올라가야함.
+                //DateTime Target = DateTime.Now.AddDays(-1); // FromQuery절로 올라가야함.
 
-                ResponseUnit<AnalysisDataDTO>? model = await DashBoardService.GetTodayDataService(Target);
+                ResponseUnit<AnalysisDataDTO>? model = await DashBoardService.GetTodayDataService(Target).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
                 
@@ -82,11 +84,22 @@ namespace IpManager.Controllers
         [Authorize(Roles ="Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetWeeksDataList")]
-        public async Task<IActionResult> GetWeeksDataList()
+        public async Task<IActionResult> GetWeeksDataList([FromQuery] DateTime Target)
+        //public async Task<IActionResult> GetWeeksDataList([FromQuery] DateTime Target)
         {
             try
             {
-                return Ok();
+                //DateTime Target = DateTime.Now.AddDays(-1);
+                //DateTime Target = DateTime.Now;
+
+                ResponseUnit<AnalysisDataDTO>? model = await DashBoardService.GetWeeksDataService(Target).ConfigureAwait(false);
+                if (model is null)
+                    return BadRequest();
+
+                if (model.code == 200)
+                    return Ok(model);
+                else
+                    return BadRequest();
             }
             catch(Exception ex)
             {
@@ -99,11 +112,21 @@ namespace IpManager.Controllers
         [Authorize(Roles ="Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetMonthDataList")]
-        public async Task<IActionResult> GetMonthDataList()
+        public async Task<IActionResult> GetMonthDataList([FromQuery] DateTime Target)
         {
             try
             {
-                return Ok();
+                //DateTime Target = DateTime.Now.AddDays(-1);
+                //DateTime Target = DateTime.Now;
+
+                ResponseUnit<AnalysisDataDTO>? model = await DashBoardService.GetMonthDataService(Target).ConfigureAwait(false);
+                if (model is null)
+                    return BadRequest();
+
+                if (model.code == 200)
+                    return Ok(model);
+                else
+                    return BadRequest();
             }
             catch(Exception ex)
             {
@@ -116,11 +139,20 @@ namespace IpManager.Controllers
         [Authorize(Roles ="Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetYearDataList")]
-        public async Task<IActionResult> GetYearDataList()
+        public async Task<IActionResult> GetYearDataList([FromQuery] DateTime Target)
         {
             try
             {
-                return Ok();
+                //DateTime Target = DateTime.Now;
+
+                ResponseUnit<AnalysisDataDTO>? model = await DashBoardService.GetYearDataService(Target).ConfigureAwait(false);
+                if (model is null)
+                    return BadRequest();
+
+                if (model.code == 200)
+                    return Ok(model);
+                else
+                    return BadRequest();
             }
             catch(Exception ex)
             {

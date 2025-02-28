@@ -88,7 +88,7 @@ namespace IpManager.Controllers
         {
             try
             {
-                ResponseUnit<TokenDTO>? model = await LoginService.AccessTokenService(logininfo);
+                ResponseUnit<TokenDTO>? model = await LoginService.AccessTokenService(logininfo).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
 
@@ -121,7 +121,7 @@ namespace IpManager.Controllers
                 if (pagenumber == 0)
                     return BadRequest();
 
-                ResponseList<UserListDTO>? model = await LoginService.GetUserListService(15, pagenumber - 1);
+                ResponseList<UserListDTO>? model = await LoginService.GetUserListService(15, pagenumber - 1).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
 
@@ -148,7 +148,7 @@ namespace IpManager.Controllers
         {
             try
             { 
-                ResponseUnit<bool> model = await LoginService.UpdateUserService(dto);
+                ResponseUnit<bool> model = await LoginService.UpdateUserService(dto).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
 
@@ -175,7 +175,7 @@ namespace IpManager.Controllers
         {
             try
             {
-                ResponseUnit<bool> model = await LoginService.DeleteUserService(pid);
+                ResponseUnit<bool> model = await LoginService.DeleteUserService(pid).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
 

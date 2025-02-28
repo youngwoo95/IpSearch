@@ -50,11 +50,11 @@ namespace IpManager.Services.Login
                 }
 
                 // 사용허가 검사
-                int LoginPermission = await UserRepository.GetLoginPermission(dto.LoginID);
+                int LoginPermission = await UserRepository.GetLoginPermission(dto.LoginID).ConfigureAwait(false);
                 if (LoginPermission < 1)
                     return new ResponseUnit<TokenDTO>() { message = "승인되지 않은 아이디입니다.", data = null, code = 200 };
 
-                LoginTb? model = await UserRepository.GetLoginAsync(dto.LoginID, dto.LoginPW);
+                LoginTb? model = await UserRepository.GetLoginAsync(dto.LoginID, dto.LoginPW).ConfigureAwait(false);
                 if(model is null)
                     return new ResponseUnit<TokenDTO>() { message = "해당 아이디가 존재하지 않습니다.", data = null, code = 200};
 
@@ -331,7 +331,7 @@ namespace IpManager.Services.Login
         {
             try
             {
-                var model = await UserRepository.GetUserListAsync(pageIndex, pageSize);
+                var model = await UserRepository.GetUserListAsync(pageIndex, pageSize).ConfigureAwait(false);
                 if (model is null)
                     return new ResponseList<UserListDTO>() { message = "조회된 데이터가 없습니다.", data = null, code = 200 };
 
@@ -374,7 +374,7 @@ namespace IpManager.Services.Login
                 if (dto.PWD is null)
                     return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, code = 200 };
 
-                var UserModelCheck = await UserRepository.GetUserInfoAsyncById(dto.PID);
+                var UserModelCheck = await UserRepository.GetUserInfoAsyncById(dto.PID).ConfigureAwait(false);
                 if (UserModelCheck is null)
                     return new ResponseUnit<bool>() { message = "해당 아이디가 존재하지 않습니다.", data = false, code = 200 };
 
@@ -387,7 +387,7 @@ namespace IpManager.Services.Login
                 UserModelCheck.UseYn = dto.UseYN;
                 UserModelCheck.UpdateDt = DateTime.Now;
               
-                int result = await UserRepository.EditUserAsync(UserModelCheck);
+                int result = await UserRepository.EditUserAsync(UserModelCheck).ConfigureAwait(false);
                 if (result != -1)
                     return new ResponseUnit<bool>() { message = "수정이 완료되었습니다.", data = true, code = 200 };
                 else
@@ -412,7 +412,7 @@ namespace IpManager.Services.Login
                 if(pid == 0)
                     return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, code = 200 };
 
-                var UserModelCheck = await UserRepository.GetUserInfoAsyncById(pid);
+                var UserModelCheck = await UserRepository.GetUserInfoAsyncById(pid).ConfigureAwait(false);
                 if (UserModelCheck is null)
                     return new ResponseUnit<bool>() { message = "해당 아이디가 존재하지 않습니다.", data = false, code = 200 };
 
@@ -420,7 +420,7 @@ namespace IpManager.Services.Login
                 UserModelCheck.DelYn = true;
                 UserModelCheck.DeleteDt = DateTime.Now;
 
-                int result = await UserRepository.DeleteUserAsync(UserModelCheck);
+                int result = await UserRepository.DeleteUserAsync(UserModelCheck).ConfigureAwait(false);
                 if (result != -1)
                     return new ResponseUnit<bool>() { message = "수정이 완료되었습니다.", data = true, code = 200 };
                 else

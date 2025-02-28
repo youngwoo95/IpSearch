@@ -128,13 +128,16 @@ namespace IpManager.Repository.DashBoard
         {
             try
             {
+                // 오늘날짜는 조회안됨.
+                DateTime Today = DateTime.Today; // 오늘 날짜 (00:00:00 기준)
 
                 // 1. 해당 날짜의 PinglogTbs 데이터를 가져옴
                 var data = await context.PinglogTbs
                     .Where(m => m.DelYn != true &&
                                 m.CreateDt.Value.Year == TargetDate.Year &&
                                 m.CreateDt.Value.Month == TargetDate.Month &&
-                                m.CreateDt.Value.Date == TargetDate.Date)
+                                m.CreateDt.Value.Day == TargetDate.Day &&
+                                m.CreateDt.Value.Date != Today)
                     .ToListAsync();
 
                 // 2. 30분 단위로 그룹핑하면서 각 그룹별 UsedPc 합계 계산
@@ -218,9 +221,94 @@ namespace IpManager.Repository.DashBoard
         /// <param name="TargetDate"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public Task<AnalysisDataDTO?> GetWeeksDataAnalysis(DateTime TargetDate)
+        public async Task<AnalysisDataDTO?> GetWeeksDataAnalysis(DateTime StartDate, DateTime EndDate)
         {
-            throw new NotImplementedException();
+            try
+            {
+                DateTime Today = DateTime.Today; // 오늘 날짜 (00:00:00 기준)
+
+                // 1. 해당 날짜의 PinglogTbs 데이터를 가져옴
+                var data = await context.PinglogTbs
+                    .Where(m => m.DelYn != true &&
+                                m.CreateDt.Value >= StartDate &&
+                                m.CreateDt.Value <= EndDate && 
+                                m.CreateDt.Value.Date != Today) // 시간 부분을 제거한 날짜 (년,월,일)을 반환하기때문에 Date만 비교를 하면됨.
+                    .ToListAsync();
+
+                // 2. 30분 단위로 그룹핑하면서 각 그룹별 UsedPc 합계 계산
+                var groupedData = data
+                    .GroupBy(m => new
+                    {
+                        PcroomId = m.PcroomtbId, // PC룸과 연관된 외래키
+                        GroupTime = new DateTime(
+                            m.CreateDt.Value.Year,
+                            m.CreateDt.Value.Month,
+                            m.CreateDt.Value.Day,
+                            m.CreateDt.Value.Hour,
+                            (m.CreateDt.Value.Minute / 30) * 30,
+                            0)
+                    })
+                    .Select(g => new
+                    {
+                        PcroomId = g.Key.PcroomId,
+                        GroupTime = g.Key.GroupTime,
+                        SumUsedPc = g.Sum(x => x.UsedPc)  // 해당 그룹의 UsedPc 합계
+                    })
+                    .ToList();
+
+                // 3. PC룸별로 모든 그룹의 UsedPc 합계를 다시 계산
+                var groupedSumByRoom = groupedData
+                    .GroupBy(x => x.PcroomId)
+                    .Select(g => new
+                    {
+                        PcroomId = g.Key,
+                        TotalUsedPc = g.Sum(x => x.SumUsedPc)
+                    })
+                    .ToList();
+
+                // 4. PC룸 정보와 왼쪽 조인 (해당 날짜의 로그가 없는 PC룸도 포함)
+                var pcroomtb = await context.PcroomTbs
+                    .Where(m => m.DelYn != true)
+                    .ToListAsync();
+
+                var finalResult = from room in pcroomtb
+                                  join gs in groupedSumByRoom
+                                      on room.Pid equals gs.PcroomId into gsJoin
+                                  from gs in gsJoin.DefaultIfEmpty()
+                                  select new
+                                  {
+                                      Pcroom = room,
+                                      TotalUsedPc = gs != null ? gs.TotalUsedPc : 0
+                                  };
+
+                List<ResultData> resultData = new List<ResultData>();
+                foreach (var analysis in finalResult)
+                {
+                    var item = new ResultData();
+                    item.PcRoomName = analysis.Pcroom.Name; // PC방 상호
+                    item.TotalCount = analysis.Pcroom.Seatnumber.Value; // 총대수
+                    item.Count = analysis.TotalUsedPc; // 선택된 날짜의 사용PC대수
+                    item.Rate = ((float)item.Count / item.TotalCount) * 100;
+                    item.ReturnRate = $"{item.Count}/{item.TotalCount} ({((double)item.Count / item.TotalCount) * 100:F2}%)";
+
+                    // 가동률 계산해야함.
+                    resultData.Add(item);
+                }
+
+                var best = resultData.OrderByDescending(m => m.Rate).FirstOrDefault();
+                AnalysisDataDTO AnalysisData = new AnalysisDataDTO();
+                AnalysisData.BestName = best.PcRoomName; // 가장높은 매장명
+                AnalysisData.AnalysisDate = DateTime.Now;
+                AnalysisData.Datas = resultData;
+
+
+                return AnalysisData;
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return null;
+            }
         }
 
         /// <summary>
@@ -229,9 +317,94 @@ namespace IpManager.Repository.DashBoard
         /// <param name="TargetDate"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public Task<AnalysisDataDTO?> GetMonthDataAnalysis(DateTime TargetDate)
+        public async Task<AnalysisDataDTO?> GetMonthDataAnalysis(DateTime StartDate, DateTime EndDate)
         {
-            throw new NotImplementedException();
+            try
+            {
+                DateTime Today = DateTime.Today; // 오늘 날짜 (00:00:00 기준)
+
+                // 1. 해당 날짜의 PinglogTbs 데이터를 가져옴
+                var data = await context.PinglogTbs
+                    .Where(m => m.DelYn != true &&
+                                m.CreateDt.Value >= StartDate &&
+                                m.CreateDt.Value <= EndDate &&
+                                 m.CreateDt.Value.Date != Today)
+                    .ToListAsync();
+
+                // 2. 30분 단위로 그룹핑하면서 각 그룹별 UsedPc 합계 계산
+                var groupedData = data
+                    .GroupBy(m => new
+                    {
+                        PcroomId = m.PcroomtbId, // PC룸과 연관된 외래키
+                        GroupTime = new DateTime(
+                            m.CreateDt.Value.Year,
+                            m.CreateDt.Value.Month,
+                            m.CreateDt.Value.Day,
+                            m.CreateDt.Value.Hour,
+                            (m.CreateDt.Value.Minute / 30) * 30,
+                            0)
+                    })
+                    .Select(g => new
+                    {
+                        PcroomId = g.Key.PcroomId,
+                        GroupTime = g.Key.GroupTime,
+                        SumUsedPc = g.Sum(x => x.UsedPc)  // 해당 그룹의 UsedPc 합계
+                    })
+                    .ToList();
+
+                // 3. PC룸별로 모든 그룹의 UsedPc 합계를 다시 계산
+                var groupedSumByRoom = groupedData
+                    .GroupBy(x => x.PcroomId)
+                    .Select(g => new
+                    {
+                        PcroomId = g.Key,
+                        TotalUsedPc = g.Sum(x => x.SumUsedPc)
+                    })
+                    .ToList();
+
+                // 4. PC룸 정보와 왼쪽 조인 (해당 날짜의 로그가 없는 PC룸도 포함)
+                var pcroomtb = await context.PcroomTbs
+                    .Where(m => m.DelYn != true)
+                    .ToListAsync();
+
+                var finalResult = from room in pcroomtb
+                                  join gs in groupedSumByRoom
+                                      on room.Pid equals gs.PcroomId into gsJoin
+                                  from gs in gsJoin.DefaultIfEmpty()
+                                  select new
+                                  {
+                                      Pcroom = room,
+                                      TotalUsedPc = gs != null ? gs.TotalUsedPc : 0
+                                  };
+
+                List<ResultData> resultData = new List<ResultData>();
+                foreach (var analysis in finalResult)
+                {
+                    var item = new ResultData();
+                    item.PcRoomName = analysis.Pcroom.Name; // PC방 상호
+                    item.TotalCount = analysis.Pcroom.Seatnumber.Value; // 총대수
+                    item.Count = analysis.TotalUsedPc; // 선택된 날짜의 사용PC대수
+                    item.Rate = ((float)item.Count / item.TotalCount) * 100;
+                    item.ReturnRate = $"{item.Count}/{item.TotalCount} ({((double)item.Count / item.TotalCount) * 100:F2}%)";
+
+                    // 가동률 계산해야함.
+                    resultData.Add(item);
+                }
+
+                var best = resultData.OrderByDescending(m => m.Rate).FirstOrDefault();
+                AnalysisDataDTO AnalysisData = new AnalysisDataDTO();
+                AnalysisData.BestName = best.PcRoomName; // 가장높은 매장명
+                AnalysisData.AnalysisDate = DateTime.Now;
+                AnalysisData.Datas = resultData;
+
+
+                return AnalysisData;
+            }
+            catch (Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return null;
+            }
         }
 
         /// <summary>
@@ -240,9 +413,94 @@ namespace IpManager.Repository.DashBoard
         /// <param name="TargetDate"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public Task<AnalysisDataDTO?> GetYearDataAnalysis(DateTime TargetDate)
+        public async Task<AnalysisDataDTO?> GetYearDataAnalysis(DateTime StartDate, DateTime EndDate)
         {
-            throw new NotImplementedException();
+            try
+            {
+                DateTime Today = DateTime.Today; // 오늘 날짜 (00:00:00 기준)
+
+                // 1. 해당 날짜의 PinglogTbs 데이터를 가져옴
+                var data = await context.PinglogTbs
+                    .Where(m => m.DelYn != true &&
+                                m.CreateDt.Value >= StartDate &&
+                                m.CreateDt.Value <= EndDate &&
+                                 m.CreateDt.Value.Date != Today)
+                    .ToListAsync();
+
+                // 2. 30분 단위로 그룹핑하면서 각 그룹별 UsedPc 합계 계산
+                var groupedData = data
+                    .GroupBy(m => new
+                    {
+                        PcroomId = m.PcroomtbId, // PC룸과 연관된 외래키
+                        GroupTime = new DateTime(
+                            m.CreateDt.Value.Year,
+                            m.CreateDt.Value.Month,
+                            m.CreateDt.Value.Day,
+                            m.CreateDt.Value.Hour,
+                            (m.CreateDt.Value.Minute / 30) * 30,
+                            0)
+                    })
+                    .Select(g => new
+                    {
+                        PcroomId = g.Key.PcroomId,
+                        GroupTime = g.Key.GroupTime,
+                        SumUsedPc = g.Sum(x => x.UsedPc)  // 해당 그룹의 UsedPc 합계
+                    })
+                    .ToList();
+
+                // 3. PC룸별로 모든 그룹의 UsedPc 합계를 다시 계산
+                var groupedSumByRoom = groupedData
+                    .GroupBy(x => x.PcroomId)
+                    .Select(g => new
+                    {
+                        PcroomId = g.Key,
+                        TotalUsedPc = g.Sum(x => x.SumUsedPc)
+                    })
+                    .ToList();
+
+                // 4. PC룸 정보와 왼쪽 조인 (해당 날짜의 로그가 없는 PC룸도 포함)
+                var pcroomtb = await context.PcroomTbs
+                    .Where(m => m.DelYn != true)
+                    .ToListAsync();
+
+                var finalResult = from room in pcroomtb
+                                  join gs in groupedSumByRoom
+                                      on room.Pid equals gs.PcroomId into gsJoin
+                                  from gs in gsJoin.DefaultIfEmpty()
+                                  select new
+                                  {
+                                      Pcroom = room,
+                                      TotalUsedPc = gs != null ? gs.TotalUsedPc : 0
+                                  };
+
+                List<ResultData> resultData = new List<ResultData>();
+                foreach (var analysis in finalResult)
+                {
+                    var item = new ResultData();
+                    item.PcRoomName = analysis.Pcroom.Name; // PC방 상호
+                    item.TotalCount = analysis.Pcroom.Seatnumber.Value; // 총대수
+                    item.Count = analysis.TotalUsedPc; // 선택된 날짜의 사용PC대수
+                    item.Rate = ((float)item.Count / item.TotalCount) * 100;
+                    item.ReturnRate = $"{item.Count}/{item.TotalCount} ({((double)item.Count / item.TotalCount) * 100:F2}%)";
+
+                    // 가동률 계산해야함.
+                    resultData.Add(item);
+                }
+
+                var best = resultData.OrderByDescending(m => m.Rate).FirstOrDefault();
+                AnalysisDataDTO AnalysisData = new AnalysisDataDTO();
+                AnalysisData.BestName = best.PcRoomName; // 가장높은 매장명
+                AnalysisData.AnalysisDate = DateTime.Now;
+                AnalysisData.Datas = resultData;
+
+
+                return AnalysisData;
+            }
+            catch (Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return null;
+            }
         }
     }
 }

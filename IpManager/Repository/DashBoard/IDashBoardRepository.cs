@@ -23,21 +23,21 @@ namespace IpManager.Repository.DashBoard
         /// </summary>
         /// <param name="TargetDate"></param>
         /// <returns></returns>
-        public Task<AnalysisDataDTO?> GetWeeksDataAnalysis(DateTime TargetDate);
+        public Task<AnalysisDataDTO?> GetWeeksDataAnalysis(DateTime StartDate, DateTime EndDate);
 
         /// <summary>
         /// 월간 데이터 조회
         /// </summary>
         /// <param name="TargetDate"></param>
         /// <returns></returns>
-        public Task<AnalysisDataDTO?> GetMonthDataAnalysis(DateTime TargetDate);
+        public Task<AnalysisDataDTO?> GetMonthDataAnalysis(DateTime StartDate, DateTime EndDate);
 
         /// <summary>
         /// 년간 데이터 조회
         /// </summary>
         /// <param name="TargetDate"></param>
         /// <returns></returns>
-        public Task<AnalysisDataDTO?> GetYearDataAnalysis(DateTime TargetDate);
+        public Task<AnalysisDataDTO?> GetYearDataAnalysis(DateTime StartDate, DateTime EndDate);
 
     }
 }
