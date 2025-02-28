@@ -3,7 +3,6 @@ using IpManager.DBModel;
 using IpManager.DTO.Store;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.Extensions.Logging.Abstractions;
 using System.Diagnostics;
 
 namespace IpManager.Repository.Store
@@ -20,6 +19,8 @@ namespace IpManager.Repository.Store
             this.LoggerService = _loggerservice;
         }
 
+#region 추가
+        
         public async Task<int> AddPCRoomAsync(PcroomTb PcroomTB, CountryTb CountryTB, CityTb CityTB, TownTb TownTB)
         {
             IExecutionStrategy strategy = context.Database.CreateExecutionStrategy();
@@ -125,7 +126,10 @@ namespace IpManager.Repository.Store
                 }
             });
         }
+        #endregion
 
+        #region 조회
+        
         /// <summary>
         /// (도/시)별 PC방 리스트 반환
         /// </summary>
@@ -396,7 +400,7 @@ namespace IpManager.Repository.Store
         /// </summary>
         /// <param name="pid"></param>
         /// <returns></returns>
-        public async Task<StoreDetailDTO?> GetPcRoomInfo(int pid)
+        public async Task<StoreDetailDTO?> GetPcRoomInfoDTO(int pid)
         {
             try
             {
@@ -481,6 +485,78 @@ namespace IpManager.Repository.Store
         }
 
         /// <summary>
+        /// PC방 테이블 조회
+        /// </summary>
+        /// <param name="pid"></param>
+        /// <returns></returns>
+        public async Task<PcroomTb?> GetPcRoomInfoTB(int pid)
+        {
+            try
+            {
+                var connection = context.Database.GetDbConnection();
+                if(connection.State != System.Data.ConnectionState.Open)
+                {
+                    await connection.OpenAsync();
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT * FROM pcroom_Tb WHERE PID = @pid AND DEL_YN != true";
+                    var parameter = command.CreateParameter();
+                    parameter.ParameterName = "@pid";
+                    parameter.Value = pid;
+                    command.Parameters.Add(parameter);
+
+                    using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                    {
+                        if(await reader.ReadAsync())
+                        {
+                            var pcroominfo = new PcroomTb
+                            {
+                                Pid = reader.IsDBNull(reader.GetOrdinal("PID")) ? 0 : reader.GetInt32(reader.GetOrdinal("PID")),
+                                Ip = reader.IsDBNull(reader.GetOrdinal("IP")) ? string.Empty : reader.GetString(reader.GetOrdinal("IP")),
+                                Port = reader.IsDBNull(reader.GetOrdinal("PORT")) ? 0 : reader.GetInt32(reader.GetOrdinal("PORT")),
+                                Name = reader.IsDBNull(reader.GetOrdinal("NAME")) ? string.Empty : reader.GetString(reader.GetOrdinal("NAME")),
+                                Addr = reader.IsDBNull(reader.GetOrdinal("ADDR")) ? string.Empty : reader.GetString(reader.GetOrdinal("ADDR")),
+                                Seatnumber = reader.IsDBNull(reader.GetOrdinal("SEATNUMBER")) ? 0 : reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
+                                Price = reader.IsDBNull(reader.GetOrdinal("PRICE")) ? 0 : reader.GetFloat(reader.GetOrdinal("PRICE")),
+                                PricePercent = reader.IsDBNull(reader.GetOrdinal("PRICE_PERCENT")) ? string.Empty : reader.GetString(reader.GetOrdinal("PRICE_PERCENT")),
+                                PcSpec = reader.IsDBNull(reader.GetOrdinal("PC_SPEC")) ? string.Empty : reader.GetString(reader.GetOrdinal("PC_SPEC")),
+                                Telecom = reader.IsDBNull(reader.GetOrdinal("TELECOM")) ? string.Empty : reader.GetString(reader.GetOrdinal("TELECOM")),
+                                Memo = reader.IsDBNull(reader.GetOrdinal("MEMO")) ? string.Empty : reader.GetString(reader.GetOrdinal("MEMO")),
+                                CreateDt = reader.IsDBNull(reader.GetOrdinal("CREATE_DT"))
+                                            ? DateTime.MinValue
+                                            : reader.GetDateTime(reader.GetOrdinal("CREATE_DT")),
+                                UpdateDt = reader.IsDBNull(reader.GetOrdinal("UPDATE_DT"))
+                                            ? DateTime.MinValue
+                                            : reader.GetDateTime(reader.GetOrdinal("UPDATE_DT")),
+                                DelYn = reader.IsDBNull(reader.GetOrdinal("DEL_YN"))
+                                        ? false
+                                        : reader.GetBoolean(reader.GetOrdinal("DEL_YN")),
+                                DeleteDt = reader.IsDBNull(reader.GetOrdinal("DELETE_DT"))
+                                            ? DateTime.MinValue
+                                            : reader.GetDateTime(reader.GetOrdinal("DELETE_DT")),
+                                CountrytbId = reader.IsDBNull(reader.GetOrdinal("COUNTRYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("COUNTRYTB_ID")),
+                                CitytbId = reader.IsDBNull(reader.GetOrdinal("CITYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("CITYTB_ID")),
+                                TowntbId = reader.IsDBNull(reader.GetOrdinal("TOWNTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("TOWNTB_ID"))
+
+                            };
+
+                            return pcroominfo;
+                        }
+                    }
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return null;
+            }
+        }
+
+        /// <summary>
         /// PC방 리스트 반환
         /// </summary>
         /// <param name="search"></param>
@@ -540,7 +616,7 @@ namespace IpManager.Repository.Store
                             $"AND country.DEL_YN != true " +
                             $"AND city.DEL_YN != true " +
                             $"AND town.DEL_YN != true " +
-                            $"ORDER BY pc.PID ASC " +
+                            $"ORDER BY pc.NAME ASC " +
                             $"LIMIT @pageIndex " +
                             $"OFFSET @offset";
 
@@ -587,7 +663,7 @@ namespace IpManager.Repository.Store
                             $"AND country.DEL_YN != true " +
                             $"AND city.DEL_YN != true " +
                             $"AND town.DEL_YN != true " +
-                            $"ORDER BY pc.PID ASC " +
+                            $"ORDER BY pc.NAME ASC " +
                             $"LIMIT @pageIndex " +
                             $"OFFSET @offset";
                             
@@ -715,6 +791,239 @@ namespace IpManager.Repository.Store
             }
         }
 
-       
+        /// <summary>
+        /// PC방 이름으로 검색
+        /// </summary>
+        /// <param name="search"></param>
+        /// <returns></returns>
+        public async Task<List<StoreListDTO>?> GetPcRoomSearchNameListAsync(string search)
+        {
+            try
+            {
+                var connection = context.Database.GetDbConnection();
+                if(connection.State != System.Data.ConnectionState.Open)
+                {
+                    await connection.OpenAsync();
+                }
+                var result = new List<StoreListDTO>();
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT " +
+                        $"pc.PID as PID," +
+                        $"pc.IP as IP," +
+                        $"pc.PORT as PORT," +
+                        $"pc.NAME as NAME," +
+                        $"pc.ADDR as ADDR," +
+                        $"pc.SEATNUMBER as SEATNUMBER," +
+                        $"pc.PRICE as PRICE," +
+                        $"pc.PRICE_PERCENT as PRICE_PERCENT," +
+                        $"pc.PC_SPEC as PC_SPEC," +
+                        $"pc.TELECOM as TELECOM," +
+                        $"pc.MEMO as MEMO," +
+                        $"pc.CREATE_DT as CREATE_DT," +
+                        $"pc.COUNTRYTB_ID as COUNTRYTB_ID," +
+                        $"pc.CITYTB_ID as CITYTB_ID," +
+                        $"pc.TOWNTB_ID as TOWNTB_ID," +
+                        $"CONCAT(country.Name,' ',city.Name,' ',town.NAME) as Region " +
+                        $"FROM pcroom_tb as pc " +
+                        $"INNER JOIN country_tb as country on pc.COUNTRYTB_ID = country.PID " +
+                        $"INNER JOIN city_tb as city on pc.CITYTB_ID = city.PID " +
+                        $"INNER JOIN town_tb as town on pc.TOWNTB_ID = town.PID " +
+                        $"WHERE pc.NAME LIKE @search " +
+                        $"ORDER BY NAME ASC";
+
+                    var searchparam = command.CreateParameter();
+                    searchparam.ParameterName = "@search";
+                    searchparam.Value = $"%{search}%";
+                    command.Parameters.Add(searchparam);
+
+                    using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            var PCRoomModel = new StoreListDTO
+                            {
+                                Pid = reader.IsDBNull(reader.GetOrdinal("PID")) ? 0 : reader.GetInt32(reader.GetOrdinal("PID")),
+                                Ip = reader.IsDBNull(reader.GetOrdinal("IP")) ? string.Empty : reader.GetString(reader.GetOrdinal("IP")),
+                                Port = reader.IsDBNull(reader.GetOrdinal("PORT")) ? 0 : reader.GetInt32(reader.GetOrdinal("PORT")),
+                                Name = reader.IsDBNull(reader.GetOrdinal("NAME")) ? string.Empty : reader.GetString(reader.GetOrdinal("NAME")),
+                                Addr = reader.IsDBNull(reader.GetOrdinal("ADDR")) ? string.Empty : reader.GetString(reader.GetOrdinal("ADDR")),
+                                SeatNumber = reader.IsDBNull(reader.GetOrdinal("SEATNUMBER")) ? 0 : reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
+                                Price = reader.IsDBNull(reader.GetOrdinal("PRICE")) ? 0 : reader.GetFloat(reader.GetOrdinal("PRICE")),
+                                PricePercent = reader.IsDBNull(reader.GetOrdinal("PRICE_PERCENT")) ? string.Empty : reader.GetString(reader.GetOrdinal("PRICE_PERCENT")),
+                                Pcspec = reader.IsDBNull(reader.GetOrdinal("PC_SPEC")) ? string.Empty : reader.GetString(reader.GetOrdinal("PC_SPEC")),
+                                Telecom = reader.IsDBNull(reader.GetOrdinal("TELECOM")) ? string.Empty : reader.GetString(reader.GetOrdinal("TELECOM")),
+                                Memo = reader.IsDBNull(reader.GetOrdinal("MEMO")) ? string.Empty : reader.GetString(reader.GetOrdinal("MEMO")),
+                                CountryTbId = reader.IsDBNull(reader.GetOrdinal("COUNTRYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("COUNTRYTB_ID")),
+                                CityTbId = reader.IsDBNull(reader.GetOrdinal("CITYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("CITYTB_ID")),
+                                TownTbId = reader.IsDBNull(reader.GetOrdinal("TOWNTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("TOWNTB_ID")),
+                                Region = reader.IsDBNull(reader.GetOrdinal("Region")) ? string.Empty : reader.GetString(reader.GetOrdinal("Region"))
+                            };
+                            result.Add(PCRoomModel);
+                        }
+                    }
+                }
+                return result;
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// PC방 주소로 검색
+        /// </summary>
+        /// <param name="search"></param>
+        /// <returns></returns>
+        public async Task<List<StoreListDTO>?> GetPcRoomSearchAddressListAsync(string search)
+        {
+            try
+            {
+                var connection = context.Database.GetDbConnection();
+                if (connection.State != System.Data.ConnectionState.Open)
+                {
+                    await connection.OpenAsync();
+                }
+                var result = new List<StoreListDTO>();
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT " +
+                        $"pc.PID as PID," +
+                        $"pc.IP as IP," +
+                        $"pc.PORT as PORT," +
+                        $"pc.NAME as NAME," +
+                        $"pc.ADDR as ADDR," +
+                        $"pc.SEATNUMBER as SEATNUMBER," +
+                        $"pc.PRICE as PRICE," +
+                        $"pc.PRICE_PERCENT as PRICE_PERCENT," +
+                        $"pc.PC_SPEC as PC_SPEC," +
+                        $"pc.TELECOM as TELECOM," +
+                        $"pc.MEMO as MEMO," +
+                        $"pc.CREATE_DT as CREATE_DT," +
+                        $"pc.COUNTRYTB_ID as COUNTRYTB_ID," +
+                        $"pc.CITYTB_ID as CITYTB_ID," +
+                        $"pc.TOWNTB_ID as TOWNTB_ID," +
+                        $"CONCAT(country.Name,' ',city.Name,' ',town.NAME) as Region " +
+                        $"FROM pcroom_tb as pc " +
+                        $"INNER JOIN country_tb as country on pc.COUNTRYTB_ID = country.PID " +
+                        $"INNER JOIN city_tb as city on pc.CITYTB_ID = city.PID " +
+                        $"INNER JOIN town_tb as town on pc.TOWNTB_ID = town.PID " +
+                        $"WHERE pc.ADDR LIKE @search " +
+                        $"ORDER BY NAME ASC";
+
+                    var searchparam = command.CreateParameter();
+                    searchparam.ParameterName = "@search";
+                    searchparam.Value = $"%{search}%";
+                    command.Parameters.Add(searchparam);
+
+                    using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            var PCRoomModel = new StoreListDTO
+                            {
+                                Pid = reader.IsDBNull(reader.GetOrdinal("PID")) ? 0 : reader.GetInt32(reader.GetOrdinal("PID")),
+                                Ip = reader.IsDBNull(reader.GetOrdinal("IP")) ? string.Empty : reader.GetString(reader.GetOrdinal("IP")),
+                                Port = reader.IsDBNull(reader.GetOrdinal("PORT")) ? 0 : reader.GetInt32(reader.GetOrdinal("PORT")),
+                                Name = reader.IsDBNull(reader.GetOrdinal("NAME")) ? string.Empty : reader.GetString(reader.GetOrdinal("NAME")),
+                                Addr = reader.IsDBNull(reader.GetOrdinal("ADDR")) ? string.Empty : reader.GetString(reader.GetOrdinal("ADDR")),
+                                SeatNumber = reader.IsDBNull(reader.GetOrdinal("SEATNUMBER")) ? 0 : reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
+                                Price = reader.IsDBNull(reader.GetOrdinal("PRICE")) ? 0 : reader.GetFloat(reader.GetOrdinal("PRICE")),
+                                PricePercent = reader.IsDBNull(reader.GetOrdinal("PRICE_PERCENT")) ? string.Empty : reader.GetString(reader.GetOrdinal("PRICE_PERCENT")),
+                                Pcspec = reader.IsDBNull(reader.GetOrdinal("PC_SPEC")) ? string.Empty : reader.GetString(reader.GetOrdinal("PC_SPEC")),
+                                Telecom = reader.IsDBNull(reader.GetOrdinal("TELECOM")) ? string.Empty : reader.GetString(reader.GetOrdinal("TELECOM")),
+                                Memo = reader.IsDBNull(reader.GetOrdinal("MEMO")) ? string.Empty : reader.GetString(reader.GetOrdinal("MEMO")),
+                                CountryTbId = reader.IsDBNull(reader.GetOrdinal("COUNTRYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("COUNTRYTB_ID")),
+                                CityTbId = reader.IsDBNull(reader.GetOrdinal("CITYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("CITYTB_ID")),
+                                TownTbId = reader.IsDBNull(reader.GetOrdinal("TOWNTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("TOWNTB_ID")),
+                                Region = reader.IsDBNull(reader.GetOrdinal("Region")) ? string.Empty : reader.GetString(reader.GetOrdinal("Region"))
+                            };
+                            result.Add(PCRoomModel);
+                        }
+                    }
+                }
+                return result;
+            }
+            catch (Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return null;
+            }
+        }
+
+        #endregion
+
+#region 수정
+        /// <summary>
+        /// PC방 정보 수정
+        /// </summary>
+        /// <param name="PcroomTB"></param>
+        /// <returns></returns>
+        public async Task<int> EditPcRoomInfo(PcroomTb PcroomTB)
+        {
+            try
+            {
+                // 이미 같은 PID를 가진 엔티티가 DbContext의 캐시에 있는지 확인
+                var trackedEntity = context.PcroomTbs.Local.FirstOrDefault(e => e.Pid == PcroomTB.Pid);
+                if(trackedEntity != null)
+                {
+                    // 이미 추적 중인 엔티티가 있다면, 해당 엔티티의 현재 값을 새 모델 값으로 업데이트한다.
+                    context.Entry(trackedEntity).CurrentValues.SetValues(PcroomTB);
+                }
+                else
+                {
+                    // 추적 중인 엔티티가 없다면, 모델을 Attach하고 상태를 Modified로 설정한다.
+                    context.PcroomTbs.Attach(PcroomTB);
+                    context.Entry(PcroomTB).State = EntityState.Modified;
+                }
+
+                int result = await context.SaveChangesAsync().ConfigureAwait(false);
+                return result;
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return -1;
+            }
+        }
+#endregion
+
+#region 삭제
+        /// <summary>
+        /// PC방 정보 삭제
+        /// </summary>
+        /// <param name="pid"></param>
+        /// <returns></returns>
+        public async Task<int> DeletePcRoomInfo(PcroomTb PcroomTB)
+        {
+            try
+            {
+                // 이미 같은 PID를 가진 엔티티가 DbContext의 캐시에 있는지 확인
+                var trackedEntity = context.PcroomTbs.Local.FirstOrDefault(e => e.Pid == PcroomTB.Pid);
+                if (trackedEntity != null)
+                {
+                    // 이미 추적 중인 엔티티가 있다면, 해당 엔티티의 현재 값을 새 모델 값으로 업데이트한다.
+                    context.Entry(trackedEntity).CurrentValues.SetValues(PcroomTB);
+                }
+                else
+                {
+                    // 추적 중인 엔티티가 없다면, 모델을 Attach하고 상태를 Modified로 설정한다.
+                    context.PcroomTbs.Attach(PcroomTB);
+                    context.Entry(PcroomTB).State = EntityState.Modified;
+                }
+
+                int result = await context.SaveChangesAsync().ConfigureAwait(false);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return -1;
+            }
+        }
+#endregion
+
     }
 }

@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace IpManager.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class StoreController : Controller
     {
         private readonly ILoggerService LoggerService;
@@ -79,6 +81,61 @@ namespace IpManager.Controllers
         }
 
         /// <summary>
+        /// PC방 이름으로 PC방 검색
+        /// </summary>
+        /// <param name="search"></param>
+        /// <returns></returns>
+        [Authorize(Roles ="Manager,Visitor")]
+        [HttpGet]
+        [Route("sign/v1/GetStoreSearchName")]
+        public async Task<IActionResult> GetStoreSearchName([FromQuery]string? search)
+        {
+            try
+            {
+                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomSearchNameListService(search).ConfigureAwait(false);
+                if (model is null)
+                    return BadRequest();
+                if (model.code == 200)
+                    return Ok(model);
+                else
+                    return BadRequest();
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+            }
+        }
+
+        /// <summary>
+        /// PC방 주소로 PC방 검색
+        /// </summary>
+        /// <param name="search"></param>
+        /// <returns></returns>
+        [Authorize(Roles = "Manager,Visitor")]
+        [HttpGet]
+        [Route("sign/v1/GetStoreSearchAddress")]
+        public async Task<IActionResult> GetStoreSearchAddress([FromQuery]string? search)
+        {
+            try
+            {
+                ResponseList<StoreListDTO>? model = await StoreService.GetPcROomSearchAddressListService(search).ConfigureAwait(false);
+                if (model is null)
+                    return BadRequest();
+                if (model.code == 200)
+                    return Ok(model);
+                else
+                    return BadRequest();
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+            }
+        }
+
+
+        /// <summary>
         /// PC방 그룹핑 개수 카운팅
         /// </summary>
         /// <returns></returns>
@@ -133,7 +190,7 @@ namespace IpManager.Controllers
         }
 
         // (도/시) 별 조회 Pc방 List
-        [Authorize(Roles = "Manage,Visitor")]
+        [Authorize(Roles = "Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetCountryStoreList")]
         public async Task<IActionResult> GetCountryStoreList([FromQuery]int countryid)
@@ -157,7 +214,7 @@ namespace IpManager.Controllers
         }
 
         // (시/군/구) 별 조회 Pc방 List
-        [Authorize(Roles = "Manage,Visitor")]
+        [Authorize(Roles = "Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetCityStoreList")]
         public async Task<IActionResult> GetCityStoreList([FromQuery]int cityid)
@@ -183,7 +240,7 @@ namespace IpManager.Controllers
 
 
         // (읍/면/동) 별 조회 Pc방 List
-        [Authorize(Roles ="Manage,Visitor")]
+        [Authorize(Roles ="Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetTownStoreList")]
         public async Task<IActionResult> GetTownStoreList([FromQuery]int townid)
@@ -207,9 +264,6 @@ namespace IpManager.Controllers
         }
 
 
-        // pc방 이름으로 정보 검색
-        // 주소로 PC방 정보 검색
-
 
         // Update
         [Authorize(Roles = "Manager,Visitor")]
@@ -219,7 +273,14 @@ namespace IpManager.Controllers
         {
             try
             {
-                return Ok();
+                ResponseUnit<bool> model = await StoreService.UpdateStoreService(dto);
+                if (model is null)
+                    return BadRequest();
+
+                if (model.code == 200)
+                    return Ok(model);
+                else
+                    return BadRequest();
             }
             catch(Exception ex)
             {
@@ -231,13 +292,20 @@ namespace IpManager.Controllers
 
         // Delete
         [Authorize(Roles = "Manger,Visitor")]
-        [HttpPost]
+        [HttpPut]
         [Route("sign/v1/DeleteStore")]
-        public async Task<IActionResult> DeleteStoreInfo()
+        public async Task<IActionResult> DeleteStoreInfo([FromBody]int pid)
         {
             try
             {
-                return Ok();
+                ResponseUnit<bool> model = await StoreService.DeleteStoreService(pid);
+                if (model is null)
+                    return BadRequest();
+
+                if (model.code == 200)
+                    return Ok(model);
+                else
+                    return BadRequest();
             }
             catch(Exception ex)
             {
@@ -246,6 +314,7 @@ namespace IpManager.Controllers
             }
         }
 
+        
        
 
     }

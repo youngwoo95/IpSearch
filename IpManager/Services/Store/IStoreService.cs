@@ -19,6 +19,21 @@ namespace IpManager.Services.Store
         public Task<ResponseList<StoreListDTO>?> GetPCRoomListService(string? search, int pageIndex, int pagenumber);
 
         /// <summary>
+        /// 검색조건(NAME)에 해당하는 PC방 LIST 반환
+        /// </summary>
+        /// <param name="search"></param>
+        /// <returns></returns>
+        public Task<ResponseList<StoreListDTO>?> GetPcRoomSearchNameListService(string? search);
+
+        /// <summary>
+        /// 검색조건(주소에 해당하는 PC방 LIST 반환
+        /// </summary>
+        /// <param name="search"></param>
+        /// <returns></returns>
+        public Task<ResponseList<StoreListDTO>?> GetPcROomSearchAddressListService(string? search);
+
+
+        /// <summary>
         /// PC방 지역별 그룹핑 개수 카운팅
         /// </summary>
         /// <returns></returns>
@@ -59,6 +74,13 @@ namespace IpManager.Services.Store
         /// <param name="dto"></param>
         /// <returns></returns>
         public Task<ResponseUnit<bool>> UpdateStoreService(UpdateStoreDTO dto);
+
+        /// <summary>
+        /// PC방 정보 삭제
+        /// </summary>
+        /// <param name="pid"></param>
+        /// <returns></returns>
+        public Task<ResponseUnit<bool>> DeleteStoreService(int pid);
 
     }
 }

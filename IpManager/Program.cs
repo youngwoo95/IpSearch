@@ -2,10 +2,12 @@ using IpManager.Comm.Logger.LogFactory;
 using IpManager.Comm.Logger.LogFactory.LoggerSelect;
 using IpManager.Comm.Tokens;
 using IpManager.DBModel;
+using IpManager.Repository.DashBoard;
 using IpManager.Repository.Login;
 using IpManager.Repository.Store;
 using IpManager.RunningSet;
 using IpManager.Services;
+using IpManager.Services.DashBoard;
 using IpManager.Services.Login;
 using IpManager.Services.Store;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -56,10 +58,12 @@ namespace IpManager
             // DB
             builder.Services.AddTransient<IUserRepository, UserRepository>();
             builder.Services.AddTransient<IStoreRepository, StoreRepository>();
+            builder.Services.AddTransient<IDashBoardRepository, DashBoardRepository>();
 
             // Service
             builder.Services.AddTransient<ILoginService, LoginService>();
             builder.Services.AddTransient<IStoreService, StoreService>();
+            builder.Services.AddTransient<IDashBoardService, DashBoardService>();
 
             /* 백그라운드 서비스 등록 */
             builder.Services.AddHostedService<BackgroundManager>();
@@ -202,7 +206,8 @@ namespace IpManager
             string[]? ApiMiddleWare = new string[]
             {
                 "/api/Login/sign",
-                "/api/Store/sign"
+                "/api/Store/sign",
+                "/api/DashBoard/sign"
             };
             
             foreach(var path in ApiMiddleWare)
