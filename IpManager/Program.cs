@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.IdentityModel.Tokens.Jwt;
@@ -43,6 +44,18 @@ namespace IpManager
                 });
             });
             #endregion
+
+            builder.Services.AddDbContextPool<IpanalyzeContext>(options =>
+                options.UseMySql(
+                    builder.Configuration.GetConnectionString("MySqlConnection"),
+                    ServerVersion.Parse("11.4.5-mariadb"),
+                    mariaSqlOption =>
+                    {
+                        mariaSqlOption.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null);
+                        mariaSqlOption.CommandTimeout(60);
+                        mariaSqlOption.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                        mariaSqlOption.MaxBatchSize(100);
+                    }));
 
             // Add services to the container.
 
@@ -146,6 +159,18 @@ namespace IpManager
                 });
             });
 
+            // CORS 정책 추가: 모든 출처, 메서드, 헤더 허용
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", builder =>
+                {
+                    builder.AllowAnyOrigin()
+                           .AllowAnyMethod()
+                           .AllowAnyHeader();
+                });
+            });
+
+
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -166,6 +191,9 @@ namespace IpManager
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
+            // CORS 미들웨어 적용
+            app.UseCors("AllowAll");
 
             /* 
                 MIME 타입 및 압축 헤더 설정

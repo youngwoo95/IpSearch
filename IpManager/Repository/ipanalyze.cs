@@ -8,13 +8,17 @@ namespace IpManager.Repository;
 
 public partial class ipanalyze : DbContext
 {
+
+    private readonly IConfiguration _configuration;
+
     public ipanalyze()
     {
     }
 
-    public ipanalyze(DbContextOptions<ipanalyze> options)
+    public ipanalyze(DbContextOptions<ipanalyze> options, IConfiguration configuration)
         : base(options)
     {
+        _configuration = configuration;
     }
 
     public virtual DbSet<CityTb> CityTbs { get; set; }
@@ -31,8 +35,24 @@ public partial class ipanalyze : DbContext
 
     public virtual DbSet<TownTb> TownTbs { get; set; }
 
+    //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    //    => optionsBuilder.UseMySql("server=127.0.0.1;port=3306;database=ipanalyze;user=root;password=rladyddn!!95", Microsoft.EntityFrameworkCore.ServerVersion.Parse("10.6.21-mariadb"));
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseMySql("server=127.0.0.1;port=3306;database=ipanalyze;user=root;password=rladyddn!!95", Microsoft.EntityFrameworkCore.ServerVersion.Parse("10.6.21-mariadb"));
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            var connectionString = _configuration.GetConnectionString("MySqlConnection");
+            optionsBuilder.UseMySql(connectionString, ServerVersion.Parse("11.4.5-mariadb"),
+                mariaSqlOption =>
+                {
+                    mariaSqlOption.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null);
+                    mariaSqlOption.CommandTimeout(60);
+                    mariaSqlOption.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                    mariaSqlOption.MaxBatchSize(100);
+                });
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

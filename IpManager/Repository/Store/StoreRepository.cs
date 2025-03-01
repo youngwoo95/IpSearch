@@ -26,8 +26,8 @@ namespace IpManager.Repository.Store
             IExecutionStrategy strategy = context.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
             {
-#if DEBUG
                 int result = 0;
+#if DEBUG
                 // 디버그 환경에서는 강제로 디버깅포인트 잡음
                 Debugger.Break();
 #endif
