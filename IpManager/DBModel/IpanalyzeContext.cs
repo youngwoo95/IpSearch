@@ -31,13 +31,13 @@ public partial class IpanalyzeContext : DbContext
     public virtual DbSet<TownTb> TownTbs { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseMySql("server=127.0.0.1;port=3306;database=ipanalyze;user=root;password=rladyddn!!95", ServerVersion.Parse("11.4.5-mariadb"),
-            mariaSqlOption =>
-            {
-                mariaSqlOption.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null); // 자동 재시작
-                mariaSqlOption.CommandTimeout(60);
-                mariaSqlOption.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery); // 쿼리분할 사용
-            });
+    => optionsBuilder.UseMySql("server=127.0.0.1;port=3306;database=ipanalyze;user=root;password=rladyddn!!95", ServerVersion.Parse("11.4.5-mariadb"),
+        mariaSqlOption =>
+        {
+            mariaSqlOption.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null); // 자동 재시작
+            mariaSqlOption.CommandTimeout(60);
+            mariaSqlOption.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery); // 쿼리분할 사용
+        });
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -49,7 +49,10 @@ public partial class IpanalyzeContext : DbContext
         {
             entity.HasKey(e => e.Pid).HasName("PRIMARY");
 
-            entity.ToTable("city_tb", tb => tb.HasComment("(시/군/구) 정보"));
+            entity
+                .ToTable("city_tb", tb => tb.HasComment("(시/군/구) 정보"))
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_general_ci");
 
             entity.HasIndex(e => e.Name, "UK").IsUnique();
 
@@ -93,7 +96,10 @@ public partial class IpanalyzeContext : DbContext
         {
             entity.HasKey(e => e.Pid).HasName("PRIMARY");
 
-            entity.ToTable("country_tb", tb => tb.HasComment("(도/시) 정보"));
+            entity
+                .ToTable("country_tb", tb => tb.HasComment("(도/시) 정보"))
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_general_ci");
 
             entity.HasIndex(e => e.Name, "UK").IsUnique();
 
@@ -127,7 +133,12 @@ public partial class IpanalyzeContext : DbContext
         {
             entity.HasKey(e => e.Pid).HasName("PRIMARY");
 
-            entity.ToTable("login_tb");
+            entity
+                .ToTable("login_tb")
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_general_ci");
+
+            entity.HasIndex(e => e.CountryId, "FK_login_country");
 
             entity.HasIndex(e => e.Uid, "UK").IsUnique();
 
@@ -138,6 +149,10 @@ public partial class IpanalyzeContext : DbContext
             entity.Property(e => e.AdminYn)
                 .HasComment("관리자계정 유무")
                 .HasColumnName("ADMIN_YN");
+            entity.Property(e => e.CountryId)
+                .HasComment("일반사용자 (도/시)ID")
+                .HasColumnType("int(11)")
+                .HasColumnName("COUNTRY_ID");
             entity.Property(e => e.CreateDt)
                 .HasDefaultValueSql("current_timestamp()")
                 .HasComment("생성일")
@@ -168,15 +183,23 @@ public partial class IpanalyzeContext : DbContext
             entity.Property(e => e.UseYn)
                 .HasComment("로그인 승인 유무")
                 .HasColumnName("USE_YN");
+
+            entity.HasOne(d => d.Country).WithMany(p => p.LoginTbs)
+                .HasForeignKey(d => d.CountryId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("FK_login_country");
         });
 
         modelBuilder.Entity<PcroomTb>(entity =>
         {
             entity.HasKey(e => e.Pid).HasName("PRIMARY");
 
-            entity.ToTable("pcroom_tb");
+            entity
+                .ToTable("pcroom_tb")
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_general_ci");
 
-            entity.HasIndex(e => e.Ip, "UK").IsUnique();
+            entity.HasIndex(e => new { e.Ip, e.Name, e.Port, e.Addr }, "UK").IsUnique();
 
             entity.HasIndex(e => e.CitytbId, "fk_pcroom_city");
 
@@ -200,17 +223,17 @@ public partial class IpanalyzeContext : DbContext
                 .HasColumnType("int(11)")
                 .HasColumnName("COUNTRYTB_ID");
             entity.Property(e => e.CreateDt)
-                .HasMaxLength(255)
                 .HasDefaultValueSql("current_timestamp()")
                 .HasComment("생성일")
+                .HasColumnType("datetime")
                 .HasColumnName("CREATE_DT");
             entity.Property(e => e.DelYn)
                 .HasDefaultValueSql("'0'")
                 .HasComment("삭제유무")
                 .HasColumnName("DEL_YN");
             entity.Property(e => e.DeleteDt)
-                .HasMaxLength(255)
                 .HasComment("삭제일")
+                .HasColumnType("datetime")
                 .HasColumnName("DELETE_DT");
             entity.Property(e => e.Ip)
                 .HasMaxLength(25)
@@ -252,8 +275,8 @@ public partial class IpanalyzeContext : DbContext
                 .HasColumnType("int(11)")
                 .HasColumnName("TOWNTB_ID");
             entity.Property(e => e.UpdateDt)
-                .HasMaxLength(255)
                 .HasComment("수정일")
+                .HasColumnType("datetime")
                 .HasColumnName("UPDATE_DT");
 
             entity.HasOne(d => d.Citytb).WithMany(p => p.PcroomTbs)
@@ -273,7 +296,10 @@ public partial class IpanalyzeContext : DbContext
         {
             entity.HasKey(e => e.Pid).HasName("PRIMARY");
 
-            entity.ToTable("pinglog_tb", tb => tb.HasComment("핑 정보"));
+            entity
+                .ToTable("pinglog_tb", tb => tb.HasComment("핑 정보"))
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_general_ci");
 
             entity.HasIndex(e => e.PcroomtbId, "fk_PINGLOG_pcroom202502191019");
 
@@ -358,7 +384,10 @@ public partial class IpanalyzeContext : DbContext
         {
             entity.HasKey(e => e.Pid).HasName("PRIMARY");
 
-            entity.ToTable("time_tb");
+            entity
+                .ToTable("time_tb")
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_general_ci");
 
             entity.Property(e => e.Pid)
                 .HasColumnType("int(11)")
@@ -373,7 +402,10 @@ public partial class IpanalyzeContext : DbContext
         {
             entity.HasKey(e => e.Pid).HasName("PRIMARY");
 
-            entity.ToTable("town_tb");
+            entity
+                .ToTable("town_tb")
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_general_ci");
 
             entity.HasIndex(e => e.Name, "UK").IsUnique();
 

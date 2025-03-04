@@ -131,7 +131,6 @@ namespace IpManager.Services
                             await context.SaveChangesAsync().ConfigureAwait(false); // 저장
                             Console.WriteLine("저장완료");
                         }
-                        break;
                     }
                     catch (TaskCanceledException)
                     {

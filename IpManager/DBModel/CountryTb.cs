@@ -37,6 +37,8 @@ public partial class CountryTb
 
     public virtual ICollection<CityTb> CityTbs { get; set; } = new List<CityTb>();
 
+    public virtual ICollection<LoginTb> LoginTbs { get; set; } = new List<LoginTb>();
+
     public virtual ICollection<PcroomTb> PcroomTbs { get; set; } = new List<PcroomTb>();
 
     public virtual ICollection<PinglogTb> PinglogTbs { get; set; } = new List<PinglogTb>();

@@ -21,7 +21,14 @@ namespace IpManager.Controllers
             this.LoggerService = _loggerservice;
             this.LoginService = _loginservice;
         }
-        
+
+        [HttpGet]
+        [Route("v1/test")]
+        public async Task<IActionResult> Test()
+        {
+            return Ok("asdasd");
+        }
+
         /// <summary>
         /// 회원가입
         /// </summary>

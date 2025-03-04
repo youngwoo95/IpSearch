@@ -191,6 +191,8 @@ namespace IpManager
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+            app.UseSwagger();
+            app.UseSwaggerUI();
 
             // CORS 미들웨어 적용
             app.UseCors("AllowAll");
