@@ -19,18 +19,34 @@ namespace IpManager.Repository.Store
 
 #region 조회
         /// <summary>
-        /// PC방 LIST 반환
+        /// 전체 PC방 LIST 반환
         /// </summary>
         /// <param name="search"></param>
         /// <returns></returns>
-        Task<List<StoreListDTO>?> GetPcRoomListAsync(string? search, int pageIndex, int pagenumber);
+        Task<List<StoreListDTO>?> GetAllPcRoomListAsync(string? search, int pageIndex, int pagenumber);
 
         /// <summary>
-        /// PC방 이름에 해당하는 PC방 LIST 반환
+        /// 내 지역 PC방 LIST 반환
+        /// </summary>
+        /// <param name="search"></param>
+        /// <param name="pageIndex"></param>
+        /// <param name="pagenumber"></param>
+        /// <returns></returns>
+        Task<List<StoreListDTO>?> GetMyPcRoomListAsync(string? search, int pageIndex, int pagenumber, int countryId);
+
+        /// <summary>
+        /// 전체) PC방 이름에 해당하는 PC방 LIST 반환
         /// </summary>
         /// <param name="search"></param>
         /// <returns></returns>
-        Task<List<StoreListDTO>?> GetPcRoomSearchNameListAsync(string search);
+        Task<List<StoreListDTO>?> GetAllPcRoomSearchNameListAsync(string search);
+
+        /// <summary>
+        /// 내) PC방 이름에 해당하는 PC방 LIST 반환
+        /// </summary>
+        /// <param name="search"></param>
+        /// <returns></returns>
+        Task<List<StoreListDTO>?> GetMyPcRoomSearchNameListAsync(string search, int countryId);
 
         /// <summary>
         /// PC방 주소에 해당하는 PC방 LIST 반환

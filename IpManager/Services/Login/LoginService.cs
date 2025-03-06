@@ -61,7 +61,8 @@ namespace IpManager.Services.Login
 
                 // Claim 생성
                 List<Claim> authClaims = new List<Claim>();
-                authClaims.Add(new Claim("UserID", model.Uid)); // 사용자 ID
+                authClaims.Add(new Claim("userPid", model.Pid.ToString())); // 사용자 PID
+                authClaims.Add(new Claim("userId", model.Uid)); // 사용자 ID
                 if(model.MasterYn)
                     authClaims.Add(new Claim("Role", "Master")); // 마스터
                     //authClaims.Add(new Claim(ClaimTypes.Role, "Master")); // 마스터

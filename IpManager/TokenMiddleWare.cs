@@ -77,13 +77,14 @@ namespace IpManager
                 if (jobj is null)
                     return;
 
-                if (jobj["UserID"] == null || 
+                if (jobj["userId"] == null ||
+                    jobj["userPid"] == null ||
                     jobj["Role"] == null)
                 {
                     context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 }
-
-                context.Items.Add("UserID", jobj["UserID"]!.ToString());
+                context.Items.Add("userPid", jobj["userPid"]!.ToString());
+                context.Items.Add("userId", jobj["userId"]!.ToString());
                 context.Items.Add("Role", jobj["Role"]!.ToString());
                 
                 await Next(context);
@@ -108,7 +109,7 @@ namespace IpManager
                     var principal = tokenHandler.ValidateToken(accessToken, tokenValidationParameters, out SecurityToken _);
 
                     // 토큰에서 UserID를 추출
-                    var UserId = principal.Claims.FirstOrDefault(m => m.Type == "UserID")?.Value;
+                    var UserId = principal.Claims.FirstOrDefault(m => m.Type == "userId")?.Value;
                     if(String.IsNullOrWhiteSpace(UserId)) // 기존 토큰에서 UserID가 없다?? --> 변조된 토큰임. 400 BadRequest
                     {
                         context.Response.StatusCode = StatusCodes.Status400BadRequest;

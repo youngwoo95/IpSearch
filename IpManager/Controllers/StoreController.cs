@@ -1,5 +1,6 @@
 ﻿using IpManager.Comm.Logger.LogFactory.LoggerSelect;
 using IpManager.DTO.Store;
+using IpManager.Helpers;
 using IpManager.Services.Store;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,7 +26,7 @@ namespace IpManager.Controllers
         /// </summary>
         /// <param name="dto"></param>
         /// <returns></returns>
-        [Authorize(Roles ="Manager")] // 매니저만 등록가능
+        [Authorize(Roles ="Master")] // 마스터만 등록가능
         [HttpPost]
         [Route("sign/v1/AddStore")]
         public async Task<IActionResult> AddStore([FromBody]StoreDTO dto)
@@ -65,7 +66,16 @@ namespace IpManager.Controllers
                 if (pagenumber == 0)
                     return BadRequest();
 
-                ResponseList<StoreListDTO>? model = await StoreService.GetPCRoomListService(search, 15, pagenumber - 1).ConfigureAwait(false);
+                // 권한 검사
+                int userType = User.GetUserType();
+                if (userType == -1)
+                    return Unauthorized();
+
+                int Pid = User.GetUserPid();
+                if (Pid == -1)
+                    return Unauthorized();
+
+                ResponseList<StoreListDTO>? model = await StoreService.GetPCRoomListService(Pid, userType, search, 15, pagenumber - 1).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
                 if (model.code == 200)
@@ -92,7 +102,16 @@ namespace IpManager.Controllers
         {
             try
             {
-                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomSearchNameListService(search).ConfigureAwait(false);
+                // 권한 검사
+                int userType = User.GetUserType();
+                if (userType == -1)
+                    return Unauthorized();
+
+                int Pid = User.GetUserPid();
+                if (Pid == -1)
+                    return Unauthorized();
+
+                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomSearchNameListService(Pid, userType, search).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
                 if (model.code == 200)

@@ -343,7 +343,8 @@ namespace IpManager.Repository.Login
                                 CreateDt = reader.IsDBNull(reader.GetOrdinal("CREATE_DT")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("CREATE_DT")),
                                 UpdateDt = reader.IsDBNull(reader.GetOrdinal("UPDATE_DT")) ? null : Convert.ToDateTime(reader["UPDATE_DT"]),
                                 DelYn = reader.IsDBNull(reader.GetOrdinal("DEL_YN")) ? false : Convert.ToBoolean(reader["DEL_YN"]),
-                                DeleteDt = reader.IsDBNull(reader.GetOrdinal("DELETE_DT")) ? null : Convert.ToDateTime(reader["DELETE_DT"])
+                                DeleteDt = reader.IsDBNull(reader.GetOrdinal("DELETE_DT")) ? null : Convert.ToDateTime(reader["DELETE_DT"]),
+                                CountryId = reader.IsDBNull(reader.GetOrdinal("COUNTRY_ID")) ? null : Convert.ToInt32(reader["COUNTRY_ID"])
                             };
 
                             return login;

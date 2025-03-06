@@ -16,14 +16,14 @@ namespace IpManager.Services.Store
         /// </summary>
         /// <param name="search"></param>
         /// <returns></returns>
-        public Task<ResponseList<StoreListDTO>?> GetPCRoomListService(string? search, int pageIndex, int pagenumber);
+        public Task<ResponseList<StoreListDTO>?> GetPCRoomListService(int pid, int usertype, string? search, int pageIndex, int pagenumber);
 
         /// <summary>
         /// 검색조건(NAME)에 해당하는 PC방 LIST 반환
         /// </summary>
         /// <param name="search"></param>
         /// <returns></returns>
-        public Task<ResponseList<StoreListDTO>?> GetPcRoomSearchNameListService(string? search);
+        public Task<ResponseList<StoreListDTO>?> GetPcRoomSearchNameListService(int pid, int userType, string? search);
 
         /// <summary>
         /// 검색조건(주소에 해당하는 PC방 LIST 반환

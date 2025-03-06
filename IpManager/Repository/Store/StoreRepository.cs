@@ -4,6 +4,7 @@ using IpManager.DTO.Store;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
 
 namespace IpManager.Repository.Store
 {
@@ -561,7 +562,7 @@ namespace IpManager.Repository.Store
         /// </summary>
         /// <param name="search"></param>
         /// <returns></returns>
-        public async Task<List<StoreListDTO>?> GetPcRoomListAsync(string? search, int pageIndex, int pagenumber)
+        public async Task<List<StoreListDTO>?> GetAllPcRoomListAsync(string? search, int pageIndex, int pagenumber)
         {
             try
             {
@@ -723,6 +724,171 @@ namespace IpManager.Repository.Store
         }
 
         /// <summary>
+        /// 할당된 지역의 PC방 리스트 반환
+        /// </summary>
+        /// <param name="search"></param>
+        /// <param name="pageIndex"></param>
+        /// <param name="pagenumber"></param>
+        /// <param name="countryId"></param>
+        /// <returns></returns>
+        public async Task<List<StoreListDTO>?> GetMyPcRoomListAsync(string? search, int pageIndex, int pagenumber, int countryId)
+        {
+            try
+            {
+                var result = new List<StoreListDTO>();
+
+                var connection = context.Database.GetDbConnection();
+                if(connection.State != System.Data.ConnectionState.Open)
+                {
+                    await connection.OpenAsync();
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    if (String.IsNullOrWhiteSpace(search))
+                    {
+                        command.CommandText = $"SELECT " +
+                            $"pc.PID as PID," +
+                            $"pc.IP as IP," +
+                            $"pc.PORT as PORT," +
+                            $"pc.NAME as NAME," +
+                            $"pc.ADDR as ADDR," +
+                            $"pc.SEATNUMBER as SEATNUMBER," +
+                            $"pc.PRICE as PRICE," +
+                            $"pc.PRICE_PERCENT as PRICE_PERCENT," +
+                            $"pc.PC_SPEC as PC_SPEC," +
+                            $"pc.TELECOM as TELECOM," +
+                            $"pc.MEMO as MEMO," +
+                            $"pc.CREATE_DT as CREATE_DT," +
+                            $"pc.COUNTRYTB_ID as COUNTRYTB_ID," +
+                            $"pc.CITYTB_ID as CITYTB_ID," +
+                            $"pc.TOWNTB_ID as TOWNTB_ID," +
+                            $"CONCAT(country.Name,' ',city.Name,' ',town.NAME) as Region " +
+                            $"FROM pcroom_tb as pc " +
+                            $"INNER JOIN country_tb as country on pc.COUNTRYTB_ID = country.PID " +
+                            $"INNER JOIN city_tb as city on pc.CITYTB_ID = city.PID " +
+                            $"INNER JOIN town_tb as town on pc.TOWNTB_ID = town.PID " +
+                            $"WHERE pc.DEL_YN != true " +
+                            $"AND country.DEL_YN != true " +
+                            $"AND city.DEL_YN != true " +
+                            $"AND town.DEL_YN != true " +
+                            $"AND country.PID = @countryId " +
+                            $"ORDER BY pc.NAME ASC " +
+                            $"LIMIT @pageIndex " +
+                            $"OFFSET @offset";
+
+                        var pageSizeParam = command.CreateParameter();
+                        pageSizeParam.ParameterName = "@pageIndex";
+                        pageSizeParam.Value = pageIndex;
+
+                        command.Parameters.Add(pageSizeParam);
+
+                        var offsetParam = command.CreateParameter();
+                        offsetParam.ParameterName = "@offset";
+                        offsetParam.Value = pageIndex * pagenumber;
+
+                        command.Parameters.Add(offsetParam);
+
+                        var countryParam = command.CreateParameter();
+                        countryParam.ParameterName = "@countryId";
+                        countryParam.Value = countryId;
+
+                        command.Parameters.Add(countryParam);
+                    }
+                    else
+                    {
+                        command.CommandText = $"SELECT " +
+                           $"pc.PID as PID," +
+                           $"pc.IP as IP," +
+                           $"pc.PORT as PORT," +
+                           $"pc.NAME as NAME," +
+                           $"pc.ADDR as ADDR," +
+                           $"pc.SEATNUMBER as SEATNUMBER," +
+                           $"pc.PRICE as PRICE," +
+                           $"pc.PRICE_PERCENT as PRICE_PERCENT," +
+                           $"pc.PC_SPEC as PC_SPEC," +
+                           $"pc.TELECOM as TELECOM," +
+                           $"pc.MEMO as MEMO," +
+                           $"pc.CREATE_DT as CREATE_DT," +
+                           $"pc.COUNTRYTB_ID as COUNTRYTB_ID," +
+                           $"pc.CITYTB_ID as CITYTB_ID," +
+                           $"pc.TOWNTB_ID as TOWNTB_ID," +
+                           $"CONCAT(country.Name,' ',city.Name,' ',town.NAME) as Region " +
+                           $"FROM pcroom_tb as pc " +
+                           $"INNER JOIN country_tb as country on pc.COUNTRYTB_ID = country.PID " +
+                           $"INNER JOIN city_tb as city on pc.CITYTB_ID = city.PID " +
+                           $"INNER JOIN town_tb as town on pc.TOWNTB_ID = town.PID " +
+                           $"WHERE pc.DEL_YN != true " +
+                           $"AND country.DEL_YN != true " +
+                           $"AND city.DEL_YN != true " +
+                           $"AND town.DEL_YN != true " +
+                           $"AND country.PID = @countryId " +
+                           $"AND pc.NAME LIKE @search " +
+                           $"ORDER BY pc.NAME ASC " +
+                           $"LIMIT @pageIndex " +
+                           $"OFFSET @offset";
+
+                        var searchparam = command.CreateParameter();
+                        searchparam.ParameterName = "@search";
+                        searchparam.Value = $"%{search}%";
+                        command.Parameters.Add(searchparam);
+
+                        var pageSizeParam = command.CreateParameter();
+                        pageSizeParam.ParameterName = "@pageIndex";
+                        pageSizeParam.Value = pageIndex;
+
+                        command.Parameters.Add(pageIndex);
+
+                        var offsetParam = command.CreateParameter();
+                        offsetParam.ParameterName = "@offset";
+                        offsetParam.Value = pageIndex * pagenumber;
+
+                        command.Parameters.Add(offsetParam);
+
+                        var countryParam = command.CreateParameter();
+                        countryParam.ParameterName = "@countryId";
+                        countryParam.Value = countryId;
+
+                        command.Parameters.Add(countryParam);
+                    }
+
+                    using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                    {
+                        while(await reader.ReadAsync())
+                        {
+                            var PCRoomModel = new StoreListDTO
+                            {
+                                pId = reader.IsDBNull(reader.GetOrdinal("PID")) ? 0 : reader.GetInt32(reader.GetOrdinal("PID")),
+                                ip = reader.IsDBNull(reader.GetOrdinal("IP")) ? string.Empty : reader.GetString(reader.GetOrdinal("IP")),
+                                port = reader.IsDBNull(reader.GetOrdinal("PORT")) ? 0 : reader.GetInt32(reader.GetOrdinal("PORT")),
+                                name = reader.IsDBNull(reader.GetOrdinal("NAME")) ? string.Empty : reader.GetString(reader.GetOrdinal("NAME")),
+                                addr = reader.IsDBNull(reader.GetOrdinal("ADDR")) ? string.Empty : reader.GetString(reader.GetOrdinal("ADDR")),
+                                seatNumber = reader.IsDBNull(reader.GetOrdinal("SEATNUMBER")) ? 0 : reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
+                                price = reader.IsDBNull(reader.GetOrdinal("PRICE")) ? 0 : reader.GetFloat(reader.GetOrdinal("PRICE")),
+                                pricePercent = reader.IsDBNull(reader.GetOrdinal("PRICE_PERCENT")) ? string.Empty : reader.GetString(reader.GetOrdinal("PRICE_PERCENT")),
+                                pcSpec = reader.IsDBNull(reader.GetOrdinal("PC_SPEC")) ? string.Empty : reader.GetString(reader.GetOrdinal("PC_SPEC")),
+                                telecom = reader.IsDBNull(reader.GetOrdinal("TELECOM")) ? string.Empty : reader.GetString(reader.GetOrdinal("TELECOM")),
+                                memo = reader.IsDBNull(reader.GetOrdinal("MEMO")) ? string.Empty : reader.GetString(reader.GetOrdinal("MEMO")),
+                                countryTbId = reader.IsDBNull(reader.GetOrdinal("COUNTRYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("COUNTRYTB_ID")),
+                                cityTbId = reader.IsDBNull(reader.GetOrdinal("CITYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("CITYTB_ID")),
+                                townTbId = reader.IsDBNull(reader.GetOrdinal("TOWNTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("TOWNTB_ID")),
+                                region = reader.IsDBNull(reader.GetOrdinal("Region")) ? string.Empty : reader.GetString(reader.GetOrdinal("Region"))
+                            };
+                            result.Add(PCRoomModel);
+                        }
+
+                    }
+                }
+                return result;
+            }
+            catch (Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return null;
+            }
+        }
+
+        /// <summary>
         /// PC방 지역별 그룹핑 개수 카운팅
         /// </summary>
         /// <returns></returns>
@@ -796,7 +962,7 @@ namespace IpManager.Repository.Store
         /// </summary>
         /// <param name="search"></param>
         /// <returns></returns>
-        public async Task<List<StoreListDTO>?> GetPcRoomSearchNameListAsync(string search)
+        public async Task<List<StoreListDTO>?> GetAllPcRoomSearchNameListAsync(string search)
         {
             try
             {
@@ -836,6 +1002,94 @@ namespace IpManager.Repository.Store
                     searchparam.ParameterName = "@search";
                     searchparam.Value = $"%{search}%";
                     command.Parameters.Add(searchparam);
+
+                    using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            var PCRoomModel = new StoreListDTO
+                            {
+                                pId = reader.IsDBNull(reader.GetOrdinal("PID")) ? 0 : reader.GetInt32(reader.GetOrdinal("PID")),
+                                ip = reader.IsDBNull(reader.GetOrdinal("IP")) ? string.Empty : reader.GetString(reader.GetOrdinal("IP")),
+                                port = reader.IsDBNull(reader.GetOrdinal("PORT")) ? 0 : reader.GetInt32(reader.GetOrdinal("PORT")),
+                                name = reader.IsDBNull(reader.GetOrdinal("NAME")) ? string.Empty : reader.GetString(reader.GetOrdinal("NAME")),
+                                addr = reader.IsDBNull(reader.GetOrdinal("ADDR")) ? string.Empty : reader.GetString(reader.GetOrdinal("ADDR")),
+                                seatNumber = reader.IsDBNull(reader.GetOrdinal("SEATNUMBER")) ? 0 : reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
+                                price = reader.IsDBNull(reader.GetOrdinal("PRICE")) ? 0 : reader.GetFloat(reader.GetOrdinal("PRICE")),
+                                pricePercent = reader.IsDBNull(reader.GetOrdinal("PRICE_PERCENT")) ? string.Empty : reader.GetString(reader.GetOrdinal("PRICE_PERCENT")),
+                                pcSpec = reader.IsDBNull(reader.GetOrdinal("PC_SPEC")) ? string.Empty : reader.GetString(reader.GetOrdinal("PC_SPEC")),
+                                telecom = reader.IsDBNull(reader.GetOrdinal("TELECOM")) ? string.Empty : reader.GetString(reader.GetOrdinal("TELECOM")),
+                                memo = reader.IsDBNull(reader.GetOrdinal("MEMO")) ? string.Empty : reader.GetString(reader.GetOrdinal("MEMO")),
+                                countryTbId = reader.IsDBNull(reader.GetOrdinal("COUNTRYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("COUNTRYTB_ID")),
+                                cityTbId = reader.IsDBNull(reader.GetOrdinal("CITYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("CITYTB_ID")),
+                                townTbId = reader.IsDBNull(reader.GetOrdinal("TOWNTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("TOWNTB_ID")),
+                                region = reader.IsDBNull(reader.GetOrdinal("Region")) ? string.Empty : reader.GetString(reader.GetOrdinal("Region"))
+                            };
+                            result.Add(PCRoomModel);
+                        }
+                    }
+                }
+                return result;
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 내) PC방 이름에 해당하는 PC방 LIST 반환
+        /// </summary>
+        /// <param name="search"></param>
+        /// <returns></returns>
+        public async Task<List<StoreListDTO>?> GetMyPcRoomSearchNameListAsync(string search, int countryId)
+        {
+            try
+            {
+                var connection = context.Database.GetDbConnection();
+                if(connection.State != System.Data.ConnectionState.Open)
+                {
+                    await connection.OpenAsync();
+                }
+
+                var result = new List<StoreListDTO>();
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = $"SELECT " +
+                      $"pc.PID as PID," +
+                      $"pc.IP as IP," +
+                      $"pc.PORT as PORT," +
+                      $"pc.NAME as NAME," +
+                      $"pc.ADDR as ADDR," +
+                      $"pc.SEATNUMBER as SEATNUMBER," +
+                      $"pc.PRICE as PRICE," +
+                      $"pc.PRICE_PERCENT as PRICE_PERCENT," +
+                      $"pc.PC_SPEC as PC_SPEC," +
+                      $"pc.TELECOM as TELECOM," +
+                      $"pc.MEMO as MEMO," +
+                      $"pc.CREATE_DT as CREATE_DT," +
+                      $"pc.COUNTRYTB_ID as COUNTRYTB_ID," +
+                      $"pc.CITYTB_ID as CITYTB_ID," +
+                      $"pc.TOWNTB_ID as TOWNTB_ID," +
+                      $"CONCAT(country.Name,' ',city.Name,' ',town.NAME) as Region " +
+                      $"FROM pcroom_tb as pc " +
+                      $"INNER JOIN country_tb as country on pc.COUNTRYTB_ID = country.PID " +
+                      $"INNER JOIN city_tb as city on pc.CITYTB_ID = city.PID " +
+                      $"INNER JOIN town_tb as town on pc.TOWNTB_ID = town.PID " +
+                      $"WHERE pc.NAME LIKE @search " +
+                      $"AND pc.COUNTRYTB_ID = @countryId " +
+                      $"ORDER BY NAME ASC";
+
+                    var searchparam = command.CreateParameter();
+                    searchparam.ParameterName = "@search";
+                    searchparam.Value = $"%{search}%";
+                    command.Parameters.Add(searchparam);
+
+                    var countryparam = command.CreateParameter();
+                    countryparam.ParameterName = "@countryId";
+                    countryparam.Value = countryId;
+                    command.Parameters.Add(countryparam);
 
                     using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
                     {
@@ -1023,7 +1277,13 @@ namespace IpManager.Repository.Store
                 return -1;
             }
         }
-#endregion
+
+    
+
+
+
+
+        #endregion
 
     }
 }
