@@ -5,27 +5,27 @@
         /// <summary>
         /// PID
         /// </summary>
-        public int PID { get; set; }
+        public int pId { get; set; }
 
         /// <summary>
         /// 사용자ID
         /// </summary>
-        public string? UID { get; set; }
+        public string? uId { get; set; }
 
         /// <summary>
         /// 매니저 여부
         /// </summary>
-        public bool AdminYN { get; set; }
+        public bool adminYn { get; set; }
 
         /// <summary>
         /// 승인 여부
         /// </summary>
-        public bool UseYN { get; set; }
+        public bool useYn { get; set; }
 
         /// <summary>
         /// 생성일
         /// </summary>
-        public string? CreateDT { get; set; }
+        public string? createDt { get; set; }
 
     }
 }

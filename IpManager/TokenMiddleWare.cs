@@ -157,7 +157,7 @@ namespace IpManager
 
                     var dto = new TokenDTO()
                     {
-                        AccessToken = newAccessToken
+                        accessToken = newAccessToken
                     };
                     await context.Response.WriteAsync(JsonSerializer.Serialize(new ResponseUnit<TokenDTO>()
                     {

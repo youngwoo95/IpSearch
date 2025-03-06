@@ -8,11 +8,11 @@
         /// <summary>
         /// 등록할 ID
         /// </summary>
-        public string? UserID { get; set; }
+        public string? userId { get; set; }
 
         /// <summary>
         /// 등록할 비밀번호
         /// </summary>
-        public string? PassWord { get; set; }
+        public string? passWord { get; set; }
     }
 }

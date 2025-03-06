@@ -5,27 +5,31 @@
         /// <summary>
         /// PID
         /// </summary>
-        public int PID { get; set; }
+        public int pId { get; set; }
 
         /// <summary>
         /// UserID - 변경대상 아님
         /// </summary>
-        public string? UID { get; set; } 
+        public string? uId { get; set; } 
 
         /// <summary>
         /// 변경할 비밀번호
         /// </summary>
-        public string? PWD { get; set; }
+        public string? pwd { get; set; }
 
         /// <summary>
         /// 관리자 여부
         /// </summary>
-        public bool AdminYN { get; set; } = false;
+        public bool adminYn { get; set; } = false;
 
         /// <summary>
         /// 승인여부
         /// </summary>
-        public bool UseYN { get; set; } = false;
+        public bool useYn { get; set; } = false;
 
+        /// <summary>
+        /// 지역 ID
+        /// </summary>
+        public int countryId { get; set; }
     }
 }

@@ -41,20 +41,20 @@ namespace IpManager.Services.Login
                 if (dto is null)
                     return new ResponseUnit<TokenDTO>() { message = "잘못된 입력값이 존재합니다.", data = null, code = 200 };
 
-                if (dto.LoginID is null || dto.LoginPW is null)
+                if (dto.loginId is null || dto.loginPw is null)
                     return new ResponseUnit<TokenDTO>() { message = "잘못된 입력값이 존재합니다.", data = null, code = 200 };
 
-                if (!String.IsNullOrEmpty(dto.LoginID) && dto.LoginID.Any(char.IsWhiteSpace)) // NULL 검사 + 공백검사
+                if (!String.IsNullOrEmpty(dto.loginId) && dto.loginId.Any(char.IsWhiteSpace)) // NULL 검사 + 공백검사
                 {
                     return new ResponseUnit<TokenDTO>() { message = "잘못된 입력값이 존재합니다.", data = null, code = 200 };
                 }
 
                 // 사용허가 검사
-                int LoginPermission = await UserRepository.GetLoginPermission(dto.LoginID).ConfigureAwait(false);
+                int LoginPermission = await UserRepository.GetLoginPermission(dto.loginId).ConfigureAwait(false);
                 if (LoginPermission < 1)
                     return new ResponseUnit<TokenDTO>() { message = "승인되지 않은 아이디입니다.", data = null, code = 200 };
 
-                LoginTb? model = await UserRepository.GetLoginAsync(dto.LoginID, dto.LoginPW).ConfigureAwait(false);
+                LoginTb? model = await UserRepository.GetLoginAsync(dto.loginId, dto.loginPw).ConfigureAwait(false);
                 if(model is null)
                     return new ResponseUnit<TokenDTO>() { message = "해당 아이디가 존재하지 않습니다.", data = null, code = 200};
 
@@ -88,7 +88,7 @@ namespace IpManager.Services.Login
                 string accessToken = new JwtSecurityTokenHandler().WriteToken(token);
                 var tokenResult = new TokenDTO
                 {
-                    AccessToken = accessToken
+                    accessToken = accessToken
                 };
 
                 return new ResponseUnit<TokenDTO>() { message = "요청이 정상 처리되었습니다.", data = tokenResult, code = 200 };
@@ -240,13 +240,13 @@ namespace IpManager.Services.Login
                 if(dto is null)
                     return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, code = 200 }; // Bad Request
 
-                if (!string.IsNullOrEmpty(dto.UserID) && dto.UserID.Any(char.IsWhiteSpace)) // NULL 검사 + 공백검사
+                if (!string.IsNullOrEmpty(dto.userId) && dto.userId.Any(char.IsWhiteSpace)) // NULL 검사 + 공백검사
                 {
                     // 안에 공백이든 NULL임.
                     return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, code = 200 }; // Bad Request
                 }
 
-                if (!string.IsNullOrEmpty(dto.PassWord) && dto.PassWord.Any(char.IsWhiteSpace)) // NULL 검사 + 공백검사
+                if (!string.IsNullOrEmpty(dto.passWord) && dto.passWord.Any(char.IsWhiteSpace)) // NULL 검사 + 공백검사
                 {
                     // 안에 공백이든 NULL임.
                     return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, code = 200 }; // Bad Request
@@ -257,8 +257,8 @@ namespace IpManager.Services.Login
                 // UserModel 생성
                 var model = new LoginTb
                 {
-                    Uid = dto.UserID!,
-                    Pwd = dto.PassWord!,
+                    Uid = dto.userId!,
+                    Pwd = dto.passWord!,
                     MasterYn = false,
                     AdminYn = false,
                     CreateDt = ThisDate,
@@ -302,13 +302,13 @@ namespace IpManager.Services.Login
                 if(dto is null)
                     return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, code = 200 }; // Bad Request
 
-                if (!string.IsNullOrEmpty(dto.UserID) && dto.UserID.Any(char.IsWhiteSpace)) // NULL 검사 + 공백검사
+                if (!string.IsNullOrEmpty(dto.userId) && dto.userId.Any(char.IsWhiteSpace)) // NULL 검사 + 공백검사
                 {
                     // 안에 공백이든 NULL임.
                     return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, code = 200 }; // Bad Request
                 }
 
-                int result = await UserRepository.CheckUserIdAsync(dto.UserID!).ConfigureAwait(false);
+                int result = await UserRepository.CheckUserIdAsync(dto.userId!).ConfigureAwait(false);
                 if (result > 0)
                     return new ResponseUnit<bool>() { message = "이미 존재하는 아이디입니다.", data = false, code = 200 };
                 else if (result < 0)
@@ -337,11 +337,11 @@ namespace IpManager.Services.Login
 
                 List<UserListDTO> dto = model.Select( m => new UserListDTO
                 {
-                    PID = m.Pid,
-                    UID = m.Uid,
-                    AdminYN = m.AdminYn,
-                    UseYN = m.UseYn,
-                    CreateDT = m.CreateDt.ToString("HH:mm:ss")
+                    pId = m.Pid,
+                    uId = m.Uid,
+                    adminYn = m.AdminYn,
+                    useYn = m.UseYn,
+                    createDt = m.CreateDt.ToString("HH:mm:ss")
                 }).ToList();
 
                 return new ResponseList<UserListDTO>() { message = "요청이 정상 처리되었습니다.", data = dto, code = 200 };
@@ -365,26 +365,26 @@ namespace IpManager.Services.Login
                 if (dto is null)
                     return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, code = 200 };
 
-                if(dto.PID == 0)
+                if(dto.pId == 0)
                     return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, code = 200 };
 
-                if(dto.UID is null)
+                if(dto.uId is null)
                     return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, code = 200 };
 
-                if (dto.PWD is null)
+                if (dto.pwd is null)
                     return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, code = 200 };
 
-                var UserModelCheck = await UserRepository.GetUserInfoAsyncById(dto.PID).ConfigureAwait(false);
+                var UserModelCheck = await UserRepository.GetUserInfoAsyncById(dto.pId).ConfigureAwait(false);
                 if (UserModelCheck is null)
                     return new ResponseUnit<bool>() { message = "해당 아이디가 존재하지 않습니다.", data = false, code = 200 };
 
-                if(UserModelCheck.Uid != dto.UID)
+                if(UserModelCheck.Uid != dto.uId)
                     return new ResponseUnit<bool>() { message = "해당 아이디가 존재하지 않습니다.", data = false, code = 200 };
 
-
-                UserModelCheck.Pwd = dto.PWD;
-                UserModelCheck.AdminYn = dto.AdminYN;
-                UserModelCheck.UseYn = dto.UseYN;
+                UserModelCheck.CountryId = dto.countryId;
+                UserModelCheck.Pwd = dto.pwd;
+                UserModelCheck.AdminYn = dto.adminYn;
+                UserModelCheck.UseYn = dto.useYn;
                 UserModelCheck.UpdateDt = DateTime.Now;
               
                 int result = await UserRepository.EditUserAsync(UserModelCheck).ConfigureAwait(false);

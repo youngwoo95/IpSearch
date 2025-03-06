@@ -5,11 +5,11 @@
         /// <summary>
         /// 사용자 ID
         /// </summary>
-        public string? UserId { get; set; }
+        public string? userId { get; set; }
 
         /// <summary>
         /// Refresh Token
         /// </summary>
-        public string? RefreshToken { get; set; }
+        public string? refreshToken { get; set; }
     }
 }

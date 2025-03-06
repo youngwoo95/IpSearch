@@ -8,7 +8,7 @@
         private string? loginid;
         private string? loginpw;
 
-        public string? LoginID
+        public string? loginId
         {
             get
             {
@@ -21,7 +21,7 @@
             }
         }
 
-        public string? LoginPW
+        public string? loginPw
         {
             get
             {

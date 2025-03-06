@@ -5,6 +5,6 @@
     /// </summary>
     public class TokenDTO
     {
-        public string? AccessToken { get; set; }
+        public string? accessToken { get; set; }
     }
 }

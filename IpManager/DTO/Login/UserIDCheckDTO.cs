@@ -8,6 +8,6 @@
         /// <summary>
         /// 사용자 ID
         /// </summary>
-        public string? UserID { get; set; }
+        public string? userId { get; set; }
     }
 }

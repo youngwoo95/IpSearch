@@ -188,20 +188,20 @@ namespace IpManager.Repository.Store
                         {
                             var store = new StoreListDTO
                             {
-                                Pid = reader.GetInt32(reader.GetOrdinal("PID")),
-                                Ip = reader.GetString(reader.GetOrdinal("IP")),
-                                Port = reader.GetInt32(reader.GetOrdinal("PORT")),
-                                Name = reader.GetString(reader.GetOrdinal("NAME")),
-                                Addr = reader.GetString(reader.GetOrdinal("ADDR")),
-                                SeatNumber = reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
-                                Price = (float)reader.GetDouble(reader.GetOrdinal("PRICE")), // 필요한 경우 형변환 처리
-                                PricePercent = reader["PRICE_PERCENT"] as string,
-                                Pcspec = reader["PC_SPEC"] as string,
-                                Telecom = reader["TELECOM"] as string,
-                                Memo = reader["MEMO"] as string,
-                                CountryTbId = reader.GetInt32(reader.GetOrdinal("COUNTRYTB_ID")),
-                                CityTbId = reader.GetInt32(reader.GetOrdinal("CITYTB_ID")),
-                                TownTbId = reader.GetInt32(reader.GetOrdinal("TOWNTB_ID"))
+                                pId = reader.GetInt32(reader.GetOrdinal("PID")),
+                                ip = reader.GetString(reader.GetOrdinal("IP")),
+                                port = reader.GetInt32(reader.GetOrdinal("PORT")),
+                                name = reader.GetString(reader.GetOrdinal("NAME")),
+                                addr = reader.GetString(reader.GetOrdinal("ADDR")),
+                                seatNumber = reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
+                                price = (float)reader.GetDouble(reader.GetOrdinal("PRICE")), // 필요한 경우 형변환 처리
+                                pricePercent = reader["PRICE_PERCENT"] as string,
+                                pcSpec = reader["PC_SPEC"] as string,
+                                telecom = reader["TELECOM"] as string,
+                                memo = reader["MEMO"] as string,
+                                countryTbId = reader.GetInt32(reader.GetOrdinal("COUNTRYTB_ID")),
+                                cityTbId = reader.GetInt32(reader.GetOrdinal("CITYTB_ID")),
+                                townTbId = reader.GetInt32(reader.GetOrdinal("TOWNTB_ID"))
                             };
                             result.Add(store);
                         }
@@ -276,20 +276,20 @@ namespace IpManager.Repository.Store
                         {
                             var store = new StoreListDTO
                             {
-                                Pid = reader.GetInt32(reader.GetOrdinal("PID")),
-                                Ip = reader.GetString(reader.GetOrdinal("IP")),
-                                Port = reader.GetInt32(reader.GetOrdinal("PORT")),
-                                Name = reader.GetString(reader.GetOrdinal("NAME")),
-                                Addr = reader.GetString(reader.GetOrdinal("ADDR")),
-                                SeatNumber = reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
-                                Price = (float)reader.GetDouble(reader.GetOrdinal("PRICE")), // 필요한 경우 형변환 처리
-                                PricePercent = reader["PRICE_PERCENT"] as string,
-                                Pcspec = reader["PC_SPEC"] as string,
-                                Telecom = reader["TELECOM"] as string,
-                                Memo = reader["MEMO"] as string,
-                                CountryTbId = reader.GetInt32(reader.GetOrdinal("COUNTRYTB_ID")),
-                                CityTbId = reader.GetInt32(reader.GetOrdinal("CITYTB_ID")),
-                                TownTbId = reader.GetInt32(reader.GetOrdinal("TOWNTB_ID"))
+                                pId = reader.GetInt32(reader.GetOrdinal("PID")),
+                                ip = reader.GetString(reader.GetOrdinal("IP")),
+                                port = reader.GetInt32(reader.GetOrdinal("PORT")),
+                                name = reader.GetString(reader.GetOrdinal("NAME")),
+                                addr = reader.GetString(reader.GetOrdinal("ADDR")),
+                                seatNumber = reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
+                                price = (float)reader.GetDouble(reader.GetOrdinal("PRICE")), // 필요한 경우 형변환 처리
+                                pricePercent = reader["PRICE_PERCENT"] as string,
+                                pcSpec = reader["PC_SPEC"] as string,
+                                telecom = reader["TELECOM"] as string,
+                                memo = reader["MEMO"] as string,
+                                countryTbId = reader.GetInt32(reader.GetOrdinal("COUNTRYTB_ID")),
+                                cityTbId = reader.GetInt32(reader.GetOrdinal("CITYTB_ID")),
+                                townTbId = reader.GetInt32(reader.GetOrdinal("TOWNTB_ID"))
                             };
                             result.Add(store);
                         }
@@ -365,20 +365,20 @@ namespace IpManager.Repository.Store
                         {
                             var store = new StoreListDTO
                             {
-                                Pid = reader.GetInt32(reader.GetOrdinal("PID")),
-                                Ip = reader.GetString(reader.GetOrdinal("IP")),
-                                Port = reader.GetInt32(reader.GetOrdinal("PORT")),
-                                Name = reader.GetString(reader.GetOrdinal("NAME")),
-                                Addr = reader.GetString(reader.GetOrdinal("ADDR")),
-                                SeatNumber = reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
-                                Price = (float)reader.GetDouble(reader.GetOrdinal("PRICE")), // 필요한 경우 형변환 처리
-                                PricePercent = reader["PRICE_PERCENT"] as string,
-                                Pcspec = reader["PC_SPEC"] as string,
-                                Telecom = reader["TELECOM"] as string,
-                                Memo = reader["MEMO"] as string,
-                                CountryTbId = reader.GetInt32(reader.GetOrdinal("COUNTRYTB_ID")),
-                                CityTbId = reader.GetInt32(reader.GetOrdinal("CITYTB_ID")),
-                                TownTbId = reader.GetInt32(reader.GetOrdinal("TOWNTB_ID"))
+                                pId = reader.GetInt32(reader.GetOrdinal("PID")),
+                                ip = reader.GetString(reader.GetOrdinal("IP")),
+                                port = reader.GetInt32(reader.GetOrdinal("PORT")),
+                                name = reader.GetString(reader.GetOrdinal("NAME")),
+                                addr = reader.GetString(reader.GetOrdinal("ADDR")),
+                                seatNumber = reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
+                                price = (float)reader.GetDouble(reader.GetOrdinal("PRICE")), // 필요한 경우 형변환 처리
+                                pricePercent = reader["PRICE_PERCENT"] as string,
+                                pcSpec = reader["PC_SPEC"] as string,
+                                telecom = reader["TELECOM"] as string,
+                                memo = reader["MEMO"] as string,
+                                countryTbId = reader.GetInt32(reader.GetOrdinal("COUNTRYTB_ID")),
+                                cityTbId = reader.GetInt32(reader.GetOrdinal("CITYTB_ID")),
+                                townTbId = reader.GetInt32(reader.GetOrdinal("TOWNTB_ID"))
                             };
                             result.Add(store);
                         }
@@ -451,23 +451,23 @@ namespace IpManager.Repository.Store
                         {
                             var model = new StoreDetailDTO
                             {
-                                Pid = reader.IsDBNull(reader.GetOrdinal("PID")) ? 0 : reader.GetInt32(reader.GetOrdinal("PID")),
-                                Ip = reader.IsDBNull(reader.GetOrdinal("IP")) ? string.Empty : reader.GetString(reader.GetOrdinal("IP")),
-                                Port = reader.IsDBNull(reader.GetOrdinal("PORT")) ? 0 : reader.GetInt32(reader.GetOrdinal("PORT")),
-                                Name = reader.IsDBNull(reader.GetOrdinal("Name")) ? string.Empty : reader.GetString(reader.GetOrdinal("Name")),
-                                Addr = reader.IsDBNull(reader.GetOrdinal("ADDR")) ? string.Empty : reader.GetString(reader.GetOrdinal("ADDR")),
-                                Seatnumber = reader.IsDBNull(reader.GetOrdinal("SEATNUMBER")) ? 0 : reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
-                                Price = reader.IsDBNull(reader.GetOrdinal("PRICE")) ? 0 : reader.GetFloat(reader.GetOrdinal("PRICE")),
-                                Pricepercent = reader.IsDBNull(reader.GetOrdinal("PRICE_PERCENT")) ? string.Empty : reader.GetString(reader.GetOrdinal("PRICE_PERCENT")),
-                                Pcspec = reader.IsDBNull(reader.GetOrdinal("PC_SPEC")) ? string.Empty : reader.GetString(reader.GetOrdinal("PC_SPEC")),
-                                Telecom = reader.IsDBNull(reader.GetOrdinal("TELECOM")) ? string.Empty : reader.GetString(reader.GetOrdinal("TELECOM")),
-                                Memo = reader.IsDBNull(reader.GetOrdinal("MEMO")) ? string.Empty : reader.GetString(reader.GetOrdinal("MEMO")),
-                                CountryTbId = reader.IsDBNull(reader.GetOrdinal("COUNTRYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("COUNTRYTB_ID")),
-                                CountryName = reader.IsDBNull(reader.GetOrdinal("COUNTRY_NAME")) ? string.Empty : reader.GetString(reader.GetOrdinal("COUNTRY_NAME")),
-                                CityTbId = reader.IsDBNull(reader.GetOrdinal("CITYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("CITYTB_ID")),
-                                CityName = reader.IsDBNull(reader.GetOrdinal("CITY_NAME")) ? string.Empty : reader.GetString(reader.GetOrdinal("CITY_NAME")),
-                                TownTbId = reader.IsDBNull(reader.GetOrdinal("TOWNTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("TOWNTB_ID")),
-                                TownName = reader.IsDBNull(reader.GetOrdinal("TOWN_NAME")) ? string.Empty : reader.GetString(reader.GetOrdinal("TOWN_NAME"))
+                                pId = reader.IsDBNull(reader.GetOrdinal("PID")) ? 0 : reader.GetInt32(reader.GetOrdinal("PID")),
+                                ip = reader.IsDBNull(reader.GetOrdinal("IP")) ? string.Empty : reader.GetString(reader.GetOrdinal("IP")),
+                                port = reader.IsDBNull(reader.GetOrdinal("PORT")) ? 0 : reader.GetInt32(reader.GetOrdinal("PORT")),
+                                name = reader.IsDBNull(reader.GetOrdinal("Name")) ? string.Empty : reader.GetString(reader.GetOrdinal("Name")),
+                                addr = reader.IsDBNull(reader.GetOrdinal("ADDR")) ? string.Empty : reader.GetString(reader.GetOrdinal("ADDR")),
+                                seatNumber = reader.IsDBNull(reader.GetOrdinal("SEATNUMBER")) ? 0 : reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
+                                price = reader.IsDBNull(reader.GetOrdinal("PRICE")) ? 0 : reader.GetFloat(reader.GetOrdinal("PRICE")),
+                                pricePercent = reader.IsDBNull(reader.GetOrdinal("PRICE_PERCENT")) ? string.Empty : reader.GetString(reader.GetOrdinal("PRICE_PERCENT")),
+                                pcSpec = reader.IsDBNull(reader.GetOrdinal("PC_SPEC")) ? string.Empty : reader.GetString(reader.GetOrdinal("PC_SPEC")),
+                                telecom = reader.IsDBNull(reader.GetOrdinal("TELECOM")) ? string.Empty : reader.GetString(reader.GetOrdinal("TELECOM")),
+                                memo = reader.IsDBNull(reader.GetOrdinal("MEMO")) ? string.Empty : reader.GetString(reader.GetOrdinal("MEMO")),
+                                countryTbId = reader.IsDBNull(reader.GetOrdinal("COUNTRYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("COUNTRYTB_ID")),
+                                countryName = reader.IsDBNull(reader.GetOrdinal("COUNTRY_NAME")) ? string.Empty : reader.GetString(reader.GetOrdinal("COUNTRY_NAME")),
+                                cityTbId = reader.IsDBNull(reader.GetOrdinal("CITYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("CITYTB_ID")),
+                                cityName = reader.IsDBNull(reader.GetOrdinal("CITY_NAME")) ? string.Empty : reader.GetString(reader.GetOrdinal("CITY_NAME")),
+                                townTbId = reader.IsDBNull(reader.GetOrdinal("TOWNTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("TOWNTB_ID")),
+                                townName = reader.IsDBNull(reader.GetOrdinal("TOWN_NAME")) ? string.Empty : reader.GetString(reader.GetOrdinal("TOWN_NAME"))
                             };
 
                             return model;
@@ -692,21 +692,21 @@ namespace IpManager.Repository.Store
                         {
                             var PCRoomModel = new StoreListDTO
                             {
-                                Pid = reader.IsDBNull(reader.GetOrdinal("PID")) ? 0 : reader.GetInt32(reader.GetOrdinal("PID")),
-                                Ip = reader.IsDBNull(reader.GetOrdinal("IP")) ? string.Empty : reader.GetString(reader.GetOrdinal("IP")),
-                                Port = reader.IsDBNull(reader.GetOrdinal("PORT")) ? 0 : reader.GetInt32(reader.GetOrdinal("PORT")),
-                                Name = reader.IsDBNull(reader.GetOrdinal("NAME")) ? string.Empty : reader.GetString(reader.GetOrdinal("NAME")),
-                                Addr = reader.IsDBNull(reader.GetOrdinal("ADDR")) ? string.Empty : reader.GetString(reader.GetOrdinal("ADDR")),
-                                SeatNumber = reader.IsDBNull(reader.GetOrdinal("SEATNUMBER")) ? 0 : reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
-                                Price = reader.IsDBNull(reader.GetOrdinal("PRICE")) ? 0 : reader.GetFloat(reader.GetOrdinal("PRICE")),
-                                PricePercent = reader.IsDBNull(reader.GetOrdinal("PRICE_PERCENT")) ? string.Empty : reader.GetString(reader.GetOrdinal("PRICE_PERCENT")),
-                                Pcspec = reader.IsDBNull(reader.GetOrdinal("PC_SPEC")) ? string.Empty : reader.GetString(reader.GetOrdinal("PC_SPEC")),
-                                Telecom = reader.IsDBNull(reader.GetOrdinal("TELECOM")) ? string.Empty : reader.GetString(reader.GetOrdinal("TELECOM")),
-                                Memo = reader.IsDBNull(reader.GetOrdinal("MEMO")) ? string.Empty : reader.GetString(reader.GetOrdinal("MEMO")),
-                                CountryTbId = reader.IsDBNull(reader.GetOrdinal("COUNTRYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("COUNTRYTB_ID")),
-                                CityTbId = reader.IsDBNull(reader.GetOrdinal("CITYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("CITYTB_ID")),
-                                TownTbId = reader.IsDBNull(reader.GetOrdinal("TOWNTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("TOWNTB_ID")),
-                                Region = reader.IsDBNull(reader.GetOrdinal("Region")) ? string.Empty : reader.GetString(reader.GetOrdinal("Region"))
+                                pId = reader.IsDBNull(reader.GetOrdinal("PID")) ? 0 : reader.GetInt32(reader.GetOrdinal("PID")),
+                                ip = reader.IsDBNull(reader.GetOrdinal("IP")) ? string.Empty : reader.GetString(reader.GetOrdinal("IP")),
+                                port = reader.IsDBNull(reader.GetOrdinal("PORT")) ? 0 : reader.GetInt32(reader.GetOrdinal("PORT")),
+                                name = reader.IsDBNull(reader.GetOrdinal("NAME")) ? string.Empty : reader.GetString(reader.GetOrdinal("NAME")),
+                                addr = reader.IsDBNull(reader.GetOrdinal("ADDR")) ? string.Empty : reader.GetString(reader.GetOrdinal("ADDR")),
+                                seatNumber = reader.IsDBNull(reader.GetOrdinal("SEATNUMBER")) ? 0 : reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
+                                price = reader.IsDBNull(reader.GetOrdinal("PRICE")) ? 0 : reader.GetFloat(reader.GetOrdinal("PRICE")),
+                                pricePercent = reader.IsDBNull(reader.GetOrdinal("PRICE_PERCENT")) ? string.Empty : reader.GetString(reader.GetOrdinal("PRICE_PERCENT")),
+                                pcSpec = reader.IsDBNull(reader.GetOrdinal("PC_SPEC")) ? string.Empty : reader.GetString(reader.GetOrdinal("PC_SPEC")),
+                                telecom = reader.IsDBNull(reader.GetOrdinal("TELECOM")) ? string.Empty : reader.GetString(reader.GetOrdinal("TELECOM")),
+                                memo = reader.IsDBNull(reader.GetOrdinal("MEMO")) ? string.Empty : reader.GetString(reader.GetOrdinal("MEMO")),
+                                countryTbId = reader.IsDBNull(reader.GetOrdinal("COUNTRYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("COUNTRYTB_ID")),
+                                cityTbId = reader.IsDBNull(reader.GetOrdinal("CITYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("CITYTB_ID")),
+                                townTbId = reader.IsDBNull(reader.GetOrdinal("TOWNTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("TOWNTB_ID")),
+                                region = reader.IsDBNull(reader.GetOrdinal("Region")) ? string.Empty : reader.GetString(reader.GetOrdinal("Region"))
                             };
                             result.Add(PCRoomModel);
                         }
@@ -768,14 +768,14 @@ namespace IpManager.Repository.Store
                         {
                             var dto = new StoreRegionDTO
                             {
-                                Country_PID = reader.GetInt32(reader.GetOrdinal("COUNTRY_PID")),
-                                Country_Name = reader["COUNTRY_NAME"] as string,
-                                City_PID = reader.GetInt32(reader.GetOrdinal("CITY_PID")),
-                                City_Name = reader["CITY_NAME"] as string,
-                                Town_PID = reader.GetInt32(reader.GetOrdinal("TOWN_PID")),
-                                Town_Name = reader["TOWN_NAME"] as string,
-                                Region = reader["Region"] as string,
-                                Count = reader.GetInt32(reader.GetOrdinal("Counter"))
+                                countryPid = reader.GetInt32(reader.GetOrdinal("COUNTRY_PID")),
+                                countryName = reader["COUNTRY_NAME"] as string,
+                                cityPid = reader.GetInt32(reader.GetOrdinal("CITY_PID")),
+                                cityName = reader["CITY_NAME"] as string,
+                                townPid = reader.GetInt32(reader.GetOrdinal("TOWN_PID")),
+                                townName = reader["TOWN_NAME"] as string,
+                                region = reader["Region"] as string,
+                                count = reader.GetInt32(reader.GetOrdinal("Counter"))
                             };
 
                             storeRegions.Add(dto);
@@ -843,21 +843,21 @@ namespace IpManager.Repository.Store
                         {
                             var PCRoomModel = new StoreListDTO
                             {
-                                Pid = reader.IsDBNull(reader.GetOrdinal("PID")) ? 0 : reader.GetInt32(reader.GetOrdinal("PID")),
-                                Ip = reader.IsDBNull(reader.GetOrdinal("IP")) ? string.Empty : reader.GetString(reader.GetOrdinal("IP")),
-                                Port = reader.IsDBNull(reader.GetOrdinal("PORT")) ? 0 : reader.GetInt32(reader.GetOrdinal("PORT")),
-                                Name = reader.IsDBNull(reader.GetOrdinal("NAME")) ? string.Empty : reader.GetString(reader.GetOrdinal("NAME")),
-                                Addr = reader.IsDBNull(reader.GetOrdinal("ADDR")) ? string.Empty : reader.GetString(reader.GetOrdinal("ADDR")),
-                                SeatNumber = reader.IsDBNull(reader.GetOrdinal("SEATNUMBER")) ? 0 : reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
-                                Price = reader.IsDBNull(reader.GetOrdinal("PRICE")) ? 0 : reader.GetFloat(reader.GetOrdinal("PRICE")),
-                                PricePercent = reader.IsDBNull(reader.GetOrdinal("PRICE_PERCENT")) ? string.Empty : reader.GetString(reader.GetOrdinal("PRICE_PERCENT")),
-                                Pcspec = reader.IsDBNull(reader.GetOrdinal("PC_SPEC")) ? string.Empty : reader.GetString(reader.GetOrdinal("PC_SPEC")),
-                                Telecom = reader.IsDBNull(reader.GetOrdinal("TELECOM")) ? string.Empty : reader.GetString(reader.GetOrdinal("TELECOM")),
-                                Memo = reader.IsDBNull(reader.GetOrdinal("MEMO")) ? string.Empty : reader.GetString(reader.GetOrdinal("MEMO")),
-                                CountryTbId = reader.IsDBNull(reader.GetOrdinal("COUNTRYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("COUNTRYTB_ID")),
-                                CityTbId = reader.IsDBNull(reader.GetOrdinal("CITYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("CITYTB_ID")),
-                                TownTbId = reader.IsDBNull(reader.GetOrdinal("TOWNTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("TOWNTB_ID")),
-                                Region = reader.IsDBNull(reader.GetOrdinal("Region")) ? string.Empty : reader.GetString(reader.GetOrdinal("Region"))
+                                pId = reader.IsDBNull(reader.GetOrdinal("PID")) ? 0 : reader.GetInt32(reader.GetOrdinal("PID")),
+                                ip = reader.IsDBNull(reader.GetOrdinal("IP")) ? string.Empty : reader.GetString(reader.GetOrdinal("IP")),
+                                port = reader.IsDBNull(reader.GetOrdinal("PORT")) ? 0 : reader.GetInt32(reader.GetOrdinal("PORT")),
+                                name = reader.IsDBNull(reader.GetOrdinal("NAME")) ? string.Empty : reader.GetString(reader.GetOrdinal("NAME")),
+                                addr = reader.IsDBNull(reader.GetOrdinal("ADDR")) ? string.Empty : reader.GetString(reader.GetOrdinal("ADDR")),
+                                seatNumber = reader.IsDBNull(reader.GetOrdinal("SEATNUMBER")) ? 0 : reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
+                                price = reader.IsDBNull(reader.GetOrdinal("PRICE")) ? 0 : reader.GetFloat(reader.GetOrdinal("PRICE")),
+                                pricePercent = reader.IsDBNull(reader.GetOrdinal("PRICE_PERCENT")) ? string.Empty : reader.GetString(reader.GetOrdinal("PRICE_PERCENT")),
+                                pcSpec = reader.IsDBNull(reader.GetOrdinal("PC_SPEC")) ? string.Empty : reader.GetString(reader.GetOrdinal("PC_SPEC")),
+                                telecom = reader.IsDBNull(reader.GetOrdinal("TELECOM")) ? string.Empty : reader.GetString(reader.GetOrdinal("TELECOM")),
+                                memo = reader.IsDBNull(reader.GetOrdinal("MEMO")) ? string.Empty : reader.GetString(reader.GetOrdinal("MEMO")),
+                                countryTbId = reader.IsDBNull(reader.GetOrdinal("COUNTRYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("COUNTRYTB_ID")),
+                                cityTbId = reader.IsDBNull(reader.GetOrdinal("CITYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("CITYTB_ID")),
+                                townTbId = reader.IsDBNull(reader.GetOrdinal("TOWNTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("TOWNTB_ID")),
+                                region = reader.IsDBNull(reader.GetOrdinal("Region")) ? string.Empty : reader.GetString(reader.GetOrdinal("Region"))
                             };
                             result.Add(PCRoomModel);
                         }
@@ -924,21 +924,21 @@ namespace IpManager.Repository.Store
                         {
                             var PCRoomModel = new StoreListDTO
                             {
-                                Pid = reader.IsDBNull(reader.GetOrdinal("PID")) ? 0 : reader.GetInt32(reader.GetOrdinal("PID")),
-                                Ip = reader.IsDBNull(reader.GetOrdinal("IP")) ? string.Empty : reader.GetString(reader.GetOrdinal("IP")),
-                                Port = reader.IsDBNull(reader.GetOrdinal("PORT")) ? 0 : reader.GetInt32(reader.GetOrdinal("PORT")),
-                                Name = reader.IsDBNull(reader.GetOrdinal("NAME")) ? string.Empty : reader.GetString(reader.GetOrdinal("NAME")),
-                                Addr = reader.IsDBNull(reader.GetOrdinal("ADDR")) ? string.Empty : reader.GetString(reader.GetOrdinal("ADDR")),
-                                SeatNumber = reader.IsDBNull(reader.GetOrdinal("SEATNUMBER")) ? 0 : reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
-                                Price = reader.IsDBNull(reader.GetOrdinal("PRICE")) ? 0 : reader.GetFloat(reader.GetOrdinal("PRICE")),
-                                PricePercent = reader.IsDBNull(reader.GetOrdinal("PRICE_PERCENT")) ? string.Empty : reader.GetString(reader.GetOrdinal("PRICE_PERCENT")),
-                                Pcspec = reader.IsDBNull(reader.GetOrdinal("PC_SPEC")) ? string.Empty : reader.GetString(reader.GetOrdinal("PC_SPEC")),
-                                Telecom = reader.IsDBNull(reader.GetOrdinal("TELECOM")) ? string.Empty : reader.GetString(reader.GetOrdinal("TELECOM")),
-                                Memo = reader.IsDBNull(reader.GetOrdinal("MEMO")) ? string.Empty : reader.GetString(reader.GetOrdinal("MEMO")),
-                                CountryTbId = reader.IsDBNull(reader.GetOrdinal("COUNTRYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("COUNTRYTB_ID")),
-                                CityTbId = reader.IsDBNull(reader.GetOrdinal("CITYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("CITYTB_ID")),
-                                TownTbId = reader.IsDBNull(reader.GetOrdinal("TOWNTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("TOWNTB_ID")),
-                                Region = reader.IsDBNull(reader.GetOrdinal("Region")) ? string.Empty : reader.GetString(reader.GetOrdinal("Region"))
+                                pId = reader.IsDBNull(reader.GetOrdinal("PID")) ? 0 : reader.GetInt32(reader.GetOrdinal("PID")),
+                                ip = reader.IsDBNull(reader.GetOrdinal("IP")) ? string.Empty : reader.GetString(reader.GetOrdinal("IP")),
+                                port = reader.IsDBNull(reader.GetOrdinal("PORT")) ? 0 : reader.GetInt32(reader.GetOrdinal("PORT")),
+                                name = reader.IsDBNull(reader.GetOrdinal("NAME")) ? string.Empty : reader.GetString(reader.GetOrdinal("NAME")),
+                                addr = reader.IsDBNull(reader.GetOrdinal("ADDR")) ? string.Empty : reader.GetString(reader.GetOrdinal("ADDR")),
+                                seatNumber = reader.IsDBNull(reader.GetOrdinal("SEATNUMBER")) ? 0 : reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
+                                price = reader.IsDBNull(reader.GetOrdinal("PRICE")) ? 0 : reader.GetFloat(reader.GetOrdinal("PRICE")),
+                                pricePercent = reader.IsDBNull(reader.GetOrdinal("PRICE_PERCENT")) ? string.Empty : reader.GetString(reader.GetOrdinal("PRICE_PERCENT")),
+                                pcSpec = reader.IsDBNull(reader.GetOrdinal("PC_SPEC")) ? string.Empty : reader.GetString(reader.GetOrdinal("PC_SPEC")),
+                                telecom = reader.IsDBNull(reader.GetOrdinal("TELECOM")) ? string.Empty : reader.GetString(reader.GetOrdinal("TELECOM")),
+                                memo = reader.IsDBNull(reader.GetOrdinal("MEMO")) ? string.Empty : reader.GetString(reader.GetOrdinal("MEMO")),
+                                countryTbId = reader.IsDBNull(reader.GetOrdinal("COUNTRYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("COUNTRYTB_ID")),
+                                cityTbId = reader.IsDBNull(reader.GetOrdinal("CITYTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("CITYTB_ID")),
+                                townTbId = reader.IsDBNull(reader.GetOrdinal("TOWNTB_ID")) ? 0 : reader.GetInt32(reader.GetOrdinal("TOWNTB_ID")),
+                                region = reader.IsDBNull(reader.GetOrdinal("Region")) ? string.Empty : reader.GetString(reader.GetOrdinal("Region"))
                             };
                             result.Add(PCRoomModel);
                         }

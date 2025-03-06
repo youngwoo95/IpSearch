@@ -27,34 +27,34 @@ namespace IpManager.Services.Store
 
                 var PCRoomModel = new PcroomTb
                 {
-                    Ip = dto.Ip,
-                    Port = dto.Port,
-                    Name = dto.Name,
-                    Addr = dto.Addr,
-                    Seatnumber = dto.Seatnumber,
-                    Price = dto.Price,
-                    PricePercent = dto.Pricepercent,
-                    PcSpec = dto.Pcspec,
-                    Telecom = dto.Telecom,
-                    Memo = dto.Memo,
+                    Ip = dto.ip,
+                    Port = dto.port,
+                    Name = dto.name,
+                    Addr = dto.addr,
+                    Seatnumber = dto.seatNumber,
+                    Price = dto.price,
+                    PricePercent = dto.pricePercent,
+                    PcSpec = dto.pcSpec,
+                    Telecom = dto.telecom,
+                    Memo = dto.memo,
                     CreateDt = DateTime.Now
                 };
 
                 var CountryModel = new CountryTb
                 {
-                    Name = dto.CountryName!,
+                    Name = dto.countryName!,
                     CreateDt = DateTime.Now
                 };
 
                 var CityModel = new CityTb
                 {
-                    Name = dto.CityName!,
+                    Name = dto.cityName!,
                     CreateDt = DateTime.Now
                 };
 
                 var TownModel = new TownTb
                 {
-                    Name = dto.TownName!,
+                    Name = dto.townName!,
                     CreateDt = DateTime.Now
                 };
 
@@ -294,34 +294,34 @@ namespace IpManager.Services.Store
                 if (dto is null)
                     return new ResponseUnit<bool>() { message = "잘못된 요청입니다.", data = false, code = 200 };
 
-                if (dto.CountryId is 0)
+                if (dto.countryId is 0)
                     return new ResponseUnit<bool>() { message = "잘못된 요청입니다.", data = false, code = 200 };
 
-                if (dto.CityId is 0)
+                if (dto.cityId is 0)
                     return new ResponseUnit<bool>() { message = "잘못된 요청입니다.", data = false, code = 200 };
 
-                if (dto.TownId is 0)
+                if (dto.townId is 0)
                     return new ResponseUnit<bool>() { message = "잘못된 요청입니다.", data = false, code = 200 };
 
-                var PcroomTB = await StoreRepository.GetPcRoomInfoTB(dto.PID).ConfigureAwait(false);
+                var PcroomTB = await StoreRepository.GetPcRoomInfoTB(dto.pId).ConfigureAwait(false);
                 if (PcroomTB is null)
                     return new ResponseUnit<bool>() { message = "존재하지 않는 PC방 정보입니다.", data = false, code = 200 };
 
                 
-                PcroomTB.Ip = dto.Ip; // IP
-                PcroomTB.Port = dto.Port; // PORT
-                PcroomTB.Name = dto.Name; // 상호명
-                PcroomTB.Addr = dto.Addr; // 주소
-                PcroomTB.Seatnumber = dto.Seatnumber; // 좌석수
-                PcroomTB.Price = dto.Price; // 요금제
-                PcroomTB.PricePercent = dto.Pricepercent; // 요금제 비율
-                PcroomTB.PcSpec = dto.Pcspec; // PC 사양
-                PcroomTB.Telecom = dto.Telecom; // 통신사
-                PcroomTB.Memo = dto.Memo; // 메모
+                PcroomTB.Ip = dto.ip; // IP
+                PcroomTB.Port = dto.port; // PORT
+                PcroomTB.Name = dto.name; // 상호명
+                PcroomTB.Addr = dto.addr; // 주소
+                PcroomTB.Seatnumber = dto.seatNumber; // 좌석수
+                PcroomTB.Price = dto.price; // 요금제
+                PcroomTB.PricePercent = dto.pricePercent; // 요금제 비율
+                PcroomTB.PcSpec = dto.pcSpec; // PC 사양
+                PcroomTB.Telecom = dto.telecom; // 통신사
+                PcroomTB.Memo = dto.memo; // 메모
                 PcroomTB.UpdateDt = DateTime.Now;
-                PcroomTB.CountrytbId = dto.CountryId; // (도/시) ID
-                PcroomTB.CitytbId = dto.CityId; // (시/군/구) ID 
-                PcroomTB.TowntbId = dto.TownId; // (읍/면/동) ID
+                PcroomTB.CountrytbId = dto.countryId; // (도/시) ID
+                PcroomTB.CitytbId = dto.cityId; // (시/군/구) ID 
+                PcroomTB.TowntbId = dto.townId; // (읍/면/동) ID
 
                 int result = await StoreRepository.EditPcRoomInfo(PcroomTB);
                 if (result != -1)

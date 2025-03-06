@@ -5,77 +5,77 @@
         /// <summary>
         /// PID
         /// </summary>
-        public int Pid { get; set; }
+        public int pId { get; set; }
         
         /// <summary>
         /// 아이피
         /// </summary>
-        public string Ip { get; set; } = null!;
+        public string ip { get; set; } = null!;
 
         /// <summary>
         /// 포트
         /// </summary>
-        public int Port { get; set; }
+        public int port { get; set; }
 
         /// <summary>
         /// 이름
         /// </summary>
-        public string Name { get; set; } = null!;
+        public string name { get; set; } = null!;
 
         /// <summary>
         /// 주소
         /// </summary>
-        public string Addr { get; set; } = null!;
+        public string addr { get; set; } = null!;
 
 
         /// <summary>
         ///  좌석수
         /// </summary>
-        public int SeatNumber { get; set; }
+        public int seatNumber { get; set; }
 
         /// <summary>
         /// 요금제 가격
         /// </summary>
-        public float Price { get; set; }
+        public float price { get; set; }
 
         /// <summary>
         /// 요금제 비율
         /// </summary>
-        public string? PricePercent { get; set; }
+        public string? pricePercent { get; set; }
 
         /// <summary>
         /// 사양
         /// </summary>
-        public string? Pcspec { get; set; }
+        public string? pcSpec { get; set; }
 
         /// <summary>
         /// 통신사
         /// </summary>
-        public string? Telecom { get; set; }
+        public string? telecom { get; set; }
 
         /// <summary>
         /// 메모
         /// </summary>
-        public string? Memo { get; set; }
+        public string? memo { get; set; }
 
         /// <summary>
         /// 도시
         /// </summary>
-        public string? Region { get; set; }
+        public string? region { get; set; }
         
         /// <summary>
         /// 대 ID
         /// </summary>
-        public int CountryTbId { get; set; }
+        public int countryTbId { get; set; }
 
         /// <summary>
         /// 중 ID
         /// </summary>
-        public int CityTbId { get; set; }
+        public int cityTbId { get; set; }
 
         /// <summary>
         /// 소 ID
         /// </summary>
-        public int TownTbId { get; set; }
+        public int townTbId { get; set; }
     }
 }
