@@ -15,9 +15,20 @@ namespace IpManager.Repository.Store
         /// <param name="TownTB"></param>
         /// <returns></returns>
         Task<int> AddPCRoomAsync(PcroomTb PcroomTB, CountryTb CountryTB, CityTb CityTB, TownTb TownTB);
-#endregion
+        #endregion
 
-#region 조회
+        #region 조회
+
+        /// <summary>
+        /// PC방이 존재하는지?
+        /// </summary>
+        /// <param name="PcRoomName"></param>
+        /// <param name="CountryName"></param>
+        /// <param name="CityName"></param>
+        /// <param name="TownName"></param>
+        /// <returns></returns>
+        Task<int> GetPcRoomCheck(string PcRoomName, string ip, int port, string addr);
+
         /// <summary>
         /// 전체 PC방 LIST 반환
         /// </summary>
@@ -49,12 +60,20 @@ namespace IpManager.Repository.Store
         Task<List<StoreListDTO>?> GetMyPcRoomSearchNameListAsync(string search, int countryId);
 
         /// <summary>
-        /// PC방 주소에 해당하는 PC방 LIST 반환
+        /// 전체) PC방 주소에 해당하는 PC방 LIST 반환
         /// </summary>
         /// <param name="search"></param>
         /// <returns></returns>
 
-        Task<List<StoreListDTO>?> GetPcRoomSearchAddressListAsync(string search);
+        Task<List<StoreListDTO>?> GetPcRoomAllSearchAddressListAsync(string search);
+
+        /// <summary>
+        /// 내) PC방 주소에 해당하는 PC방 LIST 반환
+        /// </summary>
+        /// <param name="search"></param>
+        /// <param name="countryId"></param>
+        /// <returns></returns>
+        Task<List<StoreListDTO>?> GetPcRoomMySearchAddressLisyAsync(string search, int countryId);
 
         /// <summary>
         /// (도/시)별 PC방 List 반환
@@ -69,7 +88,7 @@ namespace IpManager.Repository.Store
         /// <param name="cityid"></param>
         /// <returns></returns>
         Task<List<StoreListDTO>?> GetPcRoomCityListAsync(int cityid);
-
+        
         /// <summary>
         /// (읍/면/동)별 PC방 List 반환
         /// </summary>
@@ -78,11 +97,16 @@ namespace IpManager.Repository.Store
         Task<List<StoreListDTO>?> GetPcRoomTownListAsync(int townid);
 
         /// <summary>
-        /// PC방 지역별 그룹핑 개수 카운팅
+        /// (전체) PC방 지역별 그룹핑 개수 카운팅
         /// </summary>
         /// <returns></returns>
-        Task<List<StoreRegionDTO>?> GetPcRoomRegionCountAsync();
+        Task<List<StoreRegionDTO>?> GetPcRoomAllRegionCountAsync();
 
+        /// <summary>
+        /// (내) PC방 지역별 그룹핑 개수 카운팅
+        /// </summary>
+        /// <returns></returns>
+        Task<List<StoreRegionDTO>?> GetPcRoomMyRegionCountAsync(int countryId);
 
         /// <summary>
         /// PC방 정보 상세보기

@@ -3,7 +3,6 @@ using IpManager.DTO.Login;
 using IpManager.Services.Login;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
 
 namespace IpManager.Controllers
 {
@@ -20,13 +19,6 @@ namespace IpManager.Controllers
         {
             this.LoggerService = _loggerservice;
             this.LoginService = _loginservice;
-        }
-
-        [HttpGet]
-        [Route("v1/test")]
-        public async Task<IActionResult> Test()
-        {
-            return Ok("asdasd");
         }
 
         /// <summary>

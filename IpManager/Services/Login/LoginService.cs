@@ -417,6 +417,7 @@ namespace IpManager.Services.Login
                 if (UserModelCheck is null)
                     return new ResponseUnit<bool>() { message = "해당 아이디가 존재하지 않습니다.", data = false, code = 200 };
 
+                UserModelCheck.Uid = $"{UserModelCheck.Pid}_{UserModelCheck.Uid}";
                 UserModelCheck.UpdateDt = DateTime.Now;
                 UserModelCheck.DelYn = true;
                 UserModelCheck.DeleteDt = DateTime.Now;

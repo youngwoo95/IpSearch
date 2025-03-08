@@ -2,11 +2,13 @@ using IpManager.Comm.Logger.LogFactory;
 using IpManager.Comm.Logger.LogFactory.LoggerSelect;
 using IpManager.Comm.Tokens;
 using IpManager.DBModel;
+using IpManager.Repository.Country;
 using IpManager.Repository.DashBoard;
 using IpManager.Repository.Login;
 using IpManager.Repository.Store;
 using IpManager.RunningSet;
 using IpManager.Services;
+using IpManager.Services.Country;
 using IpManager.Services.DashBoard;
 using IpManager.Services.Login;
 using IpManager.Services.Store;
@@ -51,7 +53,6 @@ namespace IpManager
                     ServerVersion.Parse("11.4.5-mariadb"),
                     mariaSqlOption =>
                     {
-                        mariaSqlOption.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null);
                         mariaSqlOption.CommandTimeout(60);
                         mariaSqlOption.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                         mariaSqlOption.MaxBatchSize(100);
@@ -72,11 +73,13 @@ namespace IpManager
             builder.Services.AddTransient<IUserRepository, UserRepository>();
             builder.Services.AddTransient<IStoreRepository, StoreRepository>();
             builder.Services.AddTransient<IDashBoardRepository, DashBoardRepository>();
+            builder.Services.AddTransient<ICountryRepository, CountryRepository>();
 
             // Service
             builder.Services.AddTransient<ILoginService, LoginService>();
             builder.Services.AddTransient<IStoreService, StoreService>();
             builder.Services.AddTransient<IDashBoardService, DashBoardService>();
+            builder.Services.AddTransient<ICountryService, CountryService>();
 
             /* 백그라운드 서비스 등록 */
             builder.Services.AddHostedService<BackgroundManager>();
@@ -237,7 +240,8 @@ namespace IpManager
             {
                 "/api/Login/sign",
                 "/api/Store/sign",
-                "/api/DashBoard/sign"
+                "/api/DashBoard/sign",
+                "/api/Country/sign"
             };
             
             foreach(var path in ApiMiddleWare)

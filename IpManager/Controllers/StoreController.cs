@@ -22,6 +22,37 @@ namespace IpManager.Controllers
         }
 
         /// <summary>
+        /// PC 방 PING SEND
+        /// </summary>
+        /// <param name="pid"></param>
+        /// <returns></returns>
+        [Authorize(Roles = "Manager,Visitor")]
+        [HttpGet]
+        [Route("sign/v1/SendIpPing")]
+        public async Task<IActionResult> GetUsedPcCount([FromQuery] int pid)
+        {
+            try
+            {
+                if (pid == 0)
+                    return BadRequest();
+
+                ResponseUnit<StorePingDTO>? model = await StoreService.GetUsedPcCountService(pid).ConfigureAwait(false);
+                if (model is null)
+                    return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+
+                if (model.code == 200)
+                    return Ok(model);
+                else
+                    return BadRequest();
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+            }
+        }
+
+        /// <summary>
         /// PC방 정보 등록
         /// </summary>
         /// <param name="dto"></param>
@@ -138,7 +169,16 @@ namespace IpManager.Controllers
         {
             try
             {
-                ResponseList<StoreListDTO>? model = await StoreService.GetPcROomSearchAddressListService(search).ConfigureAwait(false);
+                // 권한 검사
+                int userType = User.GetUserType();
+                if (userType == -1)
+                    return Unauthorized();
+
+                int Pid = User.GetUserPid();
+                if (Pid == -1)
+                    return Unauthorized();
+
+                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomSearchAddressListService(Pid, userType, search).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
                 if (model.code == 200)
@@ -165,7 +205,16 @@ namespace IpManager.Controllers
         {
             try
             {
-                ResponseList<StoreRegionDTO>? model = await StoreService.GetPcRoomRegionListService().ConfigureAwait(false);
+                // 권한 검사
+                int userType = User.GetUserType();
+                if (userType == -1)
+                    return Unauthorized();
+
+                int Pid = User.GetUserPid();
+                if (Pid == -1)
+                    return Unauthorized();
+
+                ResponseList<StoreRegionDTO>? model = await StoreService.GetPcRoomRegionListService(Pid, userType).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
                 if (model.code == 200)
@@ -192,7 +241,16 @@ namespace IpManager.Controllers
         {
             try
             {
-                ResponseUnit<StoreDetailDTO>? model = await StoreService.GetPCRoomDetailService(pid).ConfigureAwait(false);
+                // 권한 검사
+                int userType = User.GetUserType();
+                if (userType == -1)
+                    return Unauthorized();
+
+                int UserPid = User.GetUserPid();
+                if (UserPid == -1)
+                    return Unauthorized();
+
+                ResponseUnit<StoreDetailDTO>? model = await StoreService.GetPCRoomDetailService(pid,UserPid, userType).ConfigureAwait(false);
                 
                 if (model is null)
                     return BadRequest();
@@ -216,7 +274,16 @@ namespace IpManager.Controllers
         {
             try
             {
-                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomCountryListService(countryid).ConfigureAwait(false);
+                // 권한 검사
+                int userType = User.GetUserType();
+                if (userType == -1)
+                    return Unauthorized();
+
+                int Pid = User.GetUserPid();
+                if (Pid == -1)
+                    return Unauthorized();
+
+                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomCountryListService(countryid, Pid, userType).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
 
@@ -240,7 +307,17 @@ namespace IpManager.Controllers
         {
             try
             {
-                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomCityListService(cityid).ConfigureAwait(false);
+                // 권한 검사
+                int userType = User.GetUserType();
+                if (userType == -1)
+                    return Unauthorized();
+
+                int Pid = User.GetUserPid();
+                if (Pid == -1)
+                    return Unauthorized();
+
+                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomCityListService(cityid, Pid, userType).ConfigureAwait(false);
+                
                 if (model is null)
                     return BadRequest();
 
@@ -266,7 +343,16 @@ namespace IpManager.Controllers
         {
             try
             {
-                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomTownListService(townid).ConfigureAwait(false);
+                // 권한 검사
+                int userType = User.GetUserType();
+                if (userType == -1)
+                    return Unauthorized();
+
+                int Pid = User.GetUserPid();
+                if (Pid == -1)
+                    return Unauthorized();
+
+                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomTownListService(townid, Pid, userType).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
 

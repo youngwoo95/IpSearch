@@ -192,7 +192,7 @@ namespace IpManager.Services
             }
 
             int dotCount = 0;
-            int thirdDotIndex = 01;
+            int thirdDotIndex = -1;
             for(int i = 0; i < ip.Length; i++)
             {
                 if (ip[i] == '.')

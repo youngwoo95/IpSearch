@@ -46,6 +46,9 @@ namespace IpManager.Controllers
             }
         }
 
+        
+
+
         /// <summary>
         /// 하루 데이터 조회
         /// </summary>

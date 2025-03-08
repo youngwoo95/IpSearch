@@ -58,7 +58,7 @@ namespace IpManager.Repository.Login
                 }
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "SELECT COUNT(*) FROM login_tb WHERE UID = @userid AND DEL_YN != true";
+                    command.CommandText = "SELECT COUNT(*) FROM login_tb WHERE UID = @userid";
                     var parameter = command.CreateParameter();
                     parameter.ParameterName = "@userid";
                     parameter.Value = userid;
