@@ -30,7 +30,7 @@ namespace IpManager.Services.Login
 
 
         /// <summary>
-        /// AccessToken 반환
+        /// AccessToken 반환 [로그인]
         /// </summary>
         /// <param name="dto"></param>
         /// <returns></returns>

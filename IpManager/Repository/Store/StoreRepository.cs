@@ -580,7 +580,7 @@ namespace IpManager.Repository.Store
         /// </summary>
         /// <param name="search"></param>
         /// <returns></returns>
-        public async Task<List<StoreListDTO>?> GetAllPcRoomListAsync(string? search, int pageIndex, int pagenumber)
+        public async Task<List<StoreListDTO>?> GetAllPcRoomListAsync(string? search)
         {
             try
             {
@@ -635,22 +635,7 @@ namespace IpManager.Repository.Store
                             $"AND country.DEL_YN != true " +
                             $"AND city.DEL_YN != true " +
                             $"AND town.DEL_YN != true " +
-                            $"ORDER BY pc.NAME ASC " +
-                            $"LIMIT @pageIndex " +
-                            $"OFFSET @offset";
-
-
-                        var pageSizeParam = command.CreateParameter();
-                        pageSizeParam.ParameterName = "@pageIndex";
-                        pageSizeParam.Value = pageIndex;
-
-                        command.Parameters.Add(pageSizeParam);
-
-                        var offsetParam = command.CreateParameter();
-                        offsetParam.ParameterName = "@offset";
-                        offsetParam.Value = pageIndex * pagenumber;
-
-                        command.Parameters.Add(offsetParam);
+                            $"ORDER BY pc.NAME ASC ";
                     }
                     else
                     {
@@ -682,27 +667,12 @@ namespace IpManager.Repository.Store
                             $"AND country.DEL_YN != true " +
                             $"AND city.DEL_YN != true " +
                             $"AND town.DEL_YN != true " +
-                            $"ORDER BY pc.NAME ASC " +
-                            $"LIMIT @pageIndex " +
-                            $"OFFSET @offset";
-                            
+                            $"ORDER BY pc.NAME ASC ";
 
                         var searchparam = command.CreateParameter();
                         searchparam.ParameterName = "@search";
                         searchparam.Value = $"%{search}%";
                         command.Parameters.Add(searchparam);
-
-                        var pageSizeParam = command.CreateParameter();
-                        pageSizeParam.ParameterName = "@pageIndex";
-                        pageSizeParam.Value = pageIndex;
-
-                        command.Parameters.Add(pageSizeParam);
-
-                        var offsetParam = command.CreateParameter();
-                        offsetParam.ParameterName = "@offset";
-                        offsetParam.Value = pageIndex * pagenumber;
-
-                        command.Parameters.Add(offsetParam);
                     }
 
                     using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
@@ -749,7 +719,7 @@ namespace IpManager.Repository.Store
         /// <param name="pagenumber"></param>
         /// <param name="countryId"></param>
         /// <returns></returns>
-        public async Task<List<StoreListDTO>?> GetMyPcRoomListAsync(string? search, int pageIndex, int pagenumber, int countryId)
+        public async Task<List<StoreListDTO>?> GetMyPcRoomListAsync(string? search, int countryId)
         {
             try
             {
@@ -795,18 +765,6 @@ namespace IpManager.Repository.Store
                             $"LIMIT @pageIndex " +
                             $"OFFSET @offset";
 
-                        var pageSizeParam = command.CreateParameter();
-                        pageSizeParam.ParameterName = "@pageIndex";
-                        pageSizeParam.Value = pageIndex;
-
-                        command.Parameters.Add(pageSizeParam);
-
-                        var offsetParam = command.CreateParameter();
-                        offsetParam.ParameterName = "@offset";
-                        offsetParam.Value = pageIndex * pagenumber;
-
-                        command.Parameters.Add(offsetParam);
-
                         var countryParam = command.CreateParameter();
                         countryParam.ParameterName = "@countryId";
                         countryParam.Value = countryId;
@@ -850,18 +808,6 @@ namespace IpManager.Repository.Store
                         searchparam.ParameterName = "@search";
                         searchparam.Value = $"%{search}%";
                         command.Parameters.Add(searchparam);
-
-                        var pageSizeParam = command.CreateParameter();
-                        pageSizeParam.ParameterName = "@pageIndex";
-                        pageSizeParam.Value = pageIndex;
-
-                        command.Parameters.Add(pageIndex);
-
-                        var offsetParam = command.CreateParameter();
-                        offsetParam.ParameterName = "@offset";
-                        offsetParam.Value = pageIndex * pagenumber;
-
-                        command.Parameters.Add(offsetParam);
 
                         var countryParam = command.CreateParameter();
                         countryParam.ParameterName = "@countryId";

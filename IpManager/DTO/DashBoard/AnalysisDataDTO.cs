@@ -3,7 +3,7 @@
     public class AnalysisDataDTO
     {
         /// <summary>
-        /// 가3동률이 가장 높은 매장
+        /// 가동률이 가장 높은 매장
         /// </summary>
         public string? BestName { get; set; }
         

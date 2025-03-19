@@ -99,7 +99,7 @@ namespace IpManager.Services.Store
         /// </summary>
         /// <param name="search"></param>
         /// <returns></returns>
-        public async Task<ResponseList<StoreListDTO>?> GetPCRoomListService(int userpid, int userType, string? search, int pageIndex, int pagenumber)
+        public async Task<ResponseList<StoreListDTO>?> GetPCRoomListService(int userpid, int userType, string? search)
         {
             try
             {
@@ -115,12 +115,12 @@ namespace IpManager.Services.Store
                     if (countryId == -1)
                         return new ResponseList<StoreListDTO>() { message = "할당된 지역이 없습니다.", data = null, code = 200 };
 
-                    model = await StoreRepository.GetMyPcRoomListAsync(search, pageIndex, pagenumber, countryId);
+                    model = await StoreRepository.GetMyPcRoomListAsync(search, countryId);
                 }
                 else
                 {
                     // Manager - 전체
-                    model = await StoreRepository.GetAllPcRoomListAsync(search, pageIndex, pagenumber).ConfigureAwait(false);
+                    model = await StoreRepository.GetAllPcRoomListAsync(search).ConfigureAwait(false);
                 }
 
                 if (model is null)

@@ -16,7 +16,7 @@ namespace IpManager.Services.Store
         /// </summary>
         /// <param name="search"></param>
         /// <returns></returns>
-        public Task<ResponseList<StoreListDTO>?> GetPCRoomListService(int userpid, int usertype, string? search, int pageIndex, int pagenumber);
+        public Task<ResponseList<StoreListDTO>?> GetPCRoomListService(int userpid, int usertype, string? search);
 
         /// <summary>
         /// 검색조건(NAME)에 해당하는 PC방 LIST 반환

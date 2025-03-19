@@ -90,13 +90,10 @@ namespace IpManager.Controllers
         [Authorize(Roles = "Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetStoreList")]
-        public async Task<IActionResult> GetStoreList([FromQuery]string? search, [FromQuery]int pagenumber)
+        public async Task<IActionResult> GetStoreList([FromQuery]string? search)
         {
             try
             {
-                if (pagenumber == 0)
-                    return BadRequest();
-
                 // 권한 검사
                 int userType = User.GetUserType();
                 if (userType == -1)
@@ -106,7 +103,7 @@ namespace IpManager.Controllers
                 if (Pid == -1)
                     return Unauthorized();
 
-                ResponseList<StoreListDTO>? model = await StoreService.GetPCRoomListService(Pid, userType, search, 15, pagenumber - 1).ConfigureAwait(false);
+                ResponseList<StoreListDTO>? model = await StoreService.GetPCRoomListService(Pid, userType, search).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
                 if (model.code == 200)

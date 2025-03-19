@@ -34,7 +34,7 @@ namespace IpManager.Repository.Store
         /// </summary>
         /// <param name="search"></param>
         /// <returns></returns>
-        Task<List<StoreListDTO>?> GetAllPcRoomListAsync(string? search, int pageIndex, int pagenumber);
+        Task<List<StoreListDTO>?> GetAllPcRoomListAsync(string? search);
 
         /// <summary>
         /// 내 지역 PC방 LIST 반환
@@ -43,7 +43,7 @@ namespace IpManager.Repository.Store
         /// <param name="pageIndex"></param>
         /// <param name="pagenumber"></param>
         /// <returns></returns>
-        Task<List<StoreListDTO>?> GetMyPcRoomListAsync(string? search, int pageIndex, int pagenumber, int countryId);
+        Task<List<StoreListDTO>?> GetMyPcRoomListAsync(string? search, int countryId);
 
         /// <summary>
         /// 전체) PC방 이름에 해당하는 PC방 LIST 반환

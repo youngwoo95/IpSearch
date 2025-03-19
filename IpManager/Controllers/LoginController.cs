@@ -1,8 +1,10 @@
 ﻿using IpManager.Comm.Logger.LogFactory.LoggerSelect;
 using IpManager.DTO.Login;
+using IpManager.Helpers;
 using IpManager.Services.Login;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace IpManager.Controllers
 {
@@ -71,6 +73,25 @@ namespace IpManager.Controllers
                     return BadRequest();
             }
             catch (Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+            }
+        }
+
+        [HttpGet]
+        [Route("v1/GetRole")]
+        public async Task<IActionResult> GetLoginRole()
+        {
+            try
+            {
+                var model = await User.GetUserRole(HttpContext);
+                if (model is null)
+                    return Unauthorized();
+                else
+                    return Ok(model);
+            }
+            catch(Exception ex)
             {
                 LoggerService.FileErrorMessage(ex.ToString());
                 return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);

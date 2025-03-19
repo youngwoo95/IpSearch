@@ -20,6 +20,7 @@ namespace IpManager.Controllers
             this.DashBoardService = _dashboardservice;
         }
 
+
         /// <summary>
         /// 현황(실시간)조회
         /// </summary>
@@ -45,9 +46,6 @@ namespace IpManager.Controllers
                 return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
             }
         }
-
-        
-
 
         /// <summary>
         /// 하루 데이터 조회
