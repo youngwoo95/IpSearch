@@ -2,8 +2,11 @@
 using IpManager.DTO.Store;
 using IpManager.Helpers;
 using IpManager.Services.Store;
+using IpManager.SwaggerExample;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
+using Swashbuckle.AspNetCore.Filters;
 
 namespace IpManager.Controllers
 {
@@ -90,6 +93,8 @@ namespace IpManager.Controllers
         [Authorize(Roles = "Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetStoreList")]
+        [SwaggerResponse(200, "성공", typeof(ResponseList<StoreListDTO>))]
+        [SwaggerResponseExample(200, typeof(SwaggerStoreList))]
         public async Task<IActionResult> GetStoreList([FromQuery]string? search)
         {
             try

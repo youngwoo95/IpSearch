@@ -12,13 +12,16 @@ using IpManager.Services.Country;
 using IpManager.Services.DashBoard;
 using IpManager.Services.Login;
 using IpManager.Services.Store;
+using IpManager.SwaggerExample;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.Filters;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 namespace IpManager
@@ -33,8 +36,10 @@ namespace IpManager
             builder.WebHost.UseKestrel((context, options) =>
             {
                 options.Configure(context.Configuration.GetSection("Kestrel"));
+                options.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(1); // 서버가 요청 헤더를 수신하는 데 걸리는 최대 시간을 설정한다.
                 // Keep-Alive TimeOut 3분설정 keep-Alive 타임아웃: 일반적으로 2~5분, 너무 짧으면 연결이 자주 끊어질 수 있고, 너무 길면 리소스가 낭비될 수 있음.
                 options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(3);
+                
                 // 최대 동시 업그레이드 연결 수: 일반적으로 1000 ~ 5000 사이로 설정하는 것이 좋음
                 options.Limits.MaxConcurrentUpgradedConnections = 3000;
                 options.Limits.MaxResponseBufferSize = null; // 응답 크기 제한 해제
@@ -46,6 +51,23 @@ namespace IpManager
                 });
             });
             #endregion
+
+            // 전달된 헤더의 미들웨어 순서
+            builder.Services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            });
+
+            builder.Services.AddResponseCompression(options =>
+            {
+                options.EnableForHttps = true;
+                options.Providers.Add<BrotliCompressionProvider>();
+                options.Providers.Add<GzipCompressionProvider>();
+                //options.Providers.Add<CustomCompressionProvider>();
+                options.MimeTypes =
+                ResponseCompressionDefaults.MimeTypes.Concat(
+                    new[] { "image/svg+xml" });
+            });
 
             builder.Services.AddDbContextPool<IpanalyzeContext>(options =>
                 options.UseMySql(
@@ -128,20 +150,32 @@ namespace IpManager
                 };
             });
 
-            // Swagger 설정 (JWT 적용)
+
             builder.Services.AddSwaggerGen(options =>
             {
+                // Swagger 문서에 버전 및 API 정보 추가
+                options.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "My API",
+                    Version = "v1",
+                    Description = "API 문서 예제"
+                });
+
+                options.EnableAnnotations(); // SwaggerResponse 어트리뷰트 사용 (옵션)
+                options.ExampleFilters();    // Swagger 예제 필터 사용
+
                 // JWT Bearer 인증 스킴 추가
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     Description = @"입력양식 - 'Bearer' [space] and then your token.
-                        예: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'",
-                    Name = "Authorization", // HTTP 헤더 이름
+                    예: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'",
+                    Name = "Authorization",
                     In = ParameterLocation.Header,
                     Type = SecuritySchemeType.ApiKey,
                     Scheme = "Bearer",
                     BearerFormat = "JWT"
                 });
+
                 // 전역 보안 요구 사항 추가
                 options.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
@@ -162,6 +196,9 @@ namespace IpManager
                 });
             });
 
+            // 예제 필터를 포함하는 어셈블리 목록
+            builder.Services.AddSwaggerExamplesFromAssemblyOf<SwaggerStoreList>();
+
             // CORS 정책 추가: 모든 출처, 메서드, 헤더 허용
             builder.Services.AddCors(options =>
             {
@@ -173,11 +210,8 @@ namespace IpManager
                 });
             });
 
-
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            
 
             var app = builder.Build();
             
@@ -189,11 +223,6 @@ namespace IpManager
             #endregion
 
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
             app.UseSwagger();
             app.UseSwaggerUI();
 
@@ -252,10 +281,8 @@ namespace IpManager
                 });
             }
 
-            //app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseAuthorization();
-
 
             app.MapControllers();
 
