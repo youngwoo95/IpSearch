@@ -365,7 +365,7 @@ namespace IpManager.Repository.Login
         /// 사용자 전체리스트 반환
         /// </summary>
         /// <returns></returns>
-        public async Task<List<LoginTb>?> GetUserListAsync(int pageIndex, int pagenumber)
+        public async Task<List<LoginTb>?> GetUserListAsync()
         {
             try
             {
@@ -379,20 +379,7 @@ namespace IpManager.Repository.Login
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "SELECT * FROM login_tb WHERE MASTER_YN != true AND DEL_YN != true ORDER BY PID LIMIT @pageIndex OFFSET @offset";
-
-
-                    var pageSizeParam = command.CreateParameter();
-                    pageSizeParam.ParameterName = "@pageIndex";
-                    pageSizeParam.Value = pageIndex;
-
-                    command.Parameters.Add(pageSizeParam);
-
-                    var offsetParam = command.CreateParameter();
-                    offsetParam.ParameterName = "@offset";
-                    offsetParam.Value = pageIndex * pagenumber;
-
-                    command.Parameters.Add(offsetParam);
+                    command.CommandText = "SELECT * FROM login_tb WHERE MASTER_YN != true AND DEL_YN != true ORDER BY PID";
 
                     using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
                     {

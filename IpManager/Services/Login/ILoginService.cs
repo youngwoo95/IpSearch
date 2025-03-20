@@ -43,7 +43,7 @@ namespace IpManager.Services.Login
         /// 사용자 전체 LIST 반환
         /// </summary>
         /// <returns></returns>
-        public Task<ResponseList<UserListDTO>?> GetUserListService(int pageIndex, int pageSize);
+        public Task<ResponseList<UserListDTO>?> GetUserListService();
 
         /// <summary>
         /// 사용자 정보 수정

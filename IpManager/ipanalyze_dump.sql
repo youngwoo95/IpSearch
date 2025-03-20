@@ -1,7 +1,7 @@
 /*M!999999\- enable the sandbox mode */ 
 -- MariaDB dump 10.19  Distrib 10.6.21-MariaDB, for Win64 (AMD64)
 --
--- Host: localhost    Database: ipanalyze
+-- Host: localhost    Database: Ipanalyze
 -- ------------------------------------------------------
 -- Server version	10.6.21-MariaDB
 
@@ -95,8 +95,11 @@ CREATE TABLE `login_tb` (
   `UPDATE_DT` datetime DEFAULT NULL COMMENT '수정일',
   `DEL_YN` tinyint(1) DEFAULT NULL COMMENT '삭제여부',
   `DELETE_DT` datetime DEFAULT NULL COMMENT '삭제일',
+  `COUNTRY_ID` int(11) DEFAULT NULL,
   PRIMARY KEY (`PID`),
-  UNIQUE KEY `UK` (`UID`)
+  UNIQUE KEY `UK` (`UID`),
+  KEY `FK_Countrytb_202503200955` (`COUNTRY_ID`),
+  CONSTRAINT `FK_Countrytb_202503200955` FOREIGN KEY (`COUNTRY_ID`) REFERENCES `country_tb` (`PID`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -106,7 +109,7 @@ CREATE TABLE `login_tb` (
 
 LOCK TABLES `login_tb` WRITE;
 /*!40000 ALTER TABLE `login_tb` DISABLE KEYS */;
-INSERT INTO `login_tb` VALUES (1,'Master','1234',1,0,1,'2025-02-20 08:48:03',NULL,0,NULL),(2,'user','1234',0,0,1,'2025-02-20 09:32:54','2025-02-20 09:32:54',0,NULL),(3,'user01','1234',0,0,0,'2025-02-20 16:36:47','2025-02-20 16:36:47',0,NULL),(4,'user02','5555111',0,0,1,'2025-02-20 16:36:58','2025-02-20 16:57:15',1,'2025-02-20 16:57:15'),(6,'Manager','1234',0,1,1,'2025-02-21 10:51:17','2025-02-21 10:51:17',0,NULL);
+INSERT INTO `login_tb` VALUES (1,'Master','1234',1,0,1,'2025-02-20 08:48:03',NULL,0,NULL,NULL),(2,'user','1234',0,0,1,'2025-02-20 09:32:54','2025-02-20 09:32:54',0,NULL,NULL),(3,'user01','1234',0,0,0,'2025-02-20 16:36:47','2025-02-20 16:36:47',0,NULL,NULL),(4,'user02','5555111',0,0,1,'2025-02-20 16:36:58','2025-02-20 16:57:15',1,'2025-02-20 16:57:15',NULL),(6,'Manager','1234',0,1,1,'2025-02-21 10:51:17','2025-02-21 10:51:17',0,NULL,NULL);
 /*!40000 ALTER TABLE `login_tb` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -125,7 +128,7 @@ CREATE TABLE `pcroom_tb` (
   `ADDR` varchar(100) NOT NULL COMMENT '주소',
   `SEATNUMBER` int(11) DEFAULT NULL COMMENT '좌석수',
   `PRICE` float NOT NULL DEFAULT 0 COMMENT '요금제 가격',
-  `PRICE_PERCENT` varchar(10) DEFAULT NULL COMMENT 'PC 요금제 비율',
+  `PRICE_PERCENT` float NOT NULL COMMENT 'PC 요금제 비율',
   `PC_SPEC` varchar(100) DEFAULT NULL COMMENT 'PC 사양',
   `TELECOM` varchar(30) DEFAULT NULL COMMENT '통신사',
   `MEMO` varchar(255) DEFAULT NULL COMMENT '메모',
@@ -153,7 +156,7 @@ CREATE TABLE `pcroom_tb` (
 
 LOCK TABLES `pcroom_tb` WRITE;
 /*!40000 ALTER TABLE `pcroom_tb` DISABLE KEYS */;
-INSERT INTO `pcroom_tb` VALUES (1,'123.2.156.148',5245,'테스트상호','경기도 하남시 미사대로',30,3000,'30%','몰라','SK','테스트용','2025-02-21 12:57:49',NULL,0,NULL,1,1,1),(2,'123.2.156.148',5245,'테스트상호1','경기도 하남시 미사대로',30,3000,'30%','몰라','SK','테스트용','2025-02-21 12:58:34',NULL,0,NULL,1,1,2),(3,'123.2.123.123',2222,'부산사업장','부산광역시 사상구 주례동',30,3000,'30%','몰라','SK','테스트2','2025-02-21 13:00:13',NULL,0,NULL,3,2,3),(4,'123.2.123.123',2222,'부산 화명사업장','부산광역시 북구 화명동',30,3000,'30%','몰라','SK','테스트3','2025-02-21 13:01:09',NULL,0,NULL,3,3,4),(5,'123.2.123.123',2222,'서울 개포 사업장','서울시 강남구 개포동',30,3000,'30%','몰라','SK','테스트3','2025-02-21 13:01:50',NULL,0,NULL,4,4,5);
+INSERT INTO `pcroom_tb` VALUES (1,'123.2.156.148',5245,'테스트상호','경기도 하남시 미사대로',30,3000,30,'몰라','SK','테스트용','2025-02-21 12:57:49',NULL,0,NULL,1,1,1),(2,'123.2.156.148',5245,'테스트상호1','경기도 하남시 미사대로',30,3000,30,'몰라','SK','테스트용','2025-02-21 12:58:34',NULL,0,NULL,1,1,2),(3,'123.2.123.123',2222,'부산사업장','부산광역시 사상구 주례동',30,3000,30,'몰라','SK','테스트2','2025-02-21 13:00:13',NULL,0,NULL,3,2,3),(4,'123.2.123.123',2222,'부산 화명사업장','부산광역시 북구 화명동',30,3000,30,'몰라','SK','테스트3','2025-02-21 13:01:09',NULL,0,NULL,3,3,4),(5,'123.2.123.123',2222,'서울 개포 사업장','서울시 강남구 개포동',30,3000,30,'몰라','SK','테스트3','2025-02-21 13:01:50',NULL,0,NULL,4,4,5);
 /*!40000 ALTER TABLE `pcroom_tb` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -268,4 +271,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-02-21 16:02:44
+-- Dump completed on 2025-03-20 10:02:49

@@ -2,9 +2,11 @@
 using IpManager.DTO.Login;
 using IpManager.Helpers;
 using IpManager.Services.Login;
+using IpManager.SwaggerExample;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using Swashbuckle.AspNetCore.Annotations;
+using Swashbuckle.AspNetCore.Filters;
 
 namespace IpManager.Controllers
 {
@@ -14,7 +16,6 @@ namespace IpManager.Controllers
     {
         private readonly ILoggerService LoggerService;
         private ILoginService LoginService;
-
 
         public LoginController(ILoggerService _loggerservice,
             ILoginService _loginservice)
@@ -30,6 +31,8 @@ namespace IpManager.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("v1/AddUser")]
+        [SwaggerResponse(200, "성공", typeof(ResponseUnit<bool>))]
+        [SwaggerResponseExample(200, typeof(SwaggerAddUserDTO))]
         public async Task<IActionResult> AddUser([FromBody]RegistrationDTO dto)
         {
             try
@@ -58,6 +61,8 @@ namespace IpManager.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("v1/CheckUserId")]
+        [SwaggerResponse(200, "성공", typeof(ResponseUnit<bool>))]
+        [SwaggerResponseExample(200, typeof(SwaggerChecUserIdDTO))]
         public async Task<IActionResult> UserIdCheck([FromBody]UserIDCheckDTO dto)
         {
             try
@@ -79,8 +84,14 @@ namespace IpManager.Controllers
             }
         }
 
+        /// <summary>
+        /// 토큰에 대한 사용자정보 반환
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [Route("v1/GetRole")]
+        [SwaggerResponse(200, "성공", typeof(ResponseUnit<LoginRoleDTO>))]
+        [SwaggerResponseExample(200, typeof(SwaggerGetRoleDTO))]
         public async Task<IActionResult> GetLoginRole()
         {
             try
@@ -89,7 +100,15 @@ namespace IpManager.Controllers
                 if (model is null)
                     return Unauthorized();
                 else
-                    return Ok(model);
+                {
+                    var result = new ResponseUnit<LoginRoleDTO>
+                    {
+                        message = "요청이 정상 처리되었습니다.",
+                        data = model,
+                        code = 200
+                    };
+                    return Ok(result);
+                }
             }
             catch(Exception ex)
             {
@@ -104,6 +123,8 @@ namespace IpManager.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("v1/Login")]
+        [SwaggerResponse(200,"성공", typeof(ResponseUnit<TokenDTO>))]
+        [SwaggerResponseExample(200, typeof(SwaggerLoginDTO))]
         public async Task<IActionResult> AccessToken([FromBody] LoginDTO logininfo)
         {
             try
@@ -126,22 +147,19 @@ namespace IpManager.Controllers
 
 
         /// <summary>
-        /// 계정관리 - 조회 - 15개씩 끊어서 준다
-        /// 첫페이지 --> 1페이지 1을 주면됨
-        /// 두번째 --> 2페이지 2를 주면됨
+        /// 계정 리스트 반환
         /// </summary>
         /// <returns></returns>
         [Authorize(Roles = "Master")] // Master만 접근가능
         [HttpGet]
         [Route("sign/v1/AccountList")]
-        public async Task<IActionResult> AccountList([FromQuery]int pagenumber)
+        [SwaggerResponse(200, "성공", typeof(ResponseList<UserListDTO>))]
+        [SwaggerResponseExample(200, typeof(SwaggerAccountList))]
+        public async Task<IActionResult> AccountList()
         {
             try
             {
-                if (pagenumber == 0)
-                    return BadRequest();
-
-                ResponseList<UserListDTO>? model = await LoginService.GetUserListService(15, pagenumber - 1).ConfigureAwait(false);
+                ResponseList<UserListDTO>? model = await LoginService.GetUserListService().ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
 
@@ -164,6 +182,8 @@ namespace IpManager.Controllers
         [Authorize(Roles = "Master")] // Master만 접근가능
         [HttpPost]
         [Route("sign/v1/AccountManagement")]
+        [SwaggerResponse(200, "성공", typeof(ResponseUnit<bool>))]
+        [SwaggerResponseExample(200, typeof(SwaggerAccountManagement))]
         public async Task<IActionResult> AccountManagement([FromBody] UserUpdateDTO dto)
         {
             try
@@ -191,6 +211,8 @@ namespace IpManager.Controllers
         [Authorize(Roles ="Master")] // Master만 접근가능
         [HttpPut]
         [Route("sign/v1/AccountDelete")]
+        [SwaggerResponse(200, "성공", typeof(ResponseUnit<bool>))]
+        [SwaggerResponseExample(200, typeof(SwaggerAccountDelete))]
         public async Task<IActionResult> AccountDelete([FromBody] int pid)
         {
             try

@@ -53,7 +53,7 @@ namespace IpManager.Repository.Login
         /// 사용자 전체리스트 반환 - PageNation
         /// </summary>
         /// <returns></returns>
-        Task<List<LoginTb>?> GetUserListAsync(int pageIndex, int pagenumber);
+        Task<List<LoginTb>?> GetUserListAsync();
 
         /// <summary>
         /// 사용자 정보 수정

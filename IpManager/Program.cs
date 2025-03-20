@@ -1,4 +1,3 @@
-using IpManager.Comm.Logger.LogFactory;
 using IpManager.Comm.Logger.LogFactory.LoggerSelect;
 using IpManager.Comm.Tokens;
 using IpManager.DBModel;
@@ -7,7 +6,6 @@ using IpManager.Repository.DashBoard;
 using IpManager.Repository.Login;
 using IpManager.Repository.Store;
 using IpManager.RunningSet;
-using IpManager.Services;
 using IpManager.Services.Country;
 using IpManager.Services.DashBoard;
 using IpManager.Services.Login;
@@ -69,17 +67,19 @@ namespace IpManager
                     new[] { "image/svg+xml" });
             });
 
-            builder.Services.AddDbContextPool<IpanalyzeContext>(options =>
-                options.UseMySql(
-                    builder.Configuration.GetConnectionString("MySqlConnection"),
-                    ServerVersion.Parse("11.4.5-mariadb"),
-                    mariaSqlOption =>
-                    {
-                        mariaSqlOption.CommandTimeout(60);
-                        mariaSqlOption.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                        mariaSqlOption.MaxBatchSize(100);
-                    }));
+            #region CORS
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", builder =>
+                {
+                    builder.AllowAnyOrigin()
+                    .AllowAnyHeader()
+                    .AllowAnyHeader();
+                });
+            });
+            #endregion
 
+            #region 의존성 주입
             // Add services to the container.
 
             builder.Services.AddTransient<ILoggerService, LoggerService>();
@@ -104,17 +104,31 @@ namespace IpManager
             builder.Services.AddTransient<ICountryService, CountryService>();
 
             /* 백그라운드 서비스 등록 */
-            builder.Services.AddHostedService<BackgroundManager>();
-            builder.Services.AddHostedService<StartupTask>();
+            //builder.Services.AddHostedService<BackgroundManager>();
+            //builder.Services.AddHostedService<StartupTask>();
+            #endregion
 
+            #region 데이터베이스 설정
+            builder.Services.AddDbContextPool<IpanalyzeContext>(options =>
+                options.UseMySql(
+                    builder.Configuration.GetConnectionString("MySqlConnection"),
+                    ServerVersion.Parse("11.4.5-mariadb"),
+                    mariaSqlOption =>
+                    {
+                        mariaSqlOption.CommandTimeout(60);
+                        mariaSqlOption.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                        mariaSqlOption.MaxBatchSize(100);
+                    }));
+            #endregion
 
+            #region 캐쉬 사용
             /* 메모리 캐시 등록 */
             builder.Services.AddMemoryCache();
+            #endregion
 
+            #region JWT TOKEN
             // JWTToken 기본 매핑 제거
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-
-
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -149,8 +163,9 @@ namespace IpManager
                     }
                 };
             });
+            #endregion
 
-
+            #region SWAGGER
             builder.Services.AddSwaggerGen(options =>
             {
                 // Swagger 문서에 버전 및 API 정보 추가
@@ -197,18 +212,28 @@ namespace IpManager
             });
 
             // 예제 필터를 포함하는 어셈블리 목록
-            builder.Services.AddSwaggerExamplesFromAssemblyOf<SwaggerStoreList>();
 
-            // CORS 정책 추가: 모든 출처, 메서드, 헤더 허용
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowAll", builder =>
-                {
-                    builder.AllowAnyOrigin()
-                           .AllowAnyMethod()
-                           .AllowAnyHeader();
-                });
-            });
+            #region 아이디 관련
+            builder.Services.AddSwaggerExamplesFromAssemblyOf<SwaggerAddUserDTO>(); // 회원가입 예제
+            builder.Services.AddSwaggerExamplesFromAssemblyOf<SwaggerChecUserIdDTO>(); // 아이디 중복검사 예제
+            builder.Services.AddSwaggerExamplesFromAssemblyOf<SwaggerGetRoleDTO>(); // 토큰에 대한 사용자 정보 반환
+            builder.Services.AddSwaggerExamplesFromAssemblyOf<SwaggerLoginDTO>(); // 로그인
+            builder.Services.AddSwaggerExamplesFromAssemblyOf<SwaggerAccountList>(); // 계정 리스트 반환
+            builder.Services.AddSwaggerExamplesFromAssemblyOf<SwaggerAccountManagement>(); // 계정 수정
+            builder.Services.AddSwaggerExamplesFromAssemblyOf<SwaggerAccountDelete>(); // 계정 삭제
+            #endregion
+
+            #region PC방 관련
+            builder.Services.AddSwaggerExamplesFromAssemblyOf<SwaggerStoreListDTO>(); // 피시방 리스트 조회
+            builder.Services.AddSwaggerExamplesFromAssemblyOf<SwaggerStorePingDTO>(); // PING SEND
+            builder.Services.AddSwaggerExamplesFromAssemblyOf<SwaggerAddStoreDTO>(); // PC방 정보 등록
+            builder.Services.AddSwaggerExamplesFromAssemblyOf<SwaggerSearchNameStoreDTO>(); // PC방 이름으로 검색
+            builder.Services.AddSwaggerExamplesFromAssemblyOf<SwaggerSearchAddrStoreDTO>(); // PC방 주소로 검색
+
+
+            #endregion
+
+            #endregion
 
             builder.Services.AddControllers();
             
@@ -222,13 +247,16 @@ namespace IpManager
             });
             #endregion
 
-            // Configure the HTTP request pipeline.
+            #region 응답압축 미들웨어 추가
+            app.UseResponseCompression();
+            #endregion
+
+            #region 스웨거 사용
             app.UseSwagger();
             app.UseSwaggerUI();
+            #endregion
 
-            // CORS 미들웨어 적용
-            app.UseCors("AllowAll");
-
+            #region MIME 타입 및 압축헤더 설정
             /* 
                 MIME 타입 및 압축 헤더 설정
                 기본 제공되지 않는 MIME 타입 추가.
@@ -264,7 +292,8 @@ namespace IpManager
                     }
                 }
             });
-            
+            #endregion
+
             string[]? ApiMiddleWare = new string[]
             {
                 "/api/Login/sign",
@@ -281,11 +310,13 @@ namespace IpManager
                 });
             }
 
+            #region CORS 미들웨어 등록
+            app.UseCors("AllowAll");
+            #endregion
             app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
-
             app.Run();
         }
     }

@@ -41,7 +41,7 @@
         /// <summary>
         /// 요금제 비율
         /// </summary>
-        public string? pricePercent { get; set; }
+        public string pricePercent { get; set; } = null!;
 
         /// <summary>
         /// 사양

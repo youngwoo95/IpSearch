@@ -35,7 +35,7 @@
         /// <summary>
         /// 요금제 비율
         /// </summary>
-        public string? pricePercent { get; set; }
+        public float pricePercent { get; set; }
 
         /// <summary>
         /// PC 사양

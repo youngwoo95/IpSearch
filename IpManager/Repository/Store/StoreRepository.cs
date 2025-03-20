@@ -3,6 +3,7 @@ using IpManager.DBModel;
 using IpManager.DTO.Store;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using System.Data;
 
 namespace IpManager.Repository.Store
 {
@@ -214,7 +215,7 @@ namespace IpManager.Repository.Store
                                 addr = reader.GetString(reader.GetOrdinal("ADDR")),
                                 seatNumber = reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
                                 price = (float)reader.GetDouble(reader.GetOrdinal("PRICE")), // 필요한 경우 형변환 처리
-                                pricePercent = reader["PRICE_PERCENT"] as string,
+                                pricePercent = $"{reader["PRICE_PERCENT"] as string}%",
                                 pcSpec = reader["PC_SPEC"] as string,
                                 telecom = reader["TELECOM"] as string,
                                 memo = reader["MEMO"] as string,
@@ -302,7 +303,7 @@ namespace IpManager.Repository.Store
                                 addr = reader.GetString(reader.GetOrdinal("ADDR")),
                                 seatNumber = reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
                                 price = (float)reader.GetDouble(reader.GetOrdinal("PRICE")), // 필요한 경우 형변환 처리
-                                pricePercent = reader["PRICE_PERCENT"] as string,
+                                pricePercent = $"{reader["PRICE_PERCENT"] as string}%",
                                 pcSpec = reader["PC_SPEC"] as string,
                                 telecom = reader["TELECOM"] as string,
                                 memo = reader["MEMO"] as string,
@@ -391,7 +392,7 @@ namespace IpManager.Repository.Store
                                 addr = reader.GetString(reader.GetOrdinal("ADDR")),
                                 seatNumber = reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
                                 price = (float)reader.GetDouble(reader.GetOrdinal("PRICE")), // 필요한 경우 형변환 처리
-                                pricePercent = reader["PRICE_PERCENT"] as string,
+                                pricePercent = $"{reader["PRICE_PERCENT"] as string}%",
                                 pcSpec = reader["PC_SPEC"] as string,
                                 telecom = reader["TELECOM"] as string,
                                 memo = reader["MEMO"] as string,
@@ -477,7 +478,8 @@ namespace IpManager.Repository.Store
                                 addr = reader.IsDBNull(reader.GetOrdinal("ADDR")) ? string.Empty : reader.GetString(reader.GetOrdinal("ADDR")),
                                 seatNumber = reader.IsDBNull(reader.GetOrdinal("SEATNUMBER")) ? 0 : reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
                                 price = reader.IsDBNull(reader.GetOrdinal("PRICE")) ? 0 : reader.GetFloat(reader.GetOrdinal("PRICE")),
-                                pricePercent = reader.IsDBNull(reader.GetOrdinal("PRICE_PERCENT")) ? string.Empty : reader.GetString(reader.GetOrdinal("PRICE_PERCENT")),
+                                //pricePercent = reader.IsDBNull(reader.GetOrdinal("PRICE_PERCENT")) ? string.Empty : reader.GetString(reader.GetOrdinal("PRICE_PERCENT")),
+                                pricePercent = reader.IsDBNull(reader.GetOrdinal("PRICE_PERCENT")) ? string.Empty : reader.GetString($"{reader.GetOrdinal("PRICE_PERCENT")}%"),
                                 pcSpec = reader.IsDBNull(reader.GetOrdinal("PC_SPEC")) ? string.Empty : reader.GetString(reader.GetOrdinal("PC_SPEC")),
                                 telecom = reader.IsDBNull(reader.GetOrdinal("TELECOM")) ? string.Empty : reader.GetString(reader.GetOrdinal("TELECOM")),
                                 memo = reader.IsDBNull(reader.GetOrdinal("MEMO")) ? string.Empty : reader.GetString(reader.GetOrdinal("MEMO")),
@@ -539,7 +541,7 @@ namespace IpManager.Repository.Store
                                 Addr = reader.IsDBNull(reader.GetOrdinal("ADDR")) ? string.Empty : reader.GetString(reader.GetOrdinal("ADDR")),
                                 Seatnumber = reader.IsDBNull(reader.GetOrdinal("SEATNUMBER")) ? 0 : reader.GetInt32(reader.GetOrdinal("SEATNUMBER")),
                                 Price = reader.IsDBNull(reader.GetOrdinal("PRICE")) ? 0 : reader.GetFloat(reader.GetOrdinal("PRICE")),
-                                PricePercent = reader.IsDBNull(reader.GetOrdinal("PRICE_PERCENT")) ? string.Empty : reader.GetString(reader.GetOrdinal("PRICE_PERCENT")),
+                                PricePercent = reader.IsDBNull(reader.GetOrdinal("PRICE_PERCENT")) ? 0: reader.GetFloat(reader.GetOrdinal("PRICE_PERCENT")),
                                 PcSpec = reader.IsDBNull(reader.GetOrdinal("PC_SPEC")) ? string.Empty : reader.GetString(reader.GetOrdinal("PC_SPEC")),
                                 Telecom = reader.IsDBNull(reader.GetOrdinal("TELECOM")) ? string.Empty : reader.GetString(reader.GetOrdinal("TELECOM")),
                                 Memo = reader.IsDBNull(reader.GetOrdinal("MEMO")) ? string.Empty : reader.GetString(reader.GetOrdinal("MEMO")),

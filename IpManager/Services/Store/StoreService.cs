@@ -30,6 +30,9 @@ namespace IpManager.Services.Store
                 if (dto is null)
                     return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, code = 200 }; // BadRequest
 
+                if (String.IsNullOrWhiteSpace(dto.ip))
+                    return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, code = 400 };
+
                 var PCRoomModel = new PcroomTb
                 {
                     Ip = dto.ip,
@@ -111,6 +114,7 @@ namespace IpManager.Services.Store
                     if (userModel is null)
                         return new ResponseList<StoreListDTO>() { message = "잘못된 요청입니다.", data = null, code = 404 };
 
+                    
                     int countryId = userModel.CountryId ?? -1;
                     if (countryId == -1)
                         return new ResponseList<StoreListDTO>() { message = "할당된 지역이 없습니다.", data = null, code = 200 };
@@ -569,7 +573,7 @@ namespace IpManager.Services.Store
                 if (dto is null)
                     return new ResponseUnit<StorePingDTO>() { message = "잘못된 요청입니다.", data = null, code = 500 };
 
-                string targetIp = default;
+                string? targetIp = default;
 
                 int dotCount = 0;
                 int thirdDotIndex = -1;

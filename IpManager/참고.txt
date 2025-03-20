@@ -1,2 +1,9 @@
 ﻿-- 데이터베이스 스캐폴드
 Scaffold-DbContext "Server=127.0.0.1;Port=3306;Database=ipanalyze;User=root;Password=rladyddn!!95;" Pomelo.EntityFrameworkCore.MySql -OutputDir DBModel -ContextDir Repository -Context IpanalyzeContext -Force
+
+mysqldump -u [사용자이름] -p [데이터베이스이름] > [백업파일명].sql
+
+mysql -u [사용자명] -p [데이터베이스명] < [dump파일명].sql
+
+C:\Users\kyw>mysql -h 127.0.0.1 -u root -p AptmentWorks < C:\Users\kyw\Documents\APTMentsAPI\aptmentworks_dump.sql
+Enter password: ****

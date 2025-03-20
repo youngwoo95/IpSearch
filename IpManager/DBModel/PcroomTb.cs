@@ -40,7 +40,7 @@ public partial class PcroomTb
     /// <summary>
     /// PC 요금제 비율
     /// </summary>
-    public string? PricePercent { get; set; }
+    public float PricePercent { get; set; }
 
     /// <summary>
     /// PC 사양

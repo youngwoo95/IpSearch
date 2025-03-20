@@ -328,11 +328,11 @@ namespace IpManager.Services.Login
         /// 사용자 전체 리스트 반환
         /// </summary>
         /// <returns></returns>
-        public async Task<ResponseList<UserListDTO>?> GetUserListService(int pageIndex, int pageSize)
+        public async Task<ResponseList<UserListDTO>?> GetUserListService()
         {
             try
             {
-                var model = await UserRepository.GetUserListAsync(pageIndex, pageSize).ConfigureAwait(false);
+                var model = await UserRepository.GetUserListAsync().ConfigureAwait(false);
                 if (model is null)
                     return new ResponseList<UserListDTO>() { message = "조회된 데이터가 없습니다.", data = null, code = 200 };
 

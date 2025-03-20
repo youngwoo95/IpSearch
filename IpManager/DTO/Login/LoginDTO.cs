@@ -1,4 +1,6 @@
-﻿namespace IpManager.DTO.Login
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace IpManager.DTO.Login
 {
     /// <summary>
     /// 로그인 DTO
@@ -7,7 +9,8 @@
     {
         private string? loginid;
         private string? loginpw;
-
+        
+        [Required]
         public string? loginId
         {
             get
@@ -21,6 +24,7 @@
             }
         }
 
+        [Required]
         public string? loginPw
         {
             get
