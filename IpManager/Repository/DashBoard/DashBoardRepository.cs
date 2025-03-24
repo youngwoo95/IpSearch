@@ -80,7 +80,7 @@ namespace IpManager.Repository.DashBoard
                 {
                     var item = new ResultData();
                     item.PcRoomName = analysis.Pcroom.Name; // PC방 상호
-                    item.TotalCount = analysis.Pcroom.Seatnumber.Value; // 총대수
+                    item.TotalCount = analysis.Pcroom.Seatnumber; // 총대수
                     if (analysis.LatestGroup != null && analysis.LatestGroup.Items != null)
                     {
                         foreach (var temp in analysis.LatestGroup.Items)
@@ -189,7 +189,7 @@ namespace IpManager.Repository.DashBoard
                 {
                     var item = new ResultData();
                     item.PcRoomName = analysis.Pcroom.Name; // PC방 상호
-                    item.TotalCount = analysis.Pcroom.Seatnumber.Value; // 총대수
+                    item.TotalCount = analysis.Pcroom.Seatnumber; // 총대수
                     item.Count = analysis.TotalUsedPc; // 선택된 날짜의 사용PC대수
                     item.Rate = ((float)item.Count / item.TotalCount) * 100;
                     item.ReturnRate = $"{item.Count}/{item.TotalCount} ({((double)item.Count / item.TotalCount) * 100:F2}%)";
@@ -286,7 +286,7 @@ namespace IpManager.Repository.DashBoard
                 {
                     var item = new ResultData();
                     item.PcRoomName = analysis.Pcroom.Name; // PC방 상호
-                    item.TotalCount = analysis.Pcroom.Seatnumber.Value; // 총대수
+                    item.TotalCount = analysis.Pcroom.Seatnumber; // 총대수
                     item.Count = analysis.TotalUsedPc; // 선택된 날짜의 사용PC대수
                     item.Rate = ((float)item.Count / item.TotalCount) * 100;
                     item.ReturnRate = $"{item.Count}/{item.TotalCount} ({((double)item.Count / item.TotalCount) * 100:F2}%)";
@@ -382,7 +382,7 @@ namespace IpManager.Repository.DashBoard
                 {
                     var item = new ResultData();
                     item.PcRoomName = analysis.Pcroom.Name; // PC방 상호
-                    item.TotalCount = analysis.Pcroom.Seatnumber.Value; // 총대수
+                    item.TotalCount = analysis.Pcroom.Seatnumber; // 총대수
                     item.Count = analysis.TotalUsedPc; // 선택된 날짜의 사용PC대수
                     item.Rate = ((float)item.Count / item.TotalCount) * 100;
                     item.ReturnRate = $"{item.Count}/{item.TotalCount} ({((double)item.Count / item.TotalCount) * 100:F2}%)";
@@ -478,7 +478,7 @@ namespace IpManager.Repository.DashBoard
                 {
                     var item = new ResultData();
                     item.PcRoomName = analysis.Pcroom.Name; // PC방 상호
-                    item.TotalCount = analysis.Pcroom.Seatnumber.Value; // 총대수
+                    item.TotalCount = analysis.Pcroom.Seatnumber; // 총대수
                     item.Count = analysis.TotalUsedPc; // 선택된 날짜의 사용PC대수
                     item.Rate = ((float)item.Count / item.TotalCount) * 100;
                     item.ReturnRate = $"{item.Count}/{item.TotalCount} ({((double)item.Count / item.TotalCount) * 100:F2}%)";

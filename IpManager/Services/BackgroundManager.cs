@@ -51,7 +51,7 @@ namespace IpManager.Services
                     
                     Console.WriteLine($"다음 실행 시간: {nextRun:yyyy-MM-dd HH:mm:ss}");
                     #endregion
-                    //TimeSpan delay = TimeSpan.FromSeconds(1); // 얘를지우고 위를 살리면됨.
+                    //delay = TimeSpan.FromSeconds(10); // 얘를지우고 위를 살리면됨.
 
                     // 다음 정각까지 대기
                     try
@@ -84,7 +84,7 @@ namespace IpManager.Services
 
                             TimeTb? TimeTB = existingTimes.Where(m => m.Time!.Value.ToString("HH:mm:ss") == ThisTime).FirstOrDefault();
 
-                            Console.WriteLine(TimeTB.Pid);
+                            Console.WriteLine(TimeTB!.Pid);
                             Console.WriteLine(TimeTB.Time);
 
                             /* PING 쏘는 로직 */
@@ -116,6 +116,8 @@ namespace IpManager.Services
                                 {
                                     UsedPc = resultipCount, // 사용대수
                                     Price = (room.Price/2)*resultipCount, // 총금액 = 요금제/2 * 사용대수
+                                    PcCount = room.Seatnumber, // PC방 인덱스
+                                    PcRate = ((float)resultipCount / room.Seatnumber) * 100, // 가동률
                                     CreateDt = DateTime.Now,
                                     UpdateDt = DateTime.Now,
                                     DelYn = false,
@@ -130,6 +132,79 @@ namespace IpManager.Services
                             await context.PinglogTbs.AddRangeAsync(LogTB);
                             await context.SaveChangesAsync().ConfigureAwait(false); // 저장
                             Console.WriteLine("저장완료");
+
+                            // 여기서 12시인 경우 로직도 있어야할듯.
+
+                            if(ThisTime == "24:00:00")
+                            {
+                                // 전날을 구해야함.
+                                DateTime today = DateTime.Today;
+                                DateTime yesterday = today.AddDays(-1);
+
+
+                                var groupedData = await context.PinglogTbs
+                                .Where(x => x.CreateDt >= yesterday && x.CreateDt < today) // 전날 데이터만 조회
+                                .GroupBy(m => m.PcroomtbId)
+                                .Select(g => new
+                                {
+                                    PcroomtbId = g.Key,
+                                    TodayRate = g.Sum(x => x.PcRate) / 48, // 매장 일평균 가동률
+                                    TodaySales = g.Sum(x => x.Price),       // 매장 일매출 (PC방 요금만)
+
+                                    TodayfoodSales = g.Sum(x => x.Price) *
+                                        (
+                                           (100.0 - context.PcroomTbs
+                                                .Where(p => p.Pid == g.Key)
+                                                .Select(p => p.PricePercent)
+                                                .FirstOrDefault())
+                                            /
+                                                 context.PcroomTbs
+                                                .Where(p => p.Pid == g.Key)
+                                                .Select(p => p.PricePercent)
+                                                .FirstOrDefault()
+                                        ),
+
+                                    TotalSales = g.Sum(x => x.Price) + // TotalSales = TodaySales + TodayfoodSales
+                                    g.Sum(x => x.Price) *
+                                    (
+                                        (100.0 - context.PcroomTbs
+                                            .Where(p => p.Pid == g.Key)
+                                            .Select(p => p.PricePercent)
+                                            .FirstOrDefault())
+                                        /
+                                        context.PcroomTbs
+                                            .Where(p => p.Pid == g.Key)
+                                            .Select(p => p.PricePercent)
+                                            .FirstOrDefault()
+                                    )
+                                })
+                                .ToListAsync();
+
+                                // 가동률 1위
+                                var topRateGroup = groupedData
+                                .OrderByDescending(m => m.TodayRate)
+                                .FirstOrDefault();
+
+                                // 매출 1위
+                                var topSales = groupedData
+                                .OrderByDescending(m => m.TotalSales)
+                                .FirstOrDefault();
+
+                                var toptown = await context.TownTbs.FirstOrDefaultAsync(m => m.Pid == topSales.PcroomtbId);
+
+                                var analyzetb = new AnalyzeTb
+                                {
+                                    TowntbId = toptown.Pid, // 매출 1위 동네 인덱스
+                                    TopSalesPcroomtbId = topSales.PcroomtbId, // 매출 1위 PC방 인덱스
+                                    TopOpratePcroomtbId = topRateGroup.PcroomtbId, // 가동률 1위 PC방 인덱스
+                                    CreateDt = DateTime.Now
+                                };
+
+                                await context.AnalyzeTbs.AddAsync(analyzetb);
+                                await context.SaveChangesAsync().ConfigureAwait(false); // 저장
+
+                                Console.WriteLine("저장완료");
+                            }
                         }
                     }
                     catch (TaskCanceledException)

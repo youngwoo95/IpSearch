@@ -16,6 +16,16 @@ public partial class PinglogTb
     public int UsedPc { get; set; }
 
     /// <summary>
+    /// 총 PC수
+    /// </summary>
+    public int PcCount { get; set; }
+
+    /// <summary>
+    /// 가동률
+    /// </summary>
+    public float PcRate { get; set; }
+
+    /// <summary>
     /// 총금액
     /// </summary>
     public float Price { get; set; }

@@ -41,7 +41,7 @@ namespace IpManager.Services.Store
                     Addr = dto.addr,
                     Seatnumber = dto.seatNumber,
                     Price = dto.price,
-                    PricePercent = dto.pricePercent,
+                    //PricePercent = dto.pricePercent,
                     PcSpec = dto.pcSpec,
                     Telecom = dto.telecom,
                     Memo = dto.memo,
@@ -503,7 +503,7 @@ namespace IpManager.Services.Store
                 PcroomTB.Addr = dto.addr; // 주소
                 PcroomTB.Seatnumber = dto.seatNumber; // 좌석수
                 PcroomTB.Price = dto.price; // 요금제
-                PcroomTB.PricePercent = dto.pricePercent; // 요금제 비율
+                //PcroomTB.PricePercent = dto.pricePercent; // 요금제 비율
                 PcroomTB.PcSpec = dto.pcSpec; // PC 사양
                 PcroomTB.Telecom = dto.telecom; // 통신사
                 PcroomTB.Memo = dto.memo; // 메모

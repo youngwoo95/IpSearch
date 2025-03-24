@@ -55,6 +55,9 @@ public partial class LoginTb
     /// </summary>
     public DateTime? DeleteDt { get; set; }
 
+    /// <summary>
+    /// 일반사용자 (도/시)ID
+    /// </summary>
     public int? CountryId { get; set; }
 
     public virtual CountryTb? Country { get; set; }

@@ -30,7 +30,7 @@ public partial class PcroomTb
     /// <summary>
     /// 좌석수
     /// </summary>
-    public int? Seatnumber { get; set; }
+    public int Seatnumber { get; set; }
 
     /// <summary>
     /// 요금제 가격
@@ -91,6 +91,10 @@ public partial class PcroomTb
     /// (읍/면/동) 테이블 키
     /// </summary>
     public int TowntbId { get; set; }
+
+    public virtual ICollection<AnalyzeTb> AnalyzeTbTopOpratePcroomtbs { get; set; } = new List<AnalyzeTb>();
+
+    public virtual ICollection<AnalyzeTb> AnalyzeTbTopSalesPcroomtbs { get; set; } = new List<AnalyzeTb>();
 
     public virtual CityTb Citytb { get; set; } = null!;
 

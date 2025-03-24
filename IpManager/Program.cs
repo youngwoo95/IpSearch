@@ -6,6 +6,7 @@ using IpManager.Repository.DashBoard;
 using IpManager.Repository.Login;
 using IpManager.Repository.Store;
 using IpManager.RunningSet;
+using IpManager.Services;
 using IpManager.Services.Country;
 using IpManager.Services.DashBoard;
 using IpManager.Services.Login;
@@ -79,6 +80,21 @@ namespace IpManager
             });
             #endregion
 
+         
+
+            #region 데이터베이스 설정
+            //builder.Services.AddDbContextPool<IpanalyzeContext>(options =>
+            //    options.UseMySql(
+            //        builder.Configuration.GetConnectionString("MySqlConnection"),
+            //        ServerVersion.Parse("11.4.5-mariadb"),
+            //        mariaSqlOption =>
+            //        {
+            //            mariaSqlOption.CommandTimeout(60);
+            //            mariaSqlOption.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+            //            mariaSqlOption.MaxBatchSize(100);
+            //        }));
+            #endregion
+
             #region 의존성 주입
             // Add services to the container.
 
@@ -104,21 +120,8 @@ namespace IpManager
             builder.Services.AddTransient<ICountryService, CountryService>();
 
             /* 백그라운드 서비스 등록 */
-            //builder.Services.AddHostedService<BackgroundManager>();
-            //builder.Services.AddHostedService<StartupTask>();
-            #endregion
-
-            #region 데이터베이스 설정
-            builder.Services.AddDbContextPool<IpanalyzeContext>(options =>
-                options.UseMySql(
-                    builder.Configuration.GetConnectionString("MySqlConnection"),
-                    ServerVersion.Parse("11.4.5-mariadb"),
-                    mariaSqlOption =>
-                    {
-                        mariaSqlOption.CommandTimeout(60);
-                        mariaSqlOption.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
-                        mariaSqlOption.MaxBatchSize(100);
-                    }));
+            builder.Services.AddHostedService<BackgroundManager>();
+            builder.Services.AddHostedService<StartupTask>();
             #endregion
 
             #region 캐쉬 사용

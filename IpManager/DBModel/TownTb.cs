@@ -42,6 +42,8 @@ public partial class TownTb
     /// </summary>
     public int CitytbId { get; set; }
 
+    public virtual ICollection<AnalyzeTb> AnalyzeTbs { get; set; } = new List<AnalyzeTb>();
+
     public virtual CityTb Citytb { get; set; } = null!;
 
     public virtual CountryTb Countytb { get; set; } = null!;
