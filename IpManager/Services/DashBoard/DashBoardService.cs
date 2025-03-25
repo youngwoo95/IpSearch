@@ -1,6 +1,7 @@
 ﻿using IpManager.Comm.Logger.LogFactory.LoggerSelect;
 using IpManager.DTO.DashBoard;
 using IpManager.Repository.DashBoard;
+using static IpManager.Repository.DashBoard.DashBoardRepository;
 
 namespace IpManager.Services.DashBoard
 {
@@ -150,6 +151,41 @@ namespace IpManager.Services.DashBoard
             {
                 LoggerService.FileErrorMessage(ex.ToString());
                 return new ResponseUnit<AnalysisDataDTO>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, code = 500 };
+            }
+        }
+
+        /// <summary>
+        /// 매출 1위상권 & 매출 1위매장 & 가동률1위 매장 조회
+        /// </summary>
+        /// <returns></returns>
+        public async Task<ResponseUnit<TopSalesNameDTO>?> GetTopSalesNameService()
+        {
+            try
+            {
+                var model = await DashBoardRepository.GetTopSalesNameInfo();
+                if (model is null)
+                    return new ResponseUnit<TopSalesNameDTO>() { message = "요청이 정상 처리되었습니다.", data = null, code = 200 };
+                else
+                    return new ResponseUnit<TopSalesNameDTO>() { message = "요청이 정상 처리되었습니다.", data = model, code = 200 };
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return new ResponseUnit<TopSalesNameDTO>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, code = 500 };
+            }
+        }
+
+        public async Task<ResponseList<PcroomTimeDataDto>> GetThisDayDataService()
+        {
+            try
+            {
+                var model = await DashBoardRepository.GetThisDayDataList();
+                return new ResponseList<PcroomTimeDataDto>() { message = "요청이 정상 처리되었습니다.", data = model, code = 500 };
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return new ResponseList<PcroomTimeDataDto>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, code = 500 };
             }
         }
     }

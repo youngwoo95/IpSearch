@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IpManager.Repository.DashBoard
 {
-    public class DashBoardRepository : IDashBoardRepository
+    public partial class DashBoardRepository : IDashBoardRepository
     {
         private readonly ILoggerService LoggerService;
         private readonly IpanalyzeContext context;
@@ -497,6 +497,145 @@ namespace IpManager.Repository.DashBoard
                 return AnalysisData;
             }
             catch (Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 매출 1위상권 & 매출 1위매장 & 가동률1위 매장 조회
+        /// </summary>
+        /// <returns></returns>
+        public async Task<TopSalesNameDTO?> GetTopSalesNameInfo()
+        {
+            try
+            {
+                var topTown = await (
+                     from a in context.AnalyzeTbs
+                     join t in context.TownTbs on a.TowntbId equals t.Pid
+                     group new { a, t } by new { a.TowntbId, t.Name } into grp
+                     orderby grp.Count() descending
+                     select new
+                     {
+                         TownTbId = grp.Key.TowntbId,
+                         TownName = grp.Key.Name,
+                         Count = grp.Count()
+                     }
+                 ).FirstOrDefaultAsync()
+                 .ConfigureAwait(false);
+
+                var topSales = await (
+                    from a in context.AnalyzeTbs
+                    join p in context.PcroomTbs on a.TopSalesPcroomtbId equals p.Pid
+                    group new { a, p } by new { a.TopSalesPcroomtbId, p.Name } into grp
+                    orderby grp.Count() descending
+                    select new
+                    {
+                        PcroomTbId = grp.Key.TopSalesPcroomtbId,
+                        PcroomName = grp.Key.Name,
+                        Count = grp.Count()
+                    }
+                ).FirstOrDefaultAsync()
+                .ConfigureAwait(false);
+
+                var topUsed = await (
+                    from a in context.AnalyzeTbs
+                    join p in context.PcroomTbs on a.TopOpratePcroomtbId equals p.Pid
+                    group new { a, p } by new { a.TopOpratePcroomtbId, p.Name } into grp
+                    orderby grp.Count() descending
+                    select new
+                    {
+                        PcroomTbId = grp.Key.TopOpratePcroomtbId,
+                        PcroomName = grp.Key.Name,
+                        Count = grp.Count()
+                    }
+                    ).FirstOrDefaultAsync()
+                    .ConfigureAwait(false);
+
+                var model = new TopSalesNameDTO
+                {
+                    topSalesTownName = topTown.TownName,
+                    topSalesStoreName = topSales.PcroomName,
+                    topUsedRateStoreName = topUsed.PcroomName
+                };
+
+                return model;
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return null;
+            }
+        }
+
+        public async Task<List<PcroomTimeDataDto>> GetThisDayDataList()
+        {
+            try
+            {
+                // 대상 날짜를 하드코딩 (예: 2025년 3월 24일)
+                var targetDate = new DateTime(2025, 3, 24);
+
+                // 1. TimeTb에서 모든 시간(00:00 ~ 23:30)을 가져오기
+                var allTimes = await context.TimeTbs
+                    .OrderBy(t => t.Time)
+                    .ToListAsync();
+
+                // "HH:mm" 형식의 문자열 리스트 (예: "00:00", "00:30", ...)
+                var allTimeStrings = allTimes
+                    .Select(t => t.Time.HasValue ? t.Time.Value.ToString("HH:mm") : "")
+                    .Where(s => !string.IsNullOrEmpty(s))
+                    .ToList();
+
+                // 2. PinglogTb, PcroomTb, TimeTb를 조인하여 대상 날짜의 데이터를 조회
+                var pingLogs = await (
+                    from p in context.PinglogTbs
+                    join pc in context.PcroomTbs on p.PcroomtbId equals pc.Pid
+                    join t in context.TimeTbs on p.TimetbId equals t.Pid
+                    where p.DelYn != true
+                          && p.CreateDt.HasValue
+                          && p.CreateDt.Value.Date == targetDate.Date
+                    select new
+                    {
+                        PcroomId = p.PcroomtbId,
+                        PcroomName = pc.Name,
+                        // 시간 문자열 ("HH:mm" 형식)
+                        TimeString = t.Time.HasValue ? t.Time.Value.ToString("HH:mm") : "",
+                        UsedPc = p.UsedPc
+                    }
+                ).ToListAsync();
+
+                // 3. PC방별로 그룹화하고, 같은 시간대의 UsedPc를 합산하여 Dictionary로 구성
+                var groupedData = pingLogs
+                    .GroupBy(x => new { x.PcroomId, x.PcroomName })
+                    .Select(g => new
+                    {
+                        PcroomId = g.Key.PcroomId,
+                        PcroomName = g.Key.PcroomName,
+                        // 각 시간대별 UsedPc 합산
+                        TimeMap = g.GroupBy(x => x.TimeString)
+                                   .ToDictionary(
+                                       tg => tg.Key,
+                                       tg => tg.Sum(x => x.UsedPc)
+                                   )
+                    })
+                    .ToList();
+
+                // 4. 모든 시간대를 기준으로, 없는 시간은 0으로 채워 DTO에 매핑
+                var result = groupedData.Select(pc => new PcroomTimeDataDto
+                {
+                    PcroomId = pc.PcroomId,
+                    PcroomName = pc.PcroomName,
+                    AnalyList = allTimeStrings.Select(time => new ThisAnayzeList
+                    {
+                        Time = time,
+                        Count = pc.TimeMap.ContainsKey(time) ? pc.TimeMap[time] : 0
+                    }).ToList()
+                }).ToList();
+
+                return result;
+            }
+            catch(Exception ex)
             {
                 LoggerService.FileErrorMessage(ex.ToString());
                 return null;

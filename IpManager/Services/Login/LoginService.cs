@@ -258,7 +258,7 @@ namespace IpManager.Services.Login
                 // UserModel 생성
                 var model = new LoginTb
                 {
-                    Uid = dto.userId!,
+                    Uid = dto.userId!.ToLower(),
                     Pwd = dto.passWord!,
                     MasterYn = false,
                     AdminYn = false,

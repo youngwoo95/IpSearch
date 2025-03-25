@@ -48,24 +48,19 @@ namespace IpManager.Controllers
         }
 
         /// <summary>
-        /// 하루 데이터 조회
+        /// 매출 1위 상권
         /// </summary>
         /// <returns></returns>
-        [Authorize(Roles = "Manager,Visitor")]
+        [Authorize(Roles ="Manager,Visitor")]
         [HttpGet]
-        [Route("sign/v1/GetTodayDataList")]
-        public async Task<IActionResult> GetTodayDataList([FromQuery] DateTime Target)
-        //public async Task<IActionResult> GetTodayDataList([FromQuery]DateTime Target)
+        [Route("sign/v1/GetTopAnalyzeName")]
+        public async Task<IActionResult> GetTopAnalyName()
         {
             try
             {
-                //DateTime Target = DateTime.Now; // FromQuery절로 올라가야함.
-                //DateTime Target = DateTime.Now.AddDays(-1); // FromQuery절로 올라가야함.
-
-                ResponseUnit<AnalysisDataDTO>? model = await DashBoardService.GetTodayDataService(Target).ConfigureAwait(false);
+                var model = await DashBoardService.GetTopSalesNameService().ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
-                
                 if (model.code == 200)
                     return Ok(model);
                 else
@@ -79,88 +74,140 @@ namespace IpManager.Controllers
         }
 
         /// <summary>
-        /// 주간 데이터 조회
+        /// 해당 날짜 전체 분석데이터 조회
         /// </summary>
         /// <returns></returns>
-        [Authorize(Roles ="Manager,Visitor")]
         [HttpGet]
-        [Route("sign/v1/GetWeeksDataList")]
-        public async Task<IActionResult> GetWeeksDataList([FromQuery] DateTime Target)
+        [Route("sign/v1/GetThisDayDataList")]
+        public async Task<IActionResult> GetThisDayDataList()
+        {
+            try
+            {
+                var model = await DashBoardService.GetThisDayDataService().ConfigureAwait(false);
+                return Ok(model);
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+            }
+        }
+
+        ///// <summary>
+        ///// 하루 데이터 조회
+        ///// </summary>
+        ///// <returns></returns>
+        //[Authorize(Roles = "Manager,Visitor")]
+        //[HttpGet]
+        //[Route("sign/v1/GetTodayDataList")]
+        //public async Task<IActionResult> GetTodayDataList()
+        ////public async Task<IActionResult> GetTodayDataList([FromQuery]DateTime Target)
+        //{
+        //    try
+        //    {
+        //        //DateTime Target = DateTime.Now; // FromQuery절로 올라가야함.
+        //        DateTime Target = DateTime.Now.AddDays(-1); // FromQuery절로 올라가야함.
+
+        //        ResponseUnit<AnalysisDataDTO>? model = await DashBoardService.GetTodayDataService(Target).ConfigureAwait(false);
+        //        if (model is null)
+        //            return BadRequest();
+                
+        //        if (model.code == 200)
+        //            return Ok(model);
+        //        else
+        //            return BadRequest();
+        //    }
+        //    catch(Exception ex)
+        //    {
+        //        LoggerService.FileErrorMessage(ex.ToString());
+        //        return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+        //    }
+        //}
+
+        ///// <summary>
+        ///// 주간 데이터 조회
+        ///// </summary>
+        ///// <returns></returns>
+        //[Authorize(Roles ="Manager,Visitor")]
+        //[HttpGet]
+        //[Route("sign/v1/GetWeeksDataList")]
+        ////public async Task<IActionResult> GetWeeksDataList()
         //public async Task<IActionResult> GetWeeksDataList([FromQuery] DateTime Target)
-        {
-            try
-            {
-                //DateTime Target = DateTime.Now.AddDays(-1);
-                //DateTime Target = DateTime.Now;
+        //{
+        //    try
+        //    {
+        //        //DateTime Target = DateTime.Now.AddDays(-1);
+        //        //DateTime Target = DateTime.Now;
 
-                ResponseUnit<AnalysisDataDTO>? model = await DashBoardService.GetWeeksDataService(Target).ConfigureAwait(false);
-                if (model is null)
-                    return BadRequest();
+        //        ResponseUnit<AnalysisDataDTO>? model = await DashBoardService.GetWeeksDataService(Target).ConfigureAwait(false);
+        //        if (model is null)
+        //            return BadRequest();
 
-                if (model.code == 200)
-                    return Ok(model);
-                else
-                    return BadRequest();
-            }
-            catch(Exception ex)
-            {
-                LoggerService.FileErrorMessage(ex.ToString());
-                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
-            }
-        }
+        //        if (model.code == 200)
+        //            return Ok(model);
+        //        else
+        //            return BadRequest();
+        //    }
+        //    catch(Exception ex)
+        //    {
+        //        LoggerService.FileErrorMessage(ex.ToString());
+        //        return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+        //    }
+        //}
 
-        // 월간 데이터 조회
-        [Authorize(Roles ="Manager,Visitor")]
-        [HttpGet]
-        [Route("sign/v1/GetMonthDataList")]
-        public async Task<IActionResult> GetMonthDataList([FromQuery] DateTime Target)
-        {
-            try
-            {
-                //DateTime Target = DateTime.Now.AddDays(-1);
-                //DateTime Target = DateTime.Now;
+        //// 월간 데이터 조회
+        //[Authorize(Roles ="Manager,Visitor")]
+        //[HttpGet]
+        //[Route("sign/v1/GetMonthDataList")]
+        //public async Task<IActionResult> GetMonthDataList()
+        ////public async Task<IActionResult> GetMonthDataList([FromQuery] DateTime Target)
+        //{
+        //    try
+        //    {
+        //        DateTime Target = DateTime.Now.AddDays(-1);
+        //        //DateTime Target = DateTime.Now;
 
-                ResponseUnit<AnalysisDataDTO>? model = await DashBoardService.GetMonthDataService(Target).ConfigureAwait(false);
-                if (model is null)
-                    return BadRequest();
+        //        ResponseUnit<AnalysisDataDTO>? model = await DashBoardService.GetMonthDataService(Target).ConfigureAwait(false);
+        //        if (model is null)
+        //            return BadRequest();
 
-                if (model.code == 200)
-                    return Ok(model);
-                else
-                    return BadRequest();
-            }
-            catch(Exception ex)
-            {
-                LoggerService.FileErrorMessage(ex.ToString());
-                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
-            }
-        }
+        //        if (model.code == 200)
+        //            return Ok(model);
+        //        else
+        //            return BadRequest();
+        //    }
+        //    catch(Exception ex)
+        //    {
+        //        LoggerService.FileErrorMessage(ex.ToString());
+        //        return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+        //    }
+        //}
 
-        // 연간 데이터 조회
-        [Authorize(Roles ="Manager,Visitor")]
-        [HttpGet]
-        [Route("sign/v1/GetYearDataList")]
-        public async Task<IActionResult> GetYearDataList([FromQuery] DateTime Target)
-        {
-            try
-            {
-                //DateTime Target = DateTime.Now;
+        //// 연간 데이터 조회
+        //[Authorize(Roles ="Manager,Visitor")]
+        //[HttpGet]
+        //[Route("sign/v1/GetYearDataList")]
+        //public async Task<IActionResult> GetYearDataList([FromQuery] DateTime Target)
+        //{
+        //    try
+        //    {
+        //        //DateTime Target = DateTime.Now;
 
-                ResponseUnit<AnalysisDataDTO>? model = await DashBoardService.GetYearDataService(Target).ConfigureAwait(false);
-                if (model is null)
-                    return BadRequest();
+        //        ResponseUnit<AnalysisDataDTO>? model = await DashBoardService.GetYearDataService(Target).ConfigureAwait(false);
+        //        if (model is null)
+        //            return BadRequest();
 
-                if (model.code == 200)
-                    return Ok(model);
-                else
-                    return BadRequest();
-            }
-            catch(Exception ex)
-            {
-                LoggerService.FileErrorMessage(ex.ToString());
-                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
-            }
-        }
+        //        if (model.code == 200)
+        //            return Ok(model);
+        //        else
+        //            return BadRequest();
+        //    }
+        //    catch(Exception ex)
+        //    {
+        //        LoggerService.FileErrorMessage(ex.ToString());
+        //        return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+        //    }
+        //}
 
     }
 }

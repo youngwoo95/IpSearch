@@ -1,4 +1,5 @@
 ﻿using IpManager.DTO.DashBoard;
+using static IpManager.Repository.DashBoard.DashBoardRepository;
 
 namespace IpManager.Repository.DashBoard
 {
@@ -39,5 +40,16 @@ namespace IpManager.Repository.DashBoard
         /// <returns></returns>
         public Task<AnalysisDataDTO?> GetYearDataAnalysis(DateTime StartDate, DateTime EndDate);
 
+        /// <summary>
+        /// 매출 1위상권 & 매출 1위매장 & 가동률1위 매장 조회
+        /// </summary>
+        /// <returns></returns>
+        public Task<TopSalesNameDTO?> GetTopSalesNameInfo();
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public Task<List<PcroomTimeDataDto>> GetThisDayDataList();
     }
 }
