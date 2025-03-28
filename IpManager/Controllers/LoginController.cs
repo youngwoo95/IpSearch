@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using Swashbuckle.AspNetCore.Filters;
+using System.ComponentModel.DataAnnotations;
 
 namespace IpManager.Controllers
 {
@@ -31,8 +32,13 @@ namespace IpManager.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("v1/AddUser")]
+        [Produces("application/json")]
         [SwaggerResponse(200, "성공", typeof(ResponseUnit<bool>))]
-        [SwaggerResponseExample(200, typeof(SwaggerAddUserDTO))]
+        [SwaggerResponseExample(StatusCodes.Status200OK, typeof(ResponseUnit<bool>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "회원정보 추가",
+            Description = "아이디, 비밀번호 필수값, 권한제한 없음")]
         public async Task<IActionResult> AddUser([FromBody]RegistrationDTO dto)
         {
             try
@@ -61,8 +67,13 @@ namespace IpManager.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("v1/CheckUserId")]
+        [Produces("application/json")]
         [SwaggerResponse(200, "성공", typeof(ResponseUnit<bool>))]
-        [SwaggerResponseExample(200, typeof(SwaggerChecUserIdDTO))]
+        [SwaggerResponseExample(StatusCodes.Status200OK, typeof(ResponseUnit<bool>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "사용자 ID 검사",
+            Description = "아이디 필수값, 권한제한 없음")]
         public async Task<IActionResult> UserIdCheck([FromBody]UserIDCheckDTO dto)
         {
             try
@@ -90,8 +101,14 @@ namespace IpManager.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("v1/GetRole")]
+        [Produces("application/json")]
         [SwaggerResponse(200, "성공", typeof(ResponseUnit<LoginRoleDTO>))]
         [SwaggerResponseExample(200, typeof(SwaggerGetRoleDTO))]
+        [SwaggerResponseExample(StatusCodes.Status200OK, typeof(ResponseUnit<bool>))]
+        [SwaggerResponseExample(StatusCodes.Status401Unauthorized,typeof(ResponseUnit<bool>))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "토큰에 대한 권한 반환",
+        Description = "Header에 JWT토큰 필수, 권한제한 없음")]
         public async Task<IActionResult> GetLoginRole()
         {
             try
@@ -123,8 +140,14 @@ namespace IpManager.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("v1/Login")]
+        [Produces("application/json")]
         [SwaggerResponse(200,"성공", typeof(ResponseUnit<TokenDTO>))]
         [SwaggerResponseExample(200, typeof(SwaggerLoginDTO))]
+        [SwaggerResponseExample(StatusCodes.Status200OK, typeof(ResponseUnit<TokenDTO>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "로그인",
+    Description = "아이디, 비밀번호 필수값, 권한제한 없음")]
         public async Task<IActionResult> AccessToken([FromBody] LoginDTO logininfo)
         {
             try
@@ -153,8 +176,14 @@ namespace IpManager.Controllers
         [Authorize(Roles = "Master")] // Master만 접근가능
         [HttpGet]
         [Route("sign/v1/AccountList")]
+        [Produces("application/json")]
         [SwaggerResponse(200, "성공", typeof(ResponseList<UserListDTO>))]
         [SwaggerResponseExample(200, typeof(SwaggerAccountList))]
+        [SwaggerResponseExample(StatusCodes.Status200OK, typeof(ResponseList<UserListDTO>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "계정 전체 리스트 반환",
+    Description = "권한제한 있음 - Master만 가능")]
         public async Task<IActionResult> AccountList()
         {
             try
@@ -182,8 +211,14 @@ namespace IpManager.Controllers
         [Authorize(Roles = "Master")] // Master만 접근가능
         [HttpPost]
         [Route("sign/v1/AccountManagement")]
+        [Produces("application/json")]
         [SwaggerResponse(200, "성공", typeof(ResponseUnit<bool>))]
         [SwaggerResponseExample(200, typeof(SwaggerAccountManagement))]
+        [SwaggerResponseExample(StatusCodes.Status200OK, typeof(ResponseUnit<bool>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "계정 정보 수정",
+    Description = "권한제한 있음 - Master만 가능")]
         public async Task<IActionResult> AccountManagement([FromBody] UserUpdateDTO dto)
         {
             try
@@ -211,9 +246,15 @@ namespace IpManager.Controllers
         [Authorize(Roles ="Master")] // Master만 접근가능
         [HttpPut]
         [Route("sign/v1/AccountDelete")]
+        [Produces("application/json")]
         [SwaggerResponse(200, "성공", typeof(ResponseUnit<bool>))]
         [SwaggerResponseExample(200, typeof(SwaggerAccountDelete))]
-        public async Task<IActionResult> AccountDelete([FromBody] int pid)
+        [SwaggerResponseExample(StatusCodes.Status200OK, typeof(ResponseUnit<bool>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "계정 삭제",
+    Description = "권한제한 있음 - Master만 가능")]
+        public async Task<IActionResult> AccountDelete([FromBody][Required] int pid)
         {
             try
             {

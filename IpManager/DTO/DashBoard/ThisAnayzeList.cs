@@ -1,11 +1,8 @@
-﻿namespace IpManager.Repository.DashBoard
+﻿namespace IpManager.DTO.DashBoard
 {
-    public partial class DashBoardRepository
+    public class ThisAnayzeList
     {
-        public class ThisAnayzeList
-        {
-            public string? Time { get; set; }
-            public int Count { get; set; }
-        }
+        public string? Time { get; set; }
+        public int Count { get; set; }
     }
 }

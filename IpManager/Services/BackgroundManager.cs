@@ -135,7 +135,7 @@ namespace IpManager.Services
 
                             // 여기서 12시인 경우 로직도 있어야할듯.
 
-                            if(ThisTime == "24:00:00")
+                            if(ThisTime == "00:00:00")
                             {
                                 // 전날을 구해야함.
                                 DateTime today = DateTime.Today;

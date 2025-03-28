@@ -33,9 +33,17 @@ namespace IpManager.Controllers
         [Authorize(Roles = "Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetStoreList")]
+        [Produces("application/json")]
         [SwaggerResponse(200, "성공", typeof(ResponseList<StoreListDTO>))]
-        [SwaggerResponseExample(200, typeof(SwaggerStoreListDTO))]
-        public async Task<IActionResult> GetStoreList([FromQuery] string? search)
+        //[SwaggerResponseExample(200, typeof(StoreListDTO))]
+        [SwaggerResponseExample(StatusCodes.Status200OK, typeof(ResponseList<StoreListDTO>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "등록된 PC방 리스트 보기",
+            Description = "권한 제한 있음 - Manager & Visitor" +
+            "Manager - 등록된 전체 PC방 리스트 조회가능 / Visitor 자기지역만 가능 / 매개변수 추가시 매개변수 조건에 해당하는 검색결과 반환")]
+        public async Task<IActionResult> GetStoreList([FromQuery] string? searchPcName)
         {
             try
             {
@@ -48,7 +56,7 @@ namespace IpManager.Controllers
                 if (Pid == -1)
                     return Unauthorized();
 
-                ResponseList<StoreListDTO>? model = await StoreService.GetPCRoomListService(Pid, userType, search).ConfigureAwait(false);
+                ResponseList<StoreListDTO>? model = await StoreService.GetPCRoomListService(Pid, userType, searchPcName).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
                 if (model.code == 200)
@@ -71,8 +79,17 @@ namespace IpManager.Controllers
         [Authorize(Roles = "Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/SendIpPing")]
+        [Produces("application/json")]
         [SwaggerResponse(200, "성공", typeof(ResponseUnit<StorePingDTO>))]
         [SwaggerResponseExample(200, typeof(SwaggerStorePingDTO))]
+        [SwaggerResponseExample(200, typeof(StoreListDTO))]
+        [SwaggerResponseExample(StatusCodes.Status200OK, typeof(ResponseUnit<StorePingDTO>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "PC방 단일 PING SEND",
+      Description = "권한 제한 있음 - Manager & Visitor" +
+      "Manager - 등록된 전체 PC방 PING SEND 가능 / Visitor 자기지역만 가능")]
         public async Task<IActionResult> GetUsedPcCount([FromQuery][Required] int pid)
         {
             try
@@ -104,8 +121,14 @@ namespace IpManager.Controllers
         [Authorize(Roles ="Master")] // 마스터만 등록가능
         [HttpPost]
         [Route("sign/v1/AddStore")]
+        [Produces("application/json")]
         [SwaggerResponse(200, "성공", typeof(ResponseUnit<bool>))]
         [SwaggerResponseExample(200, typeof(SwaggerAddStoreDTO))]
+        [SwaggerResponseExample(StatusCodes.Status200OK, typeof(ResponseUnit<bool>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "PC방 정보 등록",
+    Description = "권한제한 있음 - Master만 가능")]
         public async Task<IActionResult> AddStore([FromBody]StoreDTO dto)
         {
             try
@@ -128,47 +151,8 @@ namespace IpManager.Controllers
         }
 
        
-
         /// <summary>
-        /// PC방 이름으로 PC방 검색
-        /// </summary>
-        /// <param name="search"></param>
-        /// <returns></returns>
-        [Authorize(Roles ="Manager,Visitor")]
-        [HttpGet]
-        [Route("sign/v1/GetStoreSearchName")]
-        [SwaggerResponse(200, "성공", typeof(ResponseList<StoreListDTO>))]
-        [SwaggerResponseExample(200, typeof(SwaggerSearchNameStoreDTO))]
-        public async Task<IActionResult> GetStoreSearchName([FromQuery]string? search)
-        {
-            try
-            {
-                // 권한 검사
-                int userType = User.GetUserType();
-                if (userType == -1)
-                    return Unauthorized();
-
-                int Pid = User.GetUserPid();
-                if (Pid == -1)
-                    return Unauthorized();
-
-                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomSearchNameListService(Pid, userType, search).ConfigureAwait(false);
-                if (model is null)
-                    return BadRequest();
-                if (model.code == 200)
-                    return Ok(model);
-                else
-                    return BadRequest();
-            }
-            catch(Exception ex)
-            {
-                LoggerService.FileErrorMessage(ex.ToString());
-                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
-            }
-        }
-
-        /// <summary>
-        /// PC방 주소로 PC방 검색
+        /// PC방 주소로 PC방 검색 - 
         /// </summary>
         /// <param name="search"></param>
         /// <returns></returns>

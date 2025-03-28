@@ -7,3 +7,5 @@ mysql -u [사용자명] -p [데이터베이스명] < [dump파일명].sql
 
 C:\Users\kyw>mysql -h 127.0.0.1 -u root -p AptmentWorks < C:\Users\kyw\Documents\APTMentsAPI\aptmentworks_dump.sql
 Enter password: ****
+
+C:\Users\kyw>mysqldump -u root -p Ipanalyze > Ipanalyze_dump.sql

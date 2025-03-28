@@ -75,7 +75,7 @@ namespace IpManager
                 {
                     builder.AllowAnyOrigin()
                     .AllowAnyHeader()
-                    .AllowAnyHeader();
+                    .AllowAnyMethod();
                 });
             });
             #endregion
@@ -174,9 +174,9 @@ namespace IpManager
                 // Swagger 문서에 버전 및 API 정보 추가
                 options.SwaggerDoc("v1", new OpenApiInfo
                 {
-                    Title = "My API",
+                    Title = "PC방 API",
                     Version = "v1",
-                    Description = "API 문서 예제"
+                    Description = "PC방 PING SEND & 관리프로그램"
                 });
 
                 options.EnableAnnotations(); // SwaggerResponse 어트리뷰트 사용 (옵션)

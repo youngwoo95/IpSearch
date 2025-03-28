@@ -1,10 +1,13 @@
-﻿namespace IpManager.DTO.Login
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace IpManager.DTO.Login
 {
     public class UserUpdateDTO
     {
         /// <summary>
         /// PID
         /// </summary>
+        [Required]
         public int pId { get; set; }
 
         /// <summary>
