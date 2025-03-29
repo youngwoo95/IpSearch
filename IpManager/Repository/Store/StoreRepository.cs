@@ -734,88 +734,53 @@ namespace IpManager.Repository.Store
 
                 using (var command = connection.CreateCommand())
                 {
-                    if (String.IsNullOrWhiteSpace(search))
+                    string sql =
+                         "SELECT " +
+                         "pc.PID as PID, " +
+                         "pc.IP as IP, " +
+                         "pc.PORT as PORT, " +
+                         "pc.NAME as NAME, " +
+                         "pc.ADDR as ADDR, " +
+                         "pc.SEATNUMBER as SEATNUMBER, " +
+                         "pc.PRICE as PRICE, " +
+                         "pc.PRICE_PERCENT as PRICE_PERCENT, " +
+                         "pc.PC_SPEC as PC_SPEC, " +
+                         "pc.TELECOM as TELECOM, " +
+                         "pc.MEMO as MEMO, " +
+                         "pc.CREATE_DT as CREATE_DT, " +
+                         "pc.COUNTRYTB_ID as COUNTRYTB_ID, " +
+                         "pc.CITYTB_ID as CITYTB_ID, " +
+                         "pc.TOWNTB_ID as TOWNTB_ID, " +
+                         "CONCAT(country.Name,' ',city.Name,' ',town.NAME) as Region " +
+                         "FROM pcroom_tb as pc " +
+                         "INNER JOIN country_tb as country on pc.COUNTRYTB_ID = country.PID " +
+                         "INNER JOIN city_tb as city on pc.CITYTB_ID = city.PID " +
+                         "INNER JOIN town_tb as town on pc.TOWNTB_ID = town.PID " +
+                         "WHERE pc.DEL_YN != true " +
+                         "AND country.DEL_YN != true " +
+                         "AND city.DEL_YN != true " +
+                         "AND town.DEL_YN != true " +
+                         "AND country.PID = @countryId ";
+
+                    // search 매개변수가 null이나 빈 문자열이 아니면 추가 조건을 붙인다.
+                    if (!string.IsNullOrWhiteSpace(search))
                     {
-                        command.CommandText = $"SELECT " +
-                            $"pc.PID as PID," +
-                            $"pc.IP as IP," +
-                            $"pc.PORT as PORT," +
-                            $"pc.NAME as NAME," +
-                            $"pc.ADDR as ADDR," +
-                            $"pc.SEATNUMBER as SEATNUMBER," +
-                            $"pc.PRICE as PRICE," +
-                            $"pc.PRICE_PERCENT as PRICE_PERCENT," +
-                            $"pc.PC_SPEC as PC_SPEC," +
-                            $"pc.TELECOM as TELECOM," +
-                            $"pc.MEMO as MEMO," +
-                            $"pc.CREATE_DT as CREATE_DT," +
-                            $"pc.COUNTRYTB_ID as COUNTRYTB_ID," +
-                            $"pc.CITYTB_ID as CITYTB_ID," +
-                            $"pc.TOWNTB_ID as TOWNTB_ID," +
-                            $"CONCAT(country.Name,' ',city.Name,' ',town.NAME) as Region " +
-                            $"FROM pcroom_tb as pc " +
-                            $"INNER JOIN country_tb as country on pc.COUNTRYTB_ID = country.PID " +
-                            $"INNER JOIN city_tb as city on pc.CITYTB_ID = city.PID " +
-                            $"INNER JOIN town_tb as town on pc.TOWNTB_ID = town.PID " +
-                            $"WHERE pc.DEL_YN != true " +
-                            $"AND country.DEL_YN != true " +
-                            $"AND city.DEL_YN != true " +
-                            $"AND town.DEL_YN != true " +
-                            $"AND country.PID = @countryId " +
-                            $"ORDER BY pc.NAME ASC " +
-                            $"LIMIT @pageIndex " +
-                            $"OFFSET @offset";
-
-                        var countryParam = command.CreateParameter();
-                        countryParam.ParameterName = "@countryId";
-                        countryParam.Value = countryId;
-
-                        command.Parameters.Add(countryParam);
+                        sql += "AND pc.NAME LIKE @search ";
+                        var searchParam = command.CreateParameter();
+                        searchParam.ParameterName = "@search";
+                        searchParam.Value = "%" + search + "%";
+                        command.Parameters.Add(searchParam);
                     }
-                    else
-                    {
-                        command.CommandText = $"SELECT " +
-                           $"pc.PID as PID," +
-                           $"pc.IP as IP," +
-                           $"pc.PORT as PORT," +
-                           $"pc.NAME as NAME," +
-                           $"pc.ADDR as ADDR," +
-                           $"pc.SEATNUMBER as SEATNUMBER," +
-                           $"pc.PRICE as PRICE," +
-                           $"pc.PRICE_PERCENT as PRICE_PERCENT," +
-                           $"pc.PC_SPEC as PC_SPEC," +
-                           $"pc.TELECOM as TELECOM," +
-                           $"pc.MEMO as MEMO," +
-                           $"pc.CREATE_DT as CREATE_DT," +
-                           $"pc.COUNTRYTB_ID as COUNTRYTB_ID," +
-                           $"pc.CITYTB_ID as CITYTB_ID," +
-                           $"pc.TOWNTB_ID as TOWNTB_ID," +
-                           $"CONCAT(country.Name,' ',city.Name,' ',town.NAME) as Region " +
-                           $"FROM pcroom_tb as pc " +
-                           $"INNER JOIN country_tb as country on pc.COUNTRYTB_ID = country.PID " +
-                           $"INNER JOIN city_tb as city on pc.CITYTB_ID = city.PID " +
-                           $"INNER JOIN town_tb as town on pc.TOWNTB_ID = town.PID " +
-                           $"WHERE pc.DEL_YN != true " +
-                           $"AND country.DEL_YN != true " +
-                           $"AND city.DEL_YN != true " +
-                           $"AND town.DEL_YN != true " +
-                           $"AND country.PID = @countryId " +
-                           $"AND pc.NAME LIKE @search " +
-                           $"ORDER BY pc.NAME ASC " +
-                           $"LIMIT @pageIndex " +
-                           $"OFFSET @offset";
 
-                        var searchparam = command.CreateParameter();
-                        searchparam.ParameterName = "@search";
-                        searchparam.Value = $"%{search}%";
-                        command.Parameters.Add(searchparam);
+                    var countryParam = command.CreateParameter();
+                    countryParam.ParameterName = "@countryId";
+                    countryParam.Value = countryId;
+                    command.Parameters.Add(countryParam);
 
-                        var countryParam = command.CreateParameter();
-                        countryParam.ParameterName = "@countryId";
-                        countryParam.Value = countryId;
+                    // 마지막에 ORDER BY 절 추가
+                    sql += "ORDER BY pc.NAME ASC";
+                    command.CommandText = sql;
 
-                        command.Parameters.Add(countryParam);
-                    }
 
                     using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
                     {
@@ -1002,6 +967,7 @@ namespace IpManager.Repository.Store
         /// </summary>
         /// <param name="search"></param>
         /// <returns></returns>
+        /*
         public async Task<List<StoreListDTO>?> GetAllPcRoomSearchNameListAsync(string search)
         {
             try
@@ -1077,12 +1043,14 @@ namespace IpManager.Repository.Store
                 return null;
             }
         }
+        */
 
         /// <summary>
         /// 내) PC방 이름에 해당하는 PC방 LIST 반환
         /// </summary>
         /// <param name="search"></param>
         /// <returns></returns>
+        /*
         public async Task<List<StoreListDTO>?> GetMyPcRoomSearchNameListAsync(string search, int countryId)
         {
             try
@@ -1165,6 +1133,7 @@ namespace IpManager.Repository.Store
                 return null;
             }
         }
+        */
 
         /// <summary>
         /// 전체) PC방 주소로 검색

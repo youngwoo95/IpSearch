@@ -50,14 +50,14 @@ namespace IpManager.Repository.Store
         /// </summary>
         /// <param name="search"></param>
         /// <returns></returns>
-        Task<List<StoreListDTO>?> GetAllPcRoomSearchNameListAsync(string search);
+        //Task<List<StoreListDTO>?> GetAllPcRoomSearchNameListAsync(string search);
 
         /// <summary>
         /// 내) PC방 이름에 해당하는 PC방 LIST 반환
         /// </summary>
         /// <param name="search"></param>
         /// <returns></returns>
-        Task<List<StoreListDTO>?> GetMyPcRoomSearchNameListAsync(string search, int countryId);
+        //Task<List<StoreListDTO>?> GetMyPcRoomSearchNameListAsync(string search, int countryId);
 
         /// <summary>
         /// 전체) PC방 주소에 해당하는 PC방 LIST 반환

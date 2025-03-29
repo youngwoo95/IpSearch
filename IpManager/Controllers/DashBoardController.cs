@@ -21,7 +21,6 @@ namespace IpManager.Controllers
             this.DashBoardService = _dashboardservice;
         }
 
-
         /// <summary>
         /// 현황(실시간)조회
         /// </summary>
@@ -109,13 +108,10 @@ namespace IpManager.Controllers
         [Authorize(Roles = "Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetPeriodList")]
-        //public async Task<IActionResult> GetPeriodList( [FromQuery] string? pcName, [FromQuery] int? countrytbid, [FromQuery] int? towntbid, [FromQuery] int? citrytbid)
         public async Task<IActionResult> GetPeriodList([FromQuery][Required]DateTime startDate, [FromQuery][Required]DateTime endDate, [FromQuery]string? pcName, [FromQuery]int? countrytbid, [FromQuery]int? towntbid, [FromQuery]int? citrytbid)
         {
             try
             {
-                //DateTime startDate = DateTime.Now.AddDays(-4);
-                //DateTime endDate = DateTime.Now;
                 var model = await DashBoardService.GetPeriodDataService(startDate, endDate, pcName, countrytbid, towntbid, citrytbid);
                 if (model is null)
                     return BadRequest();
@@ -138,12 +134,9 @@ namespace IpManager.Controllers
         [HttpGet]
         [Route("sign/v1/GetMonthDataList")]
         public async Task<IActionResult> GetMonthDataList([FromQuery][Required]DateTime TargetDate, [FromQuery]string? pcName, [FromQuery] int? countryTbId, [FromQuery]int? townTbId, [FromQuery] int? cityTbId)
-        //public async Task<IActionResult> GetMonthDataList([FromQuery] DateTime Target)
         {
             try
             {
-                //DateTime Target = DateTime.Now;
-
                 var model = await DashBoardService.GetMonthDataService(TargetDate, pcName, countryTbId, townTbId, cityTbId).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
@@ -169,13 +162,9 @@ namespace IpManager.Controllers
         [HttpGet]
         [Route("sign/v1/GetDaysDataList")]
         public async Task<IActionResult> GetDaysDataList([FromQuery][Required] DateTime Target,[FromQuery] string? pcName, [FromQuery]int? countryTbId, [FromQuery]int? townTbId, [FromQuery] int? cityTbId)
-        //public async Task<IActionResult> GetTodayDataList([FromQuery]DateTime Target)
         {
             try
             {
-                
-                //DateTime Target = DateTime.Now.AddDays(-1); // FromQuery절로 올라가야함.
-
                 var model = await DashBoardService.GetDaysDataService(Target,pcName,countryTbId, townTbId,cityTbId).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();

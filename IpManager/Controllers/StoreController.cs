@@ -42,7 +42,7 @@ namespace IpManager.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(Summary = "등록된 PC방 리스트 보기",
             Description = "권한 제한 있음 - Manager & Visitor" +
-            "Manager - 등록된 전체 PC방 리스트 조회가능 / Visitor 자기지역만 가능 / 매개변수 추가시 매개변수 조건에 해당하는 검색결과 반환")]
+            "Manager - 등록된 전체 PC방 리스트 조회가능 / Visitor 자기지역만 가능 / 매개변수 추가시 매개변수 조건에 해당하는 검색결과 반환 [이름검색과 전체검색 API 통합 [수정완료]]")]
         public async Task<IActionResult> GetStoreList([FromQuery] string? searchPcName)
         {
             try
@@ -152,16 +152,23 @@ namespace IpManager.Controllers
 
        
         /// <summary>
-        /// PC방 주소로 PC방 검색 - 
+        /// PC방 주소로 PC방 검색 - 이거 왜 만들었는지 기억이안남.
         /// </summary>
         /// <param name="search"></param>
         /// <returns></returns>
         [Authorize(Roles = "Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetStoreSearchAddress")]
+        [Produces("application/json")]
         [SwaggerResponse(200, "성공", typeof(ResponseList<StoreListDTO>))]
         [SwaggerResponseExample(200, typeof(SwaggerSearchAddrStoreDTO))]
-        public async Task<IActionResult> GetStoreSearchAddress([FromQuery]string? search)
+        [SwaggerResponseExample(StatusCodes.Status200OK, typeof(ResponseList<StoreListDTO>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "PC방 주소로 PC방 검색",
+    Description = "권한제한 있음 - Manager는 전체 지역 다검색가능 / Visitor는 자기지역만 [API 왜 만들었는지 기억이안남.]")]
+        public async Task<IActionResult> GetStoreSearchAddress([FromQuery][Required]string searchAddress)
         {
             try
             {
@@ -174,7 +181,7 @@ namespace IpManager.Controllers
                 if (Pid == -1)
                     return Unauthorized();
 
-                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomSearchAddressListService(Pid, userType, search).ConfigureAwait(false);
+                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomSearchAddressListService(Pid, userType, searchAddress).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
                 if (model.code == 200)
@@ -197,8 +204,15 @@ namespace IpManager.Controllers
         [Authorize(Roles = "Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetStoreGroupList")]
+        [Produces("application/json")]
         [SwaggerResponse(200, "성공", typeof(ResponseList<StoreRegionDTO>))]
         [SwaggerResponseExample(200, typeof(SwaggerStoreGroupListDTO))]
+        [SwaggerResponseExample(StatusCodes.Status200OK, typeof(ResponseList<StoreRegionDTO>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "PC방 그룹핑 개수 카운팅",
+Description = "권한제한 있음 - Manager는 전체 카운팅 / Visitor는 자기지역만 Counting")]
         public async Task<IActionResult> GetStoreGroupList()
         {
             try
@@ -235,7 +249,16 @@ namespace IpManager.Controllers
         [Authorize(Roles ="Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetStoreDetail")]
-        public async Task<IActionResult> GetStoreDetail([FromQuery]int pid)
+        [Produces("application/json")]
+        [SwaggerResponse(200, "성공", typeof(ResponseUnit<StoreDetailDTO>))]
+        //[SwaggerResponseExample(200, typeof(SwaggerAddStoreDTO))]
+        [SwaggerResponseExample(StatusCodes.Status200OK, typeof(ResponseUnit<StoreDetailDTO>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "PC방 상세정보 보기",
+Description = "권한제한 있음 - Manger는 전체리스트에 대해서 정보보기 가능 / Visitor는 할당된 지역만 가능")]
+        public async Task<IActionResult> GetStoreDetail([FromQuery][Required] int pid)
         {
             try
             {
@@ -264,11 +287,24 @@ namespace IpManager.Controllers
             }
         }
 
-        // (도/시) 별 조회 Pc방 List
+        /// <summary>
+        /// (도/시) 별 조회 Pc방 List
+        /// </summary>
+        /// <param name="countryid"></param>
+        /// <returns></returns>
         [Authorize(Roles = "Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetCountryStoreList")]
-        public async Task<IActionResult> GetCountryStoreList([FromQuery]int countryid)
+        [Produces("application/json")]
+        [SwaggerResponse(200, "성공", typeof(ResponseList<StoreListDTO>))]
+        //[SwaggerResponseExample(200, typeof(SwaggerAddStoreDTO))]
+        [SwaggerResponseExample(StatusCodes.Status200OK, typeof(ResponseList<StoreListDTO>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "(도/시) 별 Pc방 List 조회",
+        Description = "Manager - 전체 대상 / Visitor - 자기지역만")]
+        public async Task<IActionResult> GetCountryStoreList([FromQuery][Required]int countryid)
         {
             try
             {
@@ -297,11 +333,24 @@ namespace IpManager.Controllers
             }
         }
 
-        // (시/군/구) 별 조회 Pc방 List
+        /// <summary>
+        /// (시/군/구) 별 조회 Pc방 List
+        /// </summary>
+        /// <param name="cityid"></param>
+        /// <returns></returns>
         [Authorize(Roles = "Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetCityStoreList")]
-        public async Task<IActionResult> GetCityStoreList([FromQuery]int cityid)
+        [Produces("application/json")]
+        [SwaggerResponse(200, "성공", typeof(ResponseList<StoreListDTO>))]
+        //[SwaggerResponseExample(200, typeof(SwaggerAddStoreDTO))]
+        [SwaggerResponseExample(StatusCodes.Status200OK, typeof(ResponseList<StoreListDTO>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "(시/군/구) 별 Pc방 List 조회",
+        Description = "Manager - 전체 대상 / Visitor - 자기지역만")]
+        public async Task<IActionResult> GetCityStoreList([FromQuery][Required]int cityid)
         {
             try
             {
@@ -333,11 +382,24 @@ namespace IpManager.Controllers
 
 
 
-        // (읍/면/동) 별 조회 Pc방 List
+        /// <summary>
+        /// (읍/면/동) 별 조회 Pc방 List
+        /// </summary>
+        /// <param name="townid"></param>
+        /// <returns></returns>
         [Authorize(Roles ="Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetTownStoreList")]
-        public async Task<IActionResult> GetTownStoreList([FromQuery]int townid)
+        [Produces("application/json")]
+        [SwaggerResponse(200, "성공", typeof(ResponseList<StoreListDTO>))]
+        //[SwaggerResponseExample(200, typeof(SwaggerAddStoreDTO))]
+        [SwaggerResponseExample(StatusCodes.Status200OK, typeof(ResponseList<StoreListDTO>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "(읍/면/동) 별 Pc방 List 조회",
+        Description = "Manager - 전체 대상 / Visitor - 자기지역만")]
+        public async Task<IActionResult> GetTownStoreList([FromQuery][Required]int townid)
         {
             try
             {
@@ -366,12 +428,22 @@ namespace IpManager.Controllers
             }
         }
 
-
-
-        // Update
+        /// <summary>
+        /// PC방 정보 수정
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>
         [Authorize(Roles = "Manager,Visitor")]
         [HttpPut]
         [Route("sign/v1/UpdateStore")]
+        [Produces("application/json")]
+        [SwaggerResponse(200, "성공", typeof(ResponseUnit<bool>))]
+        //[SwaggerResponseExample(200, typeof(SwaggerAddStoreDTO))]
+        [SwaggerResponseExample(StatusCodes.Status200OK, typeof(ResponseUnit<bool>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "PC방 정보 수정",
+        Description = "권한제한 있음 - Manager, Visitor만 가능")]
         public async Task<IActionResult> UpdateStoreInfo([FromBody] UpdateStoreDTO dto)
         {
             try
@@ -393,11 +465,23 @@ namespace IpManager.Controllers
         }
 
 
-        // Delete
+        /// <summary>
+        /// PC방 정보 삭제
+        /// </summary>
+        /// <param name="pid"></param>
+        /// <returns></returns>
         [Authorize(Roles = "Manger,Visitor")]
         [HttpPut]
         [Route("sign/v1/DeleteStore")]
-        public async Task<IActionResult> DeleteStoreInfo([FromBody]int pid)
+        [Produces("application/json")]
+        [SwaggerResponse(200, "성공", typeof(ResponseUnit<bool>))]
+        //[SwaggerResponseExample(200, typeof(SwaggerAddStoreDTO))]
+        [SwaggerResponseExample(StatusCodes.Status200OK, typeof(ResponseUnit<bool>))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(Summary = "PC방 정보 삭제",
+        Description = "권한제한 있음 - Manager, Visitor만 가능")]
+        public async Task<IActionResult> DeleteStoreInfo([FromBody][Required]int pid)
         {
             try
             {

@@ -1,10 +1,13 @@
-﻿namespace IpManager.DTO.Store
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace IpManager.DTO.Store
 {
     public class UpdateStoreDTO
     {
         /// <summary>
         /// PID
         /// </summary>
+        [Required]
         public int pId { get; set; }
 
         /// <summary>

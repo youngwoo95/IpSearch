@@ -144,6 +144,7 @@ namespace IpManager.Services.Store
         /// </summary>
         /// <param name="search"></param>
         /// <returns></returns>
+        /*
         public async Task<ResponseList<StoreListDTO>?> GetPcRoomSearchNameListService(int userpid, int userType, string? search)
         {
             try
@@ -183,6 +184,7 @@ namespace IpManager.Services.Store
                 return new ResponseList<StoreListDTO>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, code = 500 };
             }
         }
+        */
 
         /// <summary>
         /// PC방 주소로 검색

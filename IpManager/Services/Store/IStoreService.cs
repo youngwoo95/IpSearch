@@ -23,14 +23,14 @@ namespace IpManager.Services.Store
         /// </summary>
         /// <param name="search"></param>
         /// <returns></returns>
-        public Task<ResponseList<StoreListDTO>?> GetPcRoomSearchNameListService(int userpid, int userType, string? search);
+        //public Task<ResponseList<StoreListDTO>?> GetPcRoomSearchNameListService(int userpid, int userType, string? search);
 
         /// <summary>
         /// 검색조건(주소에 해당하는 PC방 LIST 반환
         /// </summary>
         /// <param name="search"></param>
         /// <returns></returns>
-        public Task<ResponseList<StoreListDTO>?> GetPcRoomSearchAddressListService(int userpid, int userType, string? search);
+        public Task<ResponseList<StoreListDTO>?> GetPcRoomSearchAddressListService(int userpid, int userType, string? searchAddress);
 
         /// <summary>
         /// PC방 지역별 그룹핑 개수 카운팅
