@@ -100,7 +100,7 @@ namespace IpManager.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        [Route("v1/GetRole")]
+        [Route("v1/sign/GetRole")]
         [Produces("application/json")]
         [SwaggerResponse(200, "성공", typeof(ResponseUnit<LoginRoleDTO>))]
         [SwaggerResponseExample(200, typeof(SwaggerGetRoleDTO))]
@@ -254,11 +254,11 @@ namespace IpManager.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(Summary = "계정 삭제",
     Description = "권한제한 있음 - Master만 가능")]
-        public async Task<IActionResult> AccountDelete([FromBody][Required] int pid)
+        public async Task<IActionResult> AccountDelete([FromBody][Required] int pId)
         {
             try
             {
-                ResponseUnit<bool> model = await LoginService.DeleteUserService(pid).ConfigureAwait(false);
+                ResponseUnit<bool> model = await LoginService.DeleteUserService(pId).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
 
