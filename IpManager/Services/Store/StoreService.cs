@@ -485,14 +485,12 @@ namespace IpManager.Services.Store
                 if (dto is null)
                     return new ResponseUnit<bool>() { message = "잘못된 요청입니다.", data = false, code = 200 };
 
-                if (dto.countryId is 0)
+                if(dto.pId is 0 || dto.countryId is 0 || dto.cityId is 0 || dto.townId is 0 || dto.price is 0 || dto.pricePercent is 0 || dto.countryId is 0 || dto.cityId is 0 || dto.townId is 0)
                     return new ResponseUnit<bool>() { message = "잘못된 요청입니다.", data = false, code = 200 };
 
-                if (dto.cityId is 0)
+                if(String.IsNullOrWhiteSpace(dto.ip) || String.IsNullOrWhiteSpace(dto.addr))
                     return new ResponseUnit<bool>() { message = "잘못된 요청입니다.", data = false, code = 200 };
 
-                if (dto.townId is 0)
-                    return new ResponseUnit<bool>() { message = "잘못된 요청입니다.", data = false, code = 200 };
 
                 var PcroomTB = await StoreRepository.GetPcRoomInfoTB(dto.pId).ConfigureAwait(false);
                 if (PcroomTB is null)

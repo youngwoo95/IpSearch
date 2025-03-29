@@ -76,11 +76,11 @@ Description = "권한제한 있음 - Manager, Visitor만 가능")]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(Summary = "도시 정보 삭제",
 Description = "권한제한 있음 - Master만 가능")]
-        public async Task<IActionResult> DeleteCountryInfo([FromBody][Required]List<int> pid)
+        public async Task<IActionResult> DeleteCountryInfo([FromBody][Required]List<int> pId)
         {
             try
             {
-                ResponseUnit<bool>? model = await CountryService.DeleteCountryListService(pid).ConfigureAwait(false);
+                ResponseUnit<bool>? model = await CountryService.DeleteCountryListService(pId).ConfigureAwait(false);
                 if(model is null)
                     return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
 

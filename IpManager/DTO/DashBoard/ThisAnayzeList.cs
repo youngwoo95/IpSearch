@@ -2,7 +2,7 @@
 {
     public class ThisAnayzeList
     {
-        public string? Time { get; set; }
-        public int Count { get; set; }
+        public string? time { get; set; }
+        public int count { get; set; }
     }
 }

@@ -58,7 +58,8 @@ namespace IpManager.Controllers
         {
             try
             {
-                var model = await DashBoardService.GetTopSalesNameService().ConfigureAwait(false);
+
+                ResponseUnit<TopSalesNameDTO>? model = await DashBoardService.GetTopSalesNameService().ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
                 if (model.code == 200)
@@ -80,11 +81,12 @@ namespace IpManager.Controllers
         [Authorize(Roles = "Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetThisDayDataList")]
-        public async Task<IActionResult> GetThisDayDataList([FromQuery][Required] DateTime targetDate,[FromQuery]string? pcName, [FromQuery]int? countrytbid, [FromQuery]int? towntbid, [FromQuery]int? citytbid)
+        public async Task<IActionResult> GetThisDayDataList([FromQuery][Required] DateTime targetDate,[FromQuery]string? pcName, [FromQuery]int? countryTbId, [FromQuery]int? townTbId, [FromQuery]int? cityTbId)
         {
             try
             {
-                var model = await DashBoardService.GetThisDayDataService(targetDate,pcName, countrytbid, towntbid, citytbid).ConfigureAwait(false);
+
+                ResponseList<PcroomTimeDataDto>? model = await DashBoardService.GetThisDayDataService(targetDate,pcName, countryTbId, townTbId, cityTbId).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
 
@@ -108,11 +110,11 @@ namespace IpManager.Controllers
         [Authorize(Roles = "Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetPeriodList")]
-        public async Task<IActionResult> GetPeriodList([FromQuery][Required]DateTime startDate, [FromQuery][Required]DateTime endDate, [FromQuery]string? pcName, [FromQuery]int? countrytbid, [FromQuery]int? towntbid, [FromQuery]int? citrytbid)
+        public async Task<IActionResult> GetPeriodList([FromQuery][Required]DateTime startDate, [FromQuery][Required]DateTime endDate, [FromQuery]string? pcName, [FromQuery]int? countryTbId, [FromQuery]int? townTbId, [FromQuery]int? citryTbId)
         {
             try
             {
-                var model = await DashBoardService.GetPeriodDataService(startDate, endDate, pcName, countrytbid, towntbid, citrytbid);
+                ResponseList<ReturnValue>? model = await DashBoardService.GetPeriodDataService(startDate, endDate, pcName, countryTbId, townTbId, citryTbId);
                 if (model is null)
                     return BadRequest();
 
@@ -129,7 +131,15 @@ namespace IpManager.Controllers
             }
         }
 
-        //// 월간 데이터 조회
+        /// <summary>
+        /// 월간 데이터 조회
+        /// </summary>
+        /// <param name="TargetDate"></param>
+        /// <param name="pcName"></param>
+        /// <param name="countryTbId"></param>
+        /// <param name="townTbId"></param>
+        /// <param name="cityTbId"></param>
+        /// <returns></returns>
         [Authorize(Roles ="Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetMonthDataList")]
@@ -137,7 +147,7 @@ namespace IpManager.Controllers
         {
             try
             {
-                var model = await DashBoardService.GetMonthDataService(TargetDate, pcName, countryTbId, townTbId, cityTbId).ConfigureAwait(false);
+                ResponseList<ReturnValue>? model = await DashBoardService.GetMonthDataService(TargetDate, pcName, countryTbId, townTbId, cityTbId).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
 
@@ -165,7 +175,7 @@ namespace IpManager.Controllers
         {
             try
             {
-                var model = await DashBoardService.GetDaysDataService(Target,pcName,countryTbId, townTbId,cityTbId).ConfigureAwait(false);
+                ResponseList<ReturnValue>? model = await DashBoardService.GetDaysDataService(Target,pcName,countryTbId, townTbId,cityTbId).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
 

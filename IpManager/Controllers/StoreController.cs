@@ -90,14 +90,14 @@ namespace IpManager.Controllers
         [SwaggerOperation(Summary = "PC방 단일 PING SEND",
       Description = "권한 제한 있음 - Manager & Visitor" +
       "Manager - 등록된 전체 PC방 PING SEND 가능 / Visitor 자기지역만 가능")]
-        public async Task<IActionResult> GetUsedPcCount([FromQuery][Required] int pid)
+        public async Task<IActionResult> GetUsedPcCount([FromQuery][Required] int pId)
         {
             try
             {
-                if (pid == 0)
+                if (pId == 0)
                     return BadRequest();
 
-                ResponseUnit<StorePingDTO>? model = await StoreService.GetUsedPcCountService(pid).ConfigureAwait(false);
+                ResponseUnit<StorePingDTO>? model = await StoreService.GetUsedPcCountService(pId).ConfigureAwait(false);
                 if (model is null)
                     return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
 
@@ -258,7 +258,7 @@ Description = "권한제한 있음 - Manager는 전체 카운팅 / Visitor는 �
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(Summary = "PC방 상세정보 보기",
 Description = "권한제한 있음 - Manger는 전체리스트에 대해서 정보보기 가능 / Visitor는 할당된 지역만 가능")]
-        public async Task<IActionResult> GetStoreDetail([FromQuery][Required] int pid)
+        public async Task<IActionResult> GetStoreDetail([FromQuery][Required] int pId)
         {
             try
             {
@@ -271,7 +271,7 @@ Description = "권한제한 있음 - Manger는 전체리스트에 대해서 정�
                 if (UserPid == -1)
                     return Unauthorized();
 
-                ResponseUnit<StoreDetailDTO>? model = await StoreService.GetPCRoomDetailService(pid, UserPid, userType).ConfigureAwait(false);
+                ResponseUnit<StoreDetailDTO>? model = await StoreService.GetPCRoomDetailService(pId, UserPid, userType).ConfigureAwait(false);
                 
                 if (model is null)
                     return BadRequest();
@@ -304,7 +304,7 @@ Description = "권한제한 있음 - Manger는 전체리스트에 대해서 정�
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(Summary = "(도/시) 별 Pc방 List 조회",
         Description = "Manager - 전체 대상 / Visitor - 자기지역만")]
-        public async Task<IActionResult> GetCountryStoreList([FromQuery][Required]int countryid)
+        public async Task<IActionResult> GetCountryStoreList([FromQuery][Required]int countryId)
         {
             try
             {
@@ -317,7 +317,7 @@ Description = "권한제한 있음 - Manger는 전체리스트에 대해서 정�
                 if (Pid == -1)
                     return Unauthorized();
 
-                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomCountryListService(countryid, Pid, userType).ConfigureAwait(false);
+                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomCountryListService(countryId, Pid, userType).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
 
@@ -350,7 +350,7 @@ Description = "권한제한 있음 - Manger는 전체리스트에 대해서 정�
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(Summary = "(시/군/구) 별 Pc방 List 조회",
         Description = "Manager - 전체 대상 / Visitor - 자기지역만")]
-        public async Task<IActionResult> GetCityStoreList([FromQuery][Required]int cityid)
+        public async Task<IActionResult> GetCityStoreList([FromQuery][Required]int cityId)
         {
             try
             {
@@ -363,7 +363,7 @@ Description = "권한제한 있음 - Manger는 전체리스트에 대해서 정�
                 if (Pid == -1)
                     return Unauthorized();
 
-                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomCityListService(cityid, Pid, userType).ConfigureAwait(false);
+                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomCityListService(cityId, Pid, userType).ConfigureAwait(false);
                 
                 if (model is null)
                     return BadRequest();
@@ -399,7 +399,7 @@ Description = "권한제한 있음 - Manger는 전체리스트에 대해서 정�
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(Summary = "(읍/면/동) 별 Pc방 List 조회",
         Description = "Manager - 전체 대상 / Visitor - 자기지역만")]
-        public async Task<IActionResult> GetTownStoreList([FromQuery][Required]int townid)
+        public async Task<IActionResult> GetTownStoreList([FromQuery][Required]int townId)
         {
             try
             {
@@ -412,7 +412,7 @@ Description = "권한제한 있음 - Manger는 전체리스트에 대해서 정�
                 if (Pid == -1)
                     return Unauthorized();
 
-                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomTownListService(townid, Pid, userType).ConfigureAwait(false);
+                ResponseList<StoreListDTO>? model = await StoreService.GetPcRoomTownListService(townId, Pid, userType).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
 
@@ -481,11 +481,11 @@ Description = "권한제한 있음 - Manger는 전체리스트에 대해서 정�
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(Summary = "PC방 정보 삭제",
         Description = "권한제한 있음 - Manager, Visitor만 가능")]
-        public async Task<IActionResult> DeleteStoreInfo([FromBody][Required]int pid)
+        public async Task<IActionResult> DeleteStoreInfo([FromBody][Required]int pId)
         {
             try
             {
-                ResponseUnit<bool> model = await StoreService.DeleteStoreService(pid).ConfigureAwait(false);
+                ResponseUnit<bool> model = await StoreService.DeleteStoreService(pId).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
 

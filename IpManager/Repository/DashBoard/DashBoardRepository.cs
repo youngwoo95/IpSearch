@@ -80,34 +80,34 @@ namespace IpManager.Repository.DashBoard
                 foreach(var analysis in result)
                 {
                     var item = new ResultData();
-                    item.PcRoomName = analysis.Pcroom.Name; // PC방 상호
-                    item.TotalCount = analysis.Pcroom.Seatnumber; // 총대수
+                    item.pcRoomName = analysis.Pcroom.Name; // PC방 상호
+                    item.totalCount = analysis.Pcroom.Seatnumber; // 총대수
                     if (analysis.LatestGroup != null && analysis.LatestGroup.Items != null)
                     {
                         foreach (var temp in analysis.LatestGroup.Items)
                         {
-                            item.Count = temp.UsedPc;
+                            item.count = temp.UsedPc;
                         }
                     }
                     else
                     {
                         // 분석 결과가 없는것
-                        item.Count = 0;
+                        item.count = 0;
                     }
 
                     
-                    item.Rate = ((float)item.Count / item.TotalCount) * 100;
-                    item.ReturnRate = $"{item.Count}/{item.TotalCount} ({((double)item.Count / item.TotalCount) * 100:F2}%)";
+                    item.rate = ((float)item.count / item.totalCount) * 100;
+                    item.returnRate = $"{item.count}/{item.totalCount} ({((double)item.count / item.totalCount) * 100:F2}%)";
 
                     // 가동률 계산해야함.
                     resultData.Add(item);
                 }
 
-                var best = resultData.OrderByDescending(m => m.Rate).FirstOrDefault();
+                var best = resultData.OrderByDescending(m => m.rate).FirstOrDefault();
                 AnalysisDataDTO AnalysisData = new AnalysisDataDTO();
-                AnalysisData.BestName = best.PcRoomName; // 가장높은 매장명
-                AnalysisData.AnalysisDate = DateTime.Now;
-                AnalysisData.Datas = resultData;
+                AnalysisData.bestName = best.pcRoomName; // 가장높은 매장명
+                AnalysisData.analysisDate = DateTime.Now;
+                AnalysisData.datas = resultData;
 
 
                 return AnalysisData;
@@ -252,12 +252,12 @@ namespace IpManager.Repository.DashBoard
                 // 모든 시간대를 기준으로 없는 시간은 0으로 채워 DTO 매핑
                 var result = groupedData.Select(pc => new PcroomTimeDataDto
                 {
-                    PcroomId = pc.PcroomId,
-                    PcroomName = pc.PcroomName,
-                    AnalyList = allTimes.Select(time => new ThisAnayzeList
+                    pcRoomId = pc.PcroomId,
+                    pcRoomName = pc.PcroomName,
+                    analyList = allTimes.Select(time => new ThisAnayzeList
                     {
-                        Time = time.Time.ToString(),
-                        Count = pc.TimeMap.ContainsKey(time.Time.ToString()) ? pc.TimeMap[time.Time.ToString()] : 0
+                        time = time.Time.ToString(),
+                        count = pc.TimeMap.ContainsKey(time.Time.ToString()) ? pc.TimeMap[time.Time.ToString()] : 0
                     }).ToList()
                 }).ToList();
 
