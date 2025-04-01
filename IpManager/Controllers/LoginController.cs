@@ -100,7 +100,7 @@ namespace IpManager.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        [Route("v1/sign/GetRole")]
+        [Route("sign/v1/GetRole")]
         [Produces("application/json")]
         [SwaggerResponse(200, "성공", typeof(ResponseUnit<LoginRoleDTO>))]
         [SwaggerResponseExample(200, typeof(SwaggerGetRoleDTO))]
