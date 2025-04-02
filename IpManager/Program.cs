@@ -297,6 +297,11 @@ namespace IpManager
             });
             #endregion
 
+
+            #region CORS 미들웨어 등록
+            app.UseCors("AllowAll");
+            #endregion
+
             string[]? ApiMiddleWare = new string[]
             {
                 "/api/Login/sign",
@@ -313,9 +318,6 @@ namespace IpManager
                 });
             }
 
-            #region CORS 미들웨어 등록
-            app.UseCors("AllowAll");
-            #endregion
             app.UseAuthentication();
             app.UseAuthorization();
 
