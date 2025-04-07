@@ -25,7 +25,7 @@ namespace IpManager.Helpers
                     .FirstOrDefault();
 
                 if (role == "Visitor") return 0;
-                else if (role == "Manager") return 1;
+                else if (role == "Manager" || role=="Master") return 1;
                 else return -1;
             }catch(Exception ex)
             {

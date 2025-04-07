@@ -25,7 +25,7 @@ namespace IpManager.Controllers
         /// 현황(실시간)조회
         /// </summary>
         /// <returns></returns>
-        [Authorize(Roles ="Manager,Visitor")]
+        [Authorize(Roles = "Master,Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetThisTimeDataList")]
         public async Task<IActionResult> GetThisTimeDataList()
@@ -51,7 +51,7 @@ namespace IpManager.Controllers
         /// 매출 1위 상권
         /// </summary>
         /// <returns></returns>
-        [Authorize(Roles ="Manager,Visitor")]
+        [Authorize(Roles = "Master,Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetTopAnalyzeName")]
         public async Task<IActionResult> GetTopAnalyName()
@@ -78,7 +78,7 @@ namespace IpManager.Controllers
         /// 해당 날짜 전체 분석데이터 조회
         /// </summary>
         /// <returns></returns>
-        [Authorize(Roles = "Manager,Visitor")]
+        [Authorize(Roles = "Master,Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetThisDayDataList")]
         public async Task<IActionResult> GetThisDayDataList([FromQuery][Required] DateTime targetDate,[FromQuery]string? pcName, [FromQuery]int? countryTbId, [FromQuery]int? townTbId, [FromQuery]int? cityTbId)
@@ -107,7 +107,7 @@ namespace IpManager.Controllers
         /// 기간별 분석
         /// </summary>
         /// <returns></returns>
-        [Authorize(Roles = "Manager,Visitor")]
+        [Authorize(Roles = "Master,Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetPeriodList")]
         public async Task<IActionResult> GetPeriodList([FromQuery][Required]DateTime startDate, [FromQuery][Required]DateTime endDate, [FromQuery]string? pcName, [FromQuery]int? countryTbId, [FromQuery]int? townTbId, [FromQuery]int? citryTbId)
@@ -140,7 +140,7 @@ namespace IpManager.Controllers
         /// <param name="townTbId"></param>
         /// <param name="cityTbId"></param>
         /// <returns></returns>
-        [Authorize(Roles ="Manager,Visitor")]
+        [Authorize(Roles = "Master,Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetMonthDataList")]
         public async Task<IActionResult> GetMonthDataList([FromQuery][Required]DateTime TargetDate, [FromQuery]string? pcName, [FromQuery] int? countryTbId, [FromQuery]int? townTbId, [FromQuery] int? cityTbId)
@@ -168,7 +168,7 @@ namespace IpManager.Controllers
         ///// 하루 데이터 조회
         ///// </summary>
         ///// <returns></returns>
-        [Authorize(Roles = "Manager,Visitor")]
+        [Authorize(Roles = "Master,Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetDaysDataList")]
         public async Task<IActionResult> GetDaysDataList([FromQuery][Required] DateTime Target,[FromQuery] string? pcName, [FromQuery]int? countryTbId, [FromQuery]int? townTbId, [FromQuery] int? cityTbId)

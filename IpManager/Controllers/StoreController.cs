@@ -30,7 +30,7 @@ namespace IpManager.Controllers
         /// </summary>
         /// <param name="search"></param>
         /// <returns></returns>
-        [Authorize(Roles = "Manager,Visitor")]
+        [Authorize(Roles = "Master,Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetStoreList")]
         [Produces("application/json")]
@@ -76,7 +76,7 @@ namespace IpManager.Controllers
         /// </summary>
         /// <param name="pid"></param>
         /// <returns></returns>
-        [Authorize(Roles = "Manager,Visitor")]
+        [Authorize(Roles = "Master,Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/SendIpPing")]
         [Produces("application/json")]
@@ -156,7 +156,7 @@ namespace IpManager.Controllers
         /// </summary>
         /// <param name="search"></param>
         /// <returns></returns>
-        [Authorize(Roles = "Manager,Visitor")]
+        [Authorize(Roles = "Master,Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetStoreSearchAddress")]
         [Produces("application/json")]
@@ -201,7 +201,7 @@ namespace IpManager.Controllers
         /// PC방 그룹핑 개수 카운팅
         /// </summary>
         /// <returns></returns>
-        [Authorize(Roles = "Manager,Visitor")]
+        [Authorize(Roles = "Master,Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetStoreGroupList")]
         [Produces("application/json")]
@@ -246,7 +246,7 @@ Description = "권한제한 있음 - Manager는 전체 카운팅 / Visitor는 �
         /// </summary>
         /// <param name="pid"></param>
         /// <returns></returns>
-        [Authorize(Roles ="Manager,Visitor")]
+        [Authorize(Roles = "Master,Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetStoreDetail")]
         [Produces("application/json")]
@@ -292,7 +292,7 @@ Description = "권한제한 있음 - Manger는 전체리스트에 대해서 정�
         /// </summary>
         /// <param name="countryid"></param>
         /// <returns></returns>
-        [Authorize(Roles = "Manager,Visitor")]
+        [Authorize(Roles = "Master,Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetCountryStoreList")]
         [Produces("application/json")]
@@ -338,7 +338,7 @@ Description = "권한제한 있음 - Manger는 전체리스트에 대해서 정�
         /// </summary>
         /// <param name="cityid"></param>
         /// <returns></returns>
-        [Authorize(Roles = "Manager,Visitor")]
+        [Authorize(Roles = "Master,Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetCityStoreList")]
         [Produces("application/json")]
@@ -387,7 +387,7 @@ Description = "권한제한 있음 - Manger는 전체리스트에 대해서 정�
         /// </summary>
         /// <param name="townid"></param>
         /// <returns></returns>
-        [Authorize(Roles ="Manager,Visitor")]
+        [Authorize(Roles = "Master,Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetTownStoreList")]
         [Produces("application/json")]
@@ -433,7 +433,7 @@ Description = "권한제한 있음 - Manger는 전체리스트에 대해서 정�
         /// </summary>
         /// <param name="dto"></param>
         /// <returns></returns>
-        [Authorize(Roles = "Manager,Visitor")]
+        [Authorize(Roles = "Master,Manager,Visitor")]
         [HttpPut]
         [Route("sign/v1/UpdateStore")]
         [Produces("application/json")]
@@ -470,7 +470,7 @@ Description = "권한제한 있음 - Manger는 전체리스트에 대해서 정�
         /// </summary>
         /// <param name="pid"></param>
         /// <returns></returns>
-        [Authorize(Roles = "Manger,Visitor")]
+        [Authorize(Roles = "Master,Manger,Visitor")]
         [HttpPut]
         [Route("sign/v1/DeleteStore")]
         [Produces("application/json")]
@@ -481,11 +481,14 @@ Description = "권한제한 있음 - Manger는 전체리스트에 대해서 정�
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(Summary = "PC방 정보 삭제",
         Description = "권한제한 있음 - Manager, Visitor만 가능")]
-        public async Task<IActionResult> DeleteStoreInfo([FromBody][Required]int pId)
+        public async Task<IActionResult> DeleteStoreInfo([FromBody][Required]DeleteStoreDTO dto)
         {
             try
             {
-                ResponseUnit<bool> model = await StoreService.DeleteStoreService(pId).ConfigureAwait(false);
+                if (dto.pId == 0)
+                    return NoContent();
+
+                ResponseUnit<bool> model = await StoreService.DeleteStoreService(dto.pId).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
 

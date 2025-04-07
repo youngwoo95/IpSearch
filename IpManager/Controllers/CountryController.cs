@@ -29,7 +29,7 @@ namespace IpManager.Controllers
         /// 도시 리스트 반환
         /// </summary>
         /// <returns></returns>
-        [Authorize(Roles = "Manager,Visitor")]
+        [Authorize(Roles = "Master,Manager,Visitor")]
         [HttpGet]
         [Route("sign/v1/GetCountryInfo")]
         [Produces("application/json")]
