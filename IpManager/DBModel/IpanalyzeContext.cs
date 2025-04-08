@@ -32,9 +32,13 @@ public partial class IpanalyzeContext : DbContext
 
     public virtual DbSet<TownTb> TownTbs { get; set; }
 
+#if DEBUG
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        => optionsBuilder.UseMySql("server=127.0.0.1;port=3306;database=ipanalyze;user=root;password=rladyddn!!95", ServerVersion.Parse("11.4.5-mariadb"));
+#else
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         => optionsBuilder.UseMySql("server=127.0.0.1;port=3306;database=ipanalyze;user=root;password=1234", ServerVersion.Parse("11.4.5-mariadb"));
-
+#endif
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder

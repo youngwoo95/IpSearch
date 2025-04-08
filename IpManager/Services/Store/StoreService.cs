@@ -485,10 +485,10 @@ namespace IpManager.Services.Store
                 if (dto is null)
                     return new ResponseUnit<bool>() { message = "잘못된 요청입니다.", data = false, code = 200 };
 
-                if(dto.pId is 0 || dto.countryId is 0 || dto.cityId is 0 || dto.townId is 0 || dto.price is 0 || dto.pricePercent is 0 || dto.countryId is 0 || dto.cityId is 0 || dto.townId is 0)
+                if(dto.pId is 0  || dto.price is 0 || dto.pricePercent is 0)
                     return new ResponseUnit<bool>() { message = "잘못된 요청입니다.", data = false, code = 200 };
 
-                if(String.IsNullOrWhiteSpace(dto.ip) || String.IsNullOrWhiteSpace(dto.addr))
+                if(String.IsNullOrWhiteSpace(dto.ip))
                     return new ResponseUnit<bool>() { message = "잘못된 요청입니다.", data = false, code = 200 };
 
 
@@ -500,17 +500,17 @@ namespace IpManager.Services.Store
                 PcroomTB.Ip = dto.ip; // IP
                 PcroomTB.Port = dto.port; // PORT
                 PcroomTB.Name = dto.name; // 상호명
-                PcroomTB.Addr = dto.addr; // 주소
+                //PcroomTB.Addr = dto.addr; // 주소
                 PcroomTB.Seatnumber = dto.seatNumber; // 좌석수
                 PcroomTB.Price = dto.price; // 요금제
-                //PcroomTB.PricePercent = dto.pricePercent; // 요금제 비율
+                PcroomTB.PricePercent = dto.pricePercent; // 요금제 비율
                 PcroomTB.PcSpec = dto.pcSpec; // PC 사양
                 PcroomTB.Telecom = dto.telecom; // 통신사
                 PcroomTB.Memo = dto.memo; // 메모
                 PcroomTB.UpdateDt = DateTime.Now;
-                PcroomTB.CountrytbId = dto.countryId; // (도/시) ID
-                PcroomTB.CitytbId = dto.cityId; // (시/군/구) ID 
-                PcroomTB.TowntbId = dto.townId; // (읍/면/동) ID
+                //PcroomTB.CountrytbId = dto.countryId; // (도/시) ID
+                //PcroomTB.CitytbId = dto.cityId; // (시/군/구) ID 
+                //PcroomTB.TowntbId = dto.townId; // (읍/면/동) ID
 
                 int result = await StoreRepository.EditPcRoomInfo(PcroomTB);
                 if (result != -1)

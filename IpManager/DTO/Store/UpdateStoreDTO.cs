@@ -29,12 +29,6 @@ namespace IpManager.DTO.Store
         public string name { get; set; } = null!;
 
         /// <summary>
-        /// 주소
-        /// </summary>
-        [Required]
-        public string addr { get; set; } = null!;
-
-        /// <summary>
         /// 좌석수
         /// </summary>
         [Required]
@@ -67,23 +61,7 @@ namespace IpManager.DTO.Store
         /// </summary>
         public string? memo { get; set; }
 
-        /// <summary>
-        /// (도/시) ID
-        /// </summary>
-        [Required]
-        public int countryId { get; set; }
-
-        /// <summary>
-        /// (시/군/구) ID
-        /// </summary>
-        [Required]
-        public int cityId { get; set; }
-
-        /// <summary>
-        /// (읍/면/동) ID
-        /// </summary>
-        [Required]
-        public int townId { get; set; }
+   
 
     }
 }
