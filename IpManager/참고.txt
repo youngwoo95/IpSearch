@@ -9,3 +9,5 @@ C:\Users\kyw>mysql -h 127.0.0.1 -u root -p AptmentWorks < C:\Users\kyw\Documents
 Enter password: ****
 
 C:\Users\kyw>mysqldump -u root -p Ipanalyze > Ipanalyze_dump.sql
+
+커밋되는지 테스트
