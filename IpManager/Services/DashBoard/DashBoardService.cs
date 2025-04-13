@@ -66,7 +66,7 @@ namespace IpManager.Services.DashBoard
             try
             {
                 var model = await DashBoardRepository.GetThisDayDataList(targetDate, pcName, countrytbid, towntbid, citytbid);
-                return new ResponseList<PcroomTimeDataDto>() { message = "요청이 정상 처리되었습니다.", data = model, code = 500 };
+                return new ResponseList<PcroomTimeDataDto>() { message = "요청이 정상 처리되었습니다.", data = model, code = 200 };
             }
             catch(Exception ex)
             {
