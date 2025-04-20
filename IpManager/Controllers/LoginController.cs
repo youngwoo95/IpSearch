@@ -275,6 +275,37 @@ namespace IpManager.Controllers
         }
 
 
+        /// <summary>
+        /// 마스터가 회원 등록
+        /// </summary>
+        /// <returns></returns>
+        [Authorize(Roles = "Master")] // 마스터만 가능
+        [HttpPost]
+        [Route("sign/v1/MasterAddUser")]
+        [Produces("application/json")]
+        public async Task<IActionResult> MasterAddUser([FromBody][Required] MasterAddUserDTO dto)
+        {
+            try
+            {
+                ResponseUnit<bool> model = await LoginService.MasterAddUserService(dto).ConfigureAwait(false);
+
+                if (model is null)
+                    return BadRequest();
+
+                if (model.code == 200)
+                    return Ok(model);
+                else if (model.code == 404)
+                    return NotFound();
+                else
+                    return BadRequest();
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+            }
+        }
+
         #region 웹전용 로그인 - Regacy
         /*
         /// <summary>

@@ -434,5 +434,68 @@ namespace IpManager.Services.Login
                 return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
             }
         }
+
+        /// <summary>
+        /// 마스터가 회원가입 등록
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>
+        public async Task<ResponseUnit<bool>> MasterAddUserService(MasterAddUserDTO dto)
+        {
+            try
+            {
+                if (dto is null)
+                    return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, code = 404 };
+
+                if (!string.IsNullOrEmpty(dto.userId) && dto.userId.Any(char.IsWhiteSpace)) // NULL 검사 + 공백검사
+                {
+                    // 안에 공백이든 NULL임.
+                    return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, code = 200 }; // Bad Request
+                }
+
+                if (!string.IsNullOrEmpty(dto.password) && dto.password.Any(char.IsWhiteSpace)) // NULL 검사 + 공백검사
+                {
+                    // 안에 공백이든 NULL임.
+                    return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, code = 200 }; // Bad Request
+                }
+
+                DateTime ThisDate = DateTime.Now;
+
+                // UserModel 생성
+                var model = new LoginTb
+                {
+                    Uid = dto.userId!.ToLower(),
+                    Pwd = dto.password!,
+                    MasterYn = false,
+                    AdminYn = dto.adminYn,
+                    CreateDt = ThisDate,
+                    UpdateDt = ThisDate,
+                    DelYn = false,
+                    UseYn = true,
+                    CountryId = dto.countryId
+                };
+
+                /* 사용자 ID 중복검사 */
+                int UesrIDCheck = await UserRepository.CheckUserIdAsync(model.Uid).ConfigureAwait(false);
+                if (UesrIDCheck > 0)
+                    return new ResponseUnit<bool>() { message = "이미 존재하는 아이디입니다.", data = false, code = 200 };
+                else if (UesrIDCheck < 0)
+                    return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
+
+                /* 사용자 ID 등록 */
+                int result = await UserRepository.AddUserAsync(model).ConfigureAwait(false);
+                if (result > 0)
+                    return new ResponseUnit<bool>() { message = "회원가입이 완료되었습니다.", data = true, code = 200 };
+                else if (result == 0)
+                    return new ResponseUnit<bool>() { message = "회원가입에 실패했습니다.", data = false, code = 200 };
+                else
+                    return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
+            }
+        }
     }
 }
