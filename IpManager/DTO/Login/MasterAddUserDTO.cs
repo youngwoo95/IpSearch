@@ -25,6 +25,6 @@ namespace IpManager.DTO.Login
         /// 1레이어 지역 ID
         /// </summary>
         [Required]
-        public int countryId { get; set; }
+        public string countryName { get; set; } = null!;
     }
 }

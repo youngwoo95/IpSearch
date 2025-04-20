@@ -1,6 +1,7 @@
 ﻿using IpManager.Comm.Logger.LogFactory.LoggerSelect;
 using IpManager.DBModel;
 using IpManager.DTO.Login;
+using IpManager.Repository.Country;
 using IpManager.Repository.Login;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
@@ -16,8 +17,10 @@ namespace IpManager.Services.Login
         private readonly IConfiguration Configuration;
         private readonly IMemoryCache MemoryCache; // 메모리캐쉬
         private readonly IUserRepository UserRepository;
+        private readonly ICountryRepository CountryRepository;
 
         public LoginService(ILoggerService _loggerservice,
+            ICountryRepository _countryrepository,
             IConfiguration _configuration,
             IMemoryCache _memorycache,
             IUserRepository _userrepository)
@@ -25,6 +28,7 @@ namespace IpManager.Services.Login
             this.LoggerService = _loggerservice;
             this.Configuration = _configuration;
             this.MemoryCache = _memorycache;
+            this.CountryRepository = _countryrepository;
             this.UserRepository = _userrepository;
         }
 
@@ -459,8 +463,18 @@ namespace IpManager.Services.Login
                     return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, code = 200 }; // Bad Request
                 }
 
-                DateTime ThisDate = DateTime.Now;
+                CountryTb? CountryModel = await CountryRepository.GetCountryInfoAsync(dto.countryName.Trim()).ConfigureAwait(false);
+                if(CountryModel is null)
+                {
+                    CountryModel = await CountryRepository.AddCountryInfoAsync(dto.countryName.Trim()).ConfigureAwait(false);
+                    if(CountryModel is null)
+                    {
+                        return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
+                    }
+                }
 
+
+                DateTime ThisDate = DateTime.Now;
                 // UserModel 생성
                 var model = new LoginTb
                 {
@@ -472,7 +486,7 @@ namespace IpManager.Services.Login
                     UpdateDt = ThisDate,
                     DelYn = false,
                     UseYn = true,
-                    CountryId = dto.countryId
+                    CountryId = CountryModel.Pid
                 };
 
                 /* 사용자 ID 중복검사 */
