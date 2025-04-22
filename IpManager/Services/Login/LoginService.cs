@@ -386,7 +386,18 @@ namespace IpManager.Services.Login
                 if(UserModelCheck.Uid != dto.uId)
                     return new ResponseUnit<bool>() { message = "해당 아이디가 존재하지 않습니다.", data = false, code = 200 };
 
-                UserModelCheck.CountryId = dto.countryId;
+                CountryTb? CountryModel = await CountryRepository.GetCountryInfoAsync(dto.countryName.Trim()).ConfigureAwait(false);
+                if(CountryModel is null)
+                {
+                    CountryModel = await CountryRepository.AddCountryInfoAsync(dto.countryName.Trim()).ConfigureAwait(false);
+                    if(CountryModel is null)
+                    {
+                        return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
+                    }
+                }
+
+
+                UserModelCheck.CountryId = CountryModel.Pid;
                 UserModelCheck.Pwd = dto.pwd;
                 UserModelCheck.AdminYn = dto.adminYn;
                 UserModelCheck.UseYn = dto.useYn;

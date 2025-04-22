@@ -254,11 +254,11 @@ namespace IpManager.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(Summary = "계정 삭제",
     Description = "권한제한 있음 - Master만 가능")]
-        public async Task<IActionResult> AccountDelete([FromBody][Required] int pId)
+        public async Task<IActionResult> AccountDelete([FromBody][Required] DeleteAccountDTO dto)
         {
             try
             {
-                ResponseUnit<bool> model = await LoginService.DeleteUserService(pId).ConfigureAwait(false);
+                ResponseUnit<bool> model = await LoginService.DeleteUserService(dto.pid).ConfigureAwait(false);
                 if (model is null)
                     return BadRequest();
 

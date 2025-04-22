@@ -33,6 +33,6 @@ namespace IpManager.DTO.Login
         /// <summary>
         /// 지역 ID
         /// </summary>
-        public int countryId { get; set; }
+        public string countryName { get; set; }
     }
 }
