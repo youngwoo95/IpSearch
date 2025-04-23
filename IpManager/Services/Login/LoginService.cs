@@ -340,16 +340,15 @@ namespace IpManager.Services.Login
                 if (model is null)
                     return new ResponseList<UserListDTO>() { message = "조회된 데이터가 없습니다.", data = null, code = 200 };
 
-                List<UserListDTO> dto = model.Select( m => new UserListDTO
-                {
-                    pId = m.Pid,
-                    uId = m.Uid,
-                    adminYn = m.AdminYn,
-                    useYn = m.UseYn,
-                    createDt = m.CreateDt.ToString("HH:mm:ss")
-                }).ToList();
-
-                return new ResponseList<UserListDTO>() { message = "요청이 정상 처리되었습니다.", data = dto, code = 200 };
+                //List<UserListDTO> dto = model.Select( m => new UserListDTO
+                //{
+                //    pId = m.Pid,
+                //    uId = m.Uid,
+                //    adminYn = m.AdminYn,
+                //    useYn = m.UseYn,
+                //    createDt = m.CreateDt.ToString("HH:mm:ss")
+                //}).ToList();
+                return new ResponseList<UserListDTO>() { message = "요청이 정상 처리되었습니다.", data = model, code = 200 };
             }
             catch(Exception ex)
             {

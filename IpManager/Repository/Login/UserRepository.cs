@@ -1,6 +1,7 @@
 ﻿using IpManager.Comm.Logger.LogFactory.LoggerSelect;
 using IpManager.DBModel;
 using IpManager.DTO.Login;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using MySqlConnector;
 
@@ -365,11 +366,11 @@ namespace IpManager.Repository.Login
         /// 사용자 전체리스트 반환
         /// </summary>
         /// <returns></returns>
-        public async Task<List<LoginTb>?> GetUserListAsync()
+        public async Task<List<UserListDTO>?> GetUserListAsync()
         {
             try
             {
-                var results = new List<LoginTb>();
+                var results = new List<UserListDTO>();
 
                 var connection = context.Database.GetDbConnection();
                 if (connection.State != System.Data.ConnectionState.Open)
@@ -379,29 +380,27 @@ namespace IpManager.Repository.Login
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "SELECT * FROM login_tb WHERE MASTER_YN != true AND DEL_YN != true ORDER BY PID";
+                    command.CommandText = "SELECT lt.*, ct.Name FROM login_tb as lt LEFT JOIN country_tb as ct ON lt.country_id = ct.PID WHERE lt.MASTER_YN != true AND lt.DEL_YN != true ORDER BY lt.PID";
 
                     using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
                     {
                         while (await reader.ReadAsync())
                         {
-                            var login = new LoginTb
+                            int idx = reader.GetOrdinal("CREATE_DT");
+                            string ConvertCreateDt = reader.IsDBNull(idx) ? string.Empty : reader.GetDateTime(idx).ToString("yyyy-MM-dd HH:mm:ss"); // 원하는 포맷 지정
+
+                            var login = new UserListDTO
                             {
-                                Pid = reader.IsDBNull(reader.GetOrdinal("PID")) ? 0 : reader.GetInt32(reader.GetOrdinal("PID")),
-                                Uid = reader.IsDBNull(reader.GetOrdinal("UID")) ? string.Empty : reader.GetString(reader.GetOrdinal("UID")),
-                                Pwd = reader.IsDBNull(reader.GetOrdinal("PWD")) ? string.Empty : reader.GetString(reader.GetOrdinal("PWD")),
-                                MasterYn = reader.IsDBNull(reader.GetOrdinal("MASTER_YN")) ? false : Convert.ToBoolean(reader["MASTER_YN"]),
-                                AdminYn = reader.IsDBNull(reader.GetOrdinal("ADMIN_YN")) ? false : Convert.ToBoolean(reader["ADMIN_YN"]),
-                                UseYn = reader.IsDBNull(reader.GetOrdinal("USE_YN")) ? false : Convert.ToBoolean(reader["USE_YN"]),
-                                CreateDt = reader.IsDBNull(reader.GetOrdinal("CREATE_DT")) ? DateTime.MinValue : reader.GetDateTime(reader.GetOrdinal("CREATE_DT")),
-                                UpdateDt = reader.IsDBNull(reader.GetOrdinal("UPDATE_DT")) ? null : Convert.ToDateTime(reader["UPDATE_DT"]),
-                                DelYn = reader.IsDBNull(reader.GetOrdinal("DEL_YN")) ? false : Convert.ToBoolean(reader["DEL_YN"]),
-                                DeleteDt = reader.IsDBNull(reader.GetOrdinal("DELETE_DT")) ? null : Convert.ToDateTime(reader["DELETE_DT"])
+                                pId = reader.IsDBNull(reader.GetOrdinal("PID")) ? 0 : reader.GetInt32(reader.GetOrdinal("PID")),
+                                uId = reader.IsDBNull(reader.GetOrdinal("UID")) ? string.Empty : reader.GetString(reader.GetOrdinal("UID")),
+                                adminYn = reader.IsDBNull(reader.GetOrdinal("ADMIN_YN")) ? false : Convert.ToBoolean(reader["ADMIN_YN"]),
+                                useYn = reader.IsDBNull(reader.GetOrdinal("USE_YN")) ? false : Convert.ToBoolean(reader["USE_YN"]),
+                                createDt = ConvertCreateDt,
+                                CountryName = reader.IsDBNull(reader.GetOrdinal("Name")) ? string.Empty : reader.GetString(reader.GetOrdinal("Name"))
                             };
                             results.Add(login);
                         }
                     }
-
                 }
                 return results;
             }
