@@ -4,7 +4,11 @@ using IpManager.DTO.Store;
 using IpManager.Repository.Login;
 using IpManager.Repository.Store;
 using Microsoft.OpenApi.Validations;
+using System.Diagnostics;
 using System.Net.NetworkInformation;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
 
 namespace IpManager.Services.Store
 {
@@ -573,43 +577,46 @@ namespace IpManager.Services.Store
                 if (dto is null)
                     return new ResponseUnit<StorePingDTO>() { message = "잘못된 요청입니다.", data = null, code = 500 };
 
-                string? targetIp = default;
-
-                int dotCount = 0;
-                int thirdDotIndex = -1;
-                for (int i = 0; i < dto.ip.Length; i++)
+                // 2) IP 프리픽스 추출 (예: "210.90.142")
+                string prefix;
                 {
-                    if (dto.ip[i] == '.')
+                    int dotCount = 0;
+                    int thirdDotIdx = -1;
+                    for (int i = 0; i < dto.ip.Length; i++)
                     {
-                        dotCount++;
-                        if(dotCount == 3)
+                        if (dto.ip[i] == '.' && ++dotCount == 3)
                         {
-                            thirdDotIndex = i;
+                            thirdDotIdx = i;
                             break;
                         }
                     }
+                    prefix = thirdDotIdx > 0
+                        ? dto.ip.Substring(0, thirdDotIdx)
+                        : dto.ip;
                 }
-                targetIp = (dotCount >= 3 && thirdDotIndex > 0) ? dto.ip.Substring(0, thirdDotIndex) : dto.ip;
-                Console.WriteLine($"타겟 접두어: {targetIp}");
 
-                var pingTasks = Enumerable.Range(0, 256)
-                    .Select(i =>
-                    {
-                        string ipAddress = $"{targetIp}.{i}";
-                        return PingHostAsync(ipAddress);
-                    }).ToList();
+                // 3) 1~255 범위의 Ping Task 생성
+                var pingTasks = Enumerable
+                    .Range(1, 255)
+                    .Select(i => PingHostAsync($"{prefix}.{i}", dto.port))
+                    .ToList();
 
-                // 병렬로 실행 후 결과 집계
+                // 4) 병렬 실행 및 결과 집계
                 var results = await Task.WhenAll(pingTasks);
+                int usedCount = results.Count(r => r != null);
 
-                var resultipCount = results.Where(r => !String.IsNullOrWhiteSpace(r)).Count();
                 var model = new StorePingDTO
                 {
-                    used = resultipCount,
-                    unUsed = dto.seatNumber - resultipCount
+                    used = usedCount,
+                    unUsed = dto.seatNumber - usedCount
                 };
 
-                return new ResponseUnit<StorePingDTO>() { message = "요청이 정상 처리되었습니다.", data = model, code = 200 };
+                return new ResponseUnit<StorePingDTO>
+                {
+                    message = "요청이 정상 처리되었습니다.",
+                    data = model,
+                    code = 200
+                };
             }
             catch (Exception ex)
             {
@@ -624,29 +631,58 @@ namespace IpManager.Services.Store
         /// <param name="ipAddress"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async Task<string?> PingHostAsync(string ipAddress)
+        private async Task<string?> PingHostAsync(string ipAddress, int port, CancellationToken cancellationToken = default)
         {
-            using (var ping = new Ping())
+            using var tcp = new TcpClient();
+            var connectTask = tcp.ConnectAsync(ipAddress, port);
+            var timeoutTask = Task.Delay(10);
+
+            // 둘 중 먼저 끝난 Task가 connectTask 여야 성공
+            if (await Task.WhenAny(connectTask, timeoutTask) != connectTask)
             {
-                try
-                {
-                    // 타임아웃을 1000ms로 설정
-                    PingReply reply = await ping.SendPingAsync(ipAddress, 1000);
-                    if(reply != null && reply.Status == IPStatus.Success)
-                    {
-                        return ipAddress;
-                    }
-                    else
-                    {
-                        return null;
-                    }    
-                }
-                catch(Exception ex)
-                {
-                    LoggerService.FileErrorMessage($"Ping error for {ipAddress}: {ex.Message}");
-                    return null;
-                }
+                // timeout 발생
+                return null;
             }
+
+            // 연결이 실제로 성립되었는지 확인
+            if (tcp.Connected)
+            {
+                // Optionally: 바로 닫기
+                tcp.Close();
+                return ipAddress;
+            }
+
+            return null;
+            /*
+            var psi = new ProcessStartInfo
+            {
+                FileName = "tcping.exe",                   // PATH에 있거나 절대경로 지정
+                Arguments = $"-n 1 -w {1000} {ipAddress} {port}",
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var proc = Process.Start(psi);
+            if (proc == null)
+                return null;
+
+            // WaitForExitAsync 는 .NET 5+ 지원
+            var exitTask = proc.WaitForExitAsync();
+            var delayTask = Task.Delay(1000 + 200);
+
+            var winner = await Task.WhenAny(exitTask, delayTask);
+            if (winner != exitTask)
+            {
+                // 타임아웃 시 프로세스 강제 종료
+                try { proc.Kill(entireProcessTree: true); } catch { }
+                return null;
+            }
+
+            // 정상 종료 후 ExitCode 검사
+            return proc.ExitCode == 0
+                ? ipAddress
+                : null;
+            */
         }
     }
 }

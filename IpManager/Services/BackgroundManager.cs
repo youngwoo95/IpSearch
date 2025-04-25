@@ -1,7 +1,7 @@
 ﻿using IpManager.Comm.Logger.LogFactory.LoggerSelect;
 using IpManager.DBModel;
 using Microsoft.EntityFrameworkCore;
-using System.Net.NetworkInformation;
+using System.Net.Sockets;
 
 namespace IpManager.Services
 {
@@ -48,7 +48,9 @@ namespace IpManager.Services
                     {
                         delay = TimeSpan.Zero;
                     }
-                    
+
+                    //TimeSpan delay = TimeSpan.FromSeconds(5);
+
                     Console.WriteLine($"다음 실행 시간: {nextRun:yyyy-MM-dd HH:mm:ss}");
                     #endregion
                     //delay = TimeSpan.FromSeconds(10); // 얘를지우고 위를 살리면됨.
@@ -99,13 +101,12 @@ namespace IpManager.Services
                                 Console.WriteLine($"타겟 접두어: {target}");
 
                                 // 0 ~ 255 범위의 IP에 대해 병렬 Ping 작업 생성
-                                var pingTasks = Enumerable.Range(0, 256)
-                                    .Select(i =>
-                                    {
-                                        string ipAddress = $"{target}.{i}";
-                                        return PingHostAsync(ipAddress, stoppingToken);
-                                    })
-                                    .ToList();
+                                var pingTasks = Enumerable
+                                .Range(1, 255)
+                                .Select(i =>
+                                    PingHostAsync($"{target}.{i}", room.Port, stoppingToken)
+                                )
+                                .ToList();
 
                                 // 병렬로 실행 후 결과 집계
                                 var results = await Task.WhenAll(pingTasks);
@@ -229,29 +230,51 @@ namespace IpManager.Services
         /// <param name="ipAddress"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async Task<string?> PingHostAsync(string ipAddress, CancellationToken cancellationToken)
+        private async Task<string?> PingHostAsync(string ipAddress, int port, CancellationToken cancellationToken)
         {
-            using (var ping = new Ping())
+            /*
+            var psi = new ProcessStartInfo("tcping.exe", $"-n 1 -w {50} {ipAddress} {port}")
             {
-                try
-                {
-                    // 타임아웃을 1000ms로 설정
-                    PingReply reply = await ping.SendPingAsync(ipAddress, 1000);
-                    if (reply != null && reply.Status == IPStatus.Success)
-                    {
-                        return ipAddress;
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    LoggerService.FileErrorMessage($"Ping error for {ipAddress}: {ex.Message}");
-                    return null;
-                }
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var proc = Process.Start(psi);
+            if (proc == null)
+                return null;
+
+            // timeoutMs 밀리초 대기
+            bool exited = proc.WaitForExit(40);
+            if (!exited)
+            {
+                try { proc.Kill(); } catch { }
+                return null;
             }
+
+            return proc.ExitCode == 0 ? ipAddress : null;
+            */
+
+            using var tcp = new TcpClient();
+            var connectTask = tcp.ConnectAsync(ipAddress, port);
+            var timeoutTask = Task.Delay(10);
+
+            // 둘 중 먼저 끝난 Task가 connectTask 여야 성공
+            if (await Task.WhenAny(connectTask, timeoutTask) != connectTask)
+            {
+                // timeout 발생
+                return null;
+            }
+
+            // 연결이 실제로 성립되었는지 확인
+            if (tcp.Connected)
+            {
+                // Optionally: 바로 닫기
+                tcp.Close();
+                return ipAddress;
+            }
+
+            return null;
+
         }
 
         /// <summary>
