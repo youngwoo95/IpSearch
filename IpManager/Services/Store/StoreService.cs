@@ -625,6 +625,7 @@ namespace IpManager.Services.Store
             }
         }
 
+
         /// <summary>
         /// PING SEND
         /// </summary>
@@ -633,56 +634,25 @@ namespace IpManager.Services.Store
         /// <returns></returns>
         private async Task<string?> PingHostAsync(string ipAddress, int port, CancellationToken cancellationToken = default)
         {
+            using var cts = new CancellationTokenSource(1000);
             using var tcp = new TcpClient();
-            var connectTask = tcp.ConnectAsync(ipAddress, port);
-            var timeoutTask = Task.Delay(10);
 
-            // 둘 중 먼저 끝난 Task가 connectTask 여야 성공
-            if (await Task.WhenAny(connectTask, timeoutTask) != connectTask)
-            {
-                // timeout 발생
-                return null;
-            }
+            // timeout 되면 tcp.Close() 호출 → ConnectAsync가 즉시 실패함
+            cts.Token.Register(() => {
+                try { tcp.Close(); } catch { }
+            });
 
-            // 연결이 실제로 성립되었는지 확인
-            if (tcp.Connected)
+            try
             {
-                // Optionally: 바로 닫기
-                tcp.Close();
+                // 이 시점에 timeoutMs 이후 바로 OperationCanceledException이 나올 수 있음
+                await tcp.ConnectAsync(ipAddress, port);
                 return ipAddress;
             }
-
-            return null;
-            /*
-            var psi = new ProcessStartInfo
+            catch
             {
-                FileName = "tcping.exe",                   // PATH에 있거나 절대경로 지정
-                Arguments = $"-n 1 -w {1000} {ipAddress} {port}",
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            using var proc = Process.Start(psi);
-            if (proc == null)
-                return null;
-
-            // WaitForExitAsync 는 .NET 5+ 지원
-            var exitTask = proc.WaitForExitAsync();
-            var delayTask = Task.Delay(1000 + 200);
-
-            var winner = await Task.WhenAny(exitTask, delayTask);
-            if (winner != exitTask)
-            {
-                // 타임아웃 시 프로세스 강제 종료
-                try { proc.Kill(entireProcessTree: true); } catch { }
+                // 타임아웃 혹은 네트워크 오류
                 return null;
             }
-
-            // 정상 종료 후 ExitCode 검사
-            return proc.ExitCode == 0
-                ? ipAddress
-                : null;
-            */
         }
     }
 }
