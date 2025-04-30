@@ -58,5 +58,12 @@ namespace IpManager.Services.Login
         /// <param name="pid"></param>
         /// <returns></returns>
         public Task<ResponseUnit<bool>> DeleteUserService(int pid);
+
+        /// <summary>
+        /// 마스터가 사용자 등록
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>
+        public Task<ResponseUnit<bool>> MasterAddUserService(MasterAddUserDTO dto);
     }
 }

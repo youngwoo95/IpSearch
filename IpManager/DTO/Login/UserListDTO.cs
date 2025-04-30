@@ -27,5 +27,9 @@
         /// </summary>
         public string? createDt { get; set; }
 
+        /// <summary>
+        /// 도시 명
+        /// </summary>
+        public string? CountryName { get; set; }
     }
 }

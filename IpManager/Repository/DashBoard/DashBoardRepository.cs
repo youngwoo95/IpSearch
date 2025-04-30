@@ -254,10 +254,14 @@ namespace IpManager.Repository.DashBoard
                 {
                     pcRoomId = pc.PcroomId,
                     pcRoomName = pc.PcroomName,
-                    analyList = allTimes.Select(time => new ThisAnayzeList
-                    {
-                        time = time.Time.ToString(),
-                        count = pc.TimeMap.ContainsKey(time.Time.ToString()) ? pc.TimeMap[time.Time.ToString()] : 0
+                    analyList = allTimes.Select(timeTb => {
+                        // key, display 모두 HH:mm 으로 통일
+                        var key = timeTb.Time.Value.ToString("HH:mm");
+                        return new ThisAnayzeList
+                        {
+                            time = key,
+                            count = pc.TimeMap.TryGetValue(key, out var c) ? c : 0
+                        };
                     }).ToList()
                 }).ToList();
 

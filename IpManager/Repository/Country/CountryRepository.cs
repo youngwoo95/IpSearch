@@ -18,8 +18,6 @@ namespace IpManager.Repository.Country
             this.LoggerService = _loggerservice;
         }
 
-  
-
         /// <summary>
         /// (도/시) 리스트 반환
         /// </summary>
@@ -132,5 +130,50 @@ namespace IpManager.Repository.Country
             }
         }
 
+        public async Task<CountryTb?> GetCountryInfoAsync(string countryName)
+        {
+            try
+            {
+                var model = await context.CountryTbs.FirstOrDefaultAsync(m => m.DelYn != true && m.Name == countryName).ConfigureAwait(false);
+                if (model is not null)
+                    return model;
+                else
+                    return null;
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return null;
+            }
+        }
+
+        public async Task<CountryTb?> AddCountryInfoAsync(string countryName)
+        {
+            try
+            {
+                DateTime ThisDate = DateTime.Now;
+                var CountryTB = new CountryTb()
+                {
+                    Name = countryName,
+                    CreateDt = ThisDate,
+                    DelYn = false
+                };
+
+                var model = await context.CountryTbs.AddAsync(CountryTB).ConfigureAwait(false);
+
+                // 저장
+                await context.SaveChangesAsync().ConfigureAwait(false);
+
+                if (model is not null)
+                    return model.Entity;
+                else
+                    return null;
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return null;
+            }
+        }
     }
 }

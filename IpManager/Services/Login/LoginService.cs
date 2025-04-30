@@ -1,6 +1,7 @@
 ﻿using IpManager.Comm.Logger.LogFactory.LoggerSelect;
 using IpManager.DBModel;
 using IpManager.DTO.Login;
+using IpManager.Repository.Country;
 using IpManager.Repository.Login;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
@@ -16,8 +17,10 @@ namespace IpManager.Services.Login
         private readonly IConfiguration Configuration;
         private readonly IMemoryCache MemoryCache; // 메모리캐쉬
         private readonly IUserRepository UserRepository;
+        private readonly ICountryRepository CountryRepository;
 
         public LoginService(ILoggerService _loggerservice,
+            ICountryRepository _countryrepository,
             IConfiguration _configuration,
             IMemoryCache _memorycache,
             IUserRepository _userrepository)
@@ -25,6 +28,7 @@ namespace IpManager.Services.Login
             this.LoggerService = _loggerservice;
             this.Configuration = _configuration;
             this.MemoryCache = _memorycache;
+            this.CountryRepository = _countryrepository;
             this.UserRepository = _userrepository;
         }
 
@@ -336,16 +340,15 @@ namespace IpManager.Services.Login
                 if (model is null)
                     return new ResponseList<UserListDTO>() { message = "조회된 데이터가 없습니다.", data = null, code = 200 };
 
-                List<UserListDTO> dto = model.Select( m => new UserListDTO
-                {
-                    pId = m.Pid,
-                    uId = m.Uid,
-                    adminYn = m.AdminYn,
-                    useYn = m.UseYn,
-                    createDt = m.CreateDt.ToString("HH:mm:ss")
-                }).ToList();
-
-                return new ResponseList<UserListDTO>() { message = "요청이 정상 처리되었습니다.", data = dto, code = 200 };
+                //List<UserListDTO> dto = model.Select( m => new UserListDTO
+                //{
+                //    pId = m.Pid,
+                //    uId = m.Uid,
+                //    adminYn = m.AdminYn,
+                //    useYn = m.UseYn,
+                //    createDt = m.CreateDt.ToString("HH:mm:ss")
+                //}).ToList();
+                return new ResponseList<UserListDTO>() { message = "요청이 정상 처리되었습니다.", data = model, code = 200 };
             }
             catch(Exception ex)
             {
@@ -382,7 +385,18 @@ namespace IpManager.Services.Login
                 if(UserModelCheck.Uid != dto.uId)
                     return new ResponseUnit<bool>() { message = "해당 아이디가 존재하지 않습니다.", data = false, code = 200 };
 
-                UserModelCheck.CountryId = dto.countryId;
+                CountryTb? CountryModel = await CountryRepository.GetCountryInfoAsync(dto.countryName.Trim()).ConfigureAwait(false);
+                if(CountryModel is null)
+                {
+                    CountryModel = await CountryRepository.AddCountryInfoAsync(dto.countryName.Trim()).ConfigureAwait(false);
+                    if(CountryModel is null)
+                    {
+                        return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
+                    }
+                }
+
+
+                UserModelCheck.CountryId = CountryModel.Pid;
                 UserModelCheck.Pwd = dto.pwd;
                 UserModelCheck.AdminYn = dto.adminYn;
                 UserModelCheck.UseYn = dto.useYn;
@@ -425,6 +439,79 @@ namespace IpManager.Services.Login
                 int result = await UserRepository.DeleteUserAsync(UserModelCheck).ConfigureAwait(false);
                 if (result != -1)
                     return new ResponseUnit<bool>() { message = "수정이 완료되었습니다.", data = true, code = 200 };
+                else
+                    return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
+            }
+        }
+
+        /// <summary>
+        /// 마스터가 회원가입 등록
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>
+        public async Task<ResponseUnit<bool>> MasterAddUserService(MasterAddUserDTO dto)
+        {
+            try
+            {
+                if (dto is null)
+                    return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, code = 404 };
+
+                if (!string.IsNullOrEmpty(dto.userId) && dto.userId.Any(char.IsWhiteSpace)) // NULL 검사 + 공백검사
+                {
+                    // 안에 공백이든 NULL임.
+                    return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, code = 200 }; // Bad Request
+                }
+
+                if (!string.IsNullOrEmpty(dto.password) && dto.password.Any(char.IsWhiteSpace)) // NULL 검사 + 공백검사
+                {
+                    // 안에 공백이든 NULL임.
+                    return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, code = 200 }; // Bad Request
+                }
+
+                CountryTb? CountryModel = await CountryRepository.GetCountryInfoAsync(dto.countryName.Trim()).ConfigureAwait(false);
+                if(CountryModel is null)
+                {
+                    CountryModel = await CountryRepository.AddCountryInfoAsync(dto.countryName.Trim()).ConfigureAwait(false);
+                    if(CountryModel is null)
+                    {
+                        return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
+                    }
+                }
+
+
+                DateTime ThisDate = DateTime.Now;
+                // UserModel 생성
+                var model = new LoginTb
+                {
+                    Uid = dto.userId!.ToLower(),
+                    Pwd = dto.password!,
+                    MasterYn = false,
+                    AdminYn = dto.adminYn,
+                    CreateDt = ThisDate,
+                    UpdateDt = ThisDate,
+                    DelYn = false,
+                    UseYn = true,
+                    CountryId = CountryModel.Pid
+                };
+
+                /* 사용자 ID 중복검사 */
+                int UesrIDCheck = await UserRepository.CheckUserIdAsync(model.Uid).ConfigureAwait(false);
+                if (UesrIDCheck > 0)
+                    return new ResponseUnit<bool>() { message = "이미 존재하는 아이디입니다.", data = false, code = 200 };
+                else if (UesrIDCheck < 0)
+                    return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
+
+                /* 사용자 ID 등록 */
+                int result = await UserRepository.AddUserAsync(model).ConfigureAwait(false);
+                if (result > 0)
+                    return new ResponseUnit<bool>() { message = "회원가입이 완료되었습니다.", data = true, code = 200 };
+                else if (result == 0)
+                    return new ResponseUnit<bool>() { message = "회원가입에 실패했습니다.", data = false, code = 200 };
                 else
                     return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
             }
