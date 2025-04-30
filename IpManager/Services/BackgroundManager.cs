@@ -253,7 +253,8 @@ namespace IpManager.Services
 
             return proc.ExitCode == 0 ? ipAddress : null;
             */
-
+            
+            /*
             using var tcp = new TcpClient();
             var connectTask = tcp.ConnectAsync(ipAddress, port);
             var timeoutTask = Task.Delay(10);
@@ -274,7 +275,31 @@ namespace IpManager.Services
             }
 
             return null;
+            */
 
+            using var cts = new CancellationTokenSource(1000);
+            using var tcp = new TcpClient();
+
+            cts.Token.Register(() =>
+            {
+                try
+                {
+                    tcp.Close();
+                }
+                catch
+                {
+                }
+            });
+
+            try
+            {
+                await tcp.ConnectAsync(ipAddress, port);
+                return ipAddress;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         /// <summary>
