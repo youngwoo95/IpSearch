@@ -10,12 +10,12 @@ namespace IpManager.Repository.Login
     public class UserRepository : IUserRepository
     {
         private readonly ILoggerService LoggerService;
-        private readonly IpanalyzeContext context;
+        private readonly IDbContextFactory<IpanalyzeContext> _dbContextFactory;
 
-        public UserRepository(IpanalyzeContext _context,
+        public UserRepository(IDbContextFactory<IpanalyzeContext> dbContextFactory,
             ILoggerService _loggerservice)
         {
-            context = _context;
+            _dbContextFactory = dbContextFactory;
             LoggerService = _loggerservice;
         }
 
@@ -29,6 +29,8 @@ namespace IpManager.Repository.Login
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 await context.LoginTbs.AddAsync(model).ConfigureAwait(false);
                 int result = await context.SaveChangesAsync().ConfigureAwait(false);
                 if (result > 0)
@@ -52,6 +54,8 @@ namespace IpManager.Repository.Login
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 var connection = context.Database.GetDbConnection();
                 if (connection.State != System.Data.ConnectionState.Open)
                 {
@@ -89,6 +93,8 @@ namespace IpManager.Repository.Login
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 // 이미 같은 PID를 가진 엔터티가 DbContext의 Local 캐시에 있는지 확인
                 var trackedEntity = context.LoginTbs.Local.FirstOrDefault(e => e.Pid == model.Pid);
                 if (trackedEntity != null)
@@ -122,6 +128,8 @@ namespace IpManager.Repository.Login
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 // 이미 같은 PID를 가진 엔터티가 DbContext의 Local 캐시에 있는지 확인
                 var trackedEntity = context.LoginTbs.Local.FirstOrDefault(e => e.Pid == model.Pid);
                 if (trackedEntity != null)
@@ -156,6 +164,8 @@ namespace IpManager.Repository.Login
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 var connection = context.Database.GetDbConnection();
                 if (connection.State != System.Data.ConnectionState.Open)
                 {
@@ -213,6 +223,8 @@ namespace IpManager.Repository.Login
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 var connection = context.Database.GetDbConnection();
                 if (connection.State != System.Data.ConnectionState.Open)
                 {
@@ -258,6 +270,8 @@ namespace IpManager.Repository.Login
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 var connection = context.Database.GetDbConnection();
                 if (connection.State != System.Data.ConnectionState.Open)
                 {
@@ -314,6 +328,8 @@ namespace IpManager.Repository.Login
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 var connection = context.Database.GetDbConnection();
                 if (connection.State != System.Data.ConnectionState.Open)
                 {
@@ -370,6 +386,8 @@ namespace IpManager.Repository.Login
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 var results = new List<UserListDTO>();
 
                 var connection = context.Database.GetDbConnection();

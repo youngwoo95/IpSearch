@@ -9,12 +9,12 @@ namespace IpManager.Repository.DashBoard
     public partial class DashBoardRepository : IDashBoardRepository
     {
         private readonly ILoggerService LoggerService;
-        private readonly IpanalyzeContext context;
+        private readonly IDbContextFactory<IpanalyzeContext> _dbContextFactory;
 
-        public DashBoardRepository(IpanalyzeContext _context,
+        public DashBoardRepository(IDbContextFactory<IpanalyzeContext> dbContextFactory,
             ILoggerService _loggerservice)
         {
-            this.context = _context;
+            this._dbContextFactory = dbContextFactory;
             this.LoggerService = _loggerservice;
         }
 
@@ -28,6 +28,8 @@ namespace IpManager.Repository.DashBoard
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 var pcroomtb = await context.PcroomTbs.Where(m => m.DelYn != true).ToListAsync();
 
                 // 먼저 조건에 맞는 데이터를 메모리로 로드
@@ -127,6 +129,8 @@ namespace IpManager.Repository.DashBoard
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 var topTown = await (
                      from a in context.AnalyzeTbs
                      join t in context.TownTbs on a.TowntbId equals t.Pid
@@ -189,6 +193,8 @@ namespace IpManager.Repository.DashBoard
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 // 모든 시간 문자열 목록 ("HH:mm" 형식)
                 var allTimes = await context.TimeTbs
                .OrderBy(t => t.Time)
@@ -278,6 +284,8 @@ namespace IpManager.Repository.DashBoard
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 // 1. 기간 설정 (날짜만 비교하기 위해 Date 사용)
                 startDate = startDate.Date;
                 endDate = endDate.Date;
@@ -427,6 +435,8 @@ namespace IpManager.Repository.DashBoard
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 // 해당 월의 첫 번째 날 (00:00:00)
                 DateTime StartDate = new DateTime(TargetDate.Year, TargetDate.Month, 1);
 
@@ -585,7 +595,7 @@ namespace IpManager.Repository.DashBoard
         {
             try
             {
-
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
                 // 2. 전체 기간의 PingLogTbs 데이터를 조회
                 var data = await context.PinglogTbs
                     .Where(m => m.DelYn != true &&

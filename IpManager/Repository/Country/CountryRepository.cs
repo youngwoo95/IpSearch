@@ -9,12 +9,12 @@ namespace IpManager.Repository.Country
     public class CountryRepository : ICountryRepository
     {
         private readonly ILoggerService LoggerService;
-        private readonly IpanalyzeContext context;
+        private readonly IDbContextFactory<IpanalyzeContext> _dbContextFactory;
 
-        public CountryRepository(IpanalyzeContext _context,
+        public CountryRepository(IDbContextFactory<IpanalyzeContext> dbContextFactory,
             ILoggerService _loggerservice)
         {
-            this.context = _context;
+            _dbContextFactory = dbContextFactory;
             this.LoggerService = _loggerservice;
         }
 
@@ -26,6 +26,8 @@ namespace IpManager.Repository.Country
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 var results = new List<CountryTb>();
 
                 var connection = context.Database.GetDbConnection();
@@ -74,6 +76,8 @@ namespace IpManager.Repository.Country
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 bool fk_check = false;
 
                 // 1) CityTb 검사
@@ -134,6 +138,8 @@ namespace IpManager.Repository.Country
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 var model = await context.CountryTbs.FirstOrDefaultAsync(m => m.DelYn != true && m.Name == countryName).ConfigureAwait(false);
                 if (model is not null)
                     return model;
@@ -151,6 +157,8 @@ namespace IpManager.Repository.Country
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 DateTime ThisDate = DateTime.Now;
                 var CountryTB = new CountryTb()
                 {

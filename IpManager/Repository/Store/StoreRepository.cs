@@ -10,12 +10,12 @@ namespace IpManager.Repository.Store
     public class StoreRepository : IStoreRepository
     {
         private readonly ILoggerService LoggerService;
-        private readonly IpanalyzeContext context;
+        private readonly IDbContextFactory<IpanalyzeContext> _dbContextFactory;
 
-        public StoreRepository(IpanalyzeContext _context,
+        public StoreRepository(IDbContextFactory<IpanalyzeContext> dbContextFactory,
             ILoggerService _loggerservice)
         {
-            this.context = _context;
+            _dbContextFactory = dbContextFactory;
             this.LoggerService = _loggerservice;
         }
 
@@ -23,6 +23,8 @@ namespace IpManager.Repository.Store
         
         public async Task<int> AddPCRoomAsync(PcroomTb PcroomTB, CountryTb CountryTB, CityTb CityTB, TownTb TownTB)
         {
+            await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+            
             int result = 0;
             using (IDbContextTransaction transaction = await context.Database.BeginTransactionAsync().ConfigureAwait(false))
             {
@@ -135,6 +137,8 @@ namespace IpManager.Repository.Store
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 var model = await context.PcroomTbs.Where(m => m.Name == PcRoomName && m.Ip == ip && m.Port == port && m.Addr == addr).FirstOrDefaultAsync();
                 if (model is null)
                     return 0; // 없음 생성가능
@@ -159,6 +163,8 @@ namespace IpManager.Repository.Store
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 var result = new List<StoreListDTO>();
 
                 var connection = context.Database.GetDbConnection();
@@ -247,6 +253,8 @@ namespace IpManager.Repository.Store
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 var result = new List<StoreListDTO>();
 
                 var connection = context.Database.GetDbConnection();
@@ -336,6 +344,8 @@ namespace IpManager.Repository.Store
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 var result = new List<StoreListDTO>();
 
                 var connection = context.Database.GetDbConnection();
@@ -424,6 +434,8 @@ namespace IpManager.Repository.Store
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 var connection = context.Database.GetDbConnection();
                 if (connection.State != System.Data.ConnectionState.Open)
                 {
@@ -513,6 +525,8 @@ namespace IpManager.Repository.Store
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 var connection = context.Database.GetDbConnection();
                 if(connection.State != System.Data.ConnectionState.Open)
                 {
@@ -596,7 +610,7 @@ namespace IpManager.Repository.Store
                     .ToListAsync();
                 */
                 #endregion
-
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
 
                 var result = new List<StoreListDTO>();
 
@@ -724,6 +738,8 @@ namespace IpManager.Repository.Store
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 var result = new List<StoreListDTO>();
 
                 var connection = context.Database.GetDbConnection();
@@ -826,6 +842,8 @@ namespace IpManager.Repository.Store
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 var connection = context.Database.GetDbConnection();
                 if(connection.State != System.Data.ConnectionState.Open)
                 {
@@ -895,6 +913,8 @@ namespace IpManager.Repository.Store
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 var connection = context.Database.GetDbConnection();
                 if(connection.State != System.Data.ConnectionState.Open)
                 {
@@ -1144,6 +1164,8 @@ namespace IpManager.Repository.Store
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 var connection = context.Database.GetDbConnection();
                 if (connection.State != System.Data.ConnectionState.Open)
                 {
@@ -1227,6 +1249,8 @@ namespace IpManager.Repository.Store
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 var connection = context.Database.GetDbConnection();
                 if(connection.State != System.Data.ConnectionState.Open)
                 {
@@ -1318,6 +1342,8 @@ namespace IpManager.Repository.Store
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 // 이미 같은 PID를 가진 엔티티가 DbContext의 캐시에 있는지 확인
                 var trackedEntity = context.PcroomTbs.Local.FirstOrDefault(e => e.Pid == PcroomTB.Pid);
                 if(trackedEntity != null)
@@ -1353,6 +1379,8 @@ namespace IpManager.Repository.Store
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                
                 // 이미 같은 PID를 가진 엔티티가 DbContext의 캐시에 있는지 확인
                 var trackedEntity = context.PcroomTbs.Local.FirstOrDefault(e => e.Pid == PcroomTB.Pid);
                 if (trackedEntity != null)

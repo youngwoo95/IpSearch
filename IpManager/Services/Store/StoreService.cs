@@ -32,7 +32,8 @@ namespace IpManager.Services.Store
             try
             {
                 if (dto is null)
-                    return new ResponseUnit<bool>() { message = "잘못된 입력값이 존재합니다.", data = false, code = 200 }; // BadRequest
+                    return new ResponseUnit<bool>()
+                        { message = "잘못된 입력값이 존재합니다.", data = false, code = 200 }; // BadRequest
 
                 if (String.IsNullOrWhiteSpace(dto.ip))
                     return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, code = 400 };
@@ -71,11 +72,12 @@ namespace IpManager.Services.Store
                 };
 
                 int pcroomCheck = await StoreRepository.GetPcRoomCheck(dto.name, dto.ip, dto.port, dto.addr);
-                if(pcroomCheck != 0)
+                if (pcroomCheck != 0)
                     return new ResponseUnit<bool>() { message = "이미 등록된 데이터입니다.", data = false, code = 200 };
 
-                int result = await StoreRepository.AddPCRoomAsync(PCRoomModel, CountryModel, CityModel, TownModel).ConfigureAwait(false);
-                if(result > 0) 
+                int result = await StoreRepository.AddPCRoomAsync(PCRoomModel, CountryModel, CityModel, TownModel)
+                    .ConfigureAwait(false);
+                if (result > 0)
                 {
                     // 저장성공
                     return new ResponseUnit<bool>() { message = "저장되었습니다.", data = true, code = 200 };
@@ -84,7 +86,7 @@ namespace IpManager.Services.Store
                 {
                     return new ResponseUnit<bool>() { message = "이미 등록된 데이터입니다.", data = false, code = 200 };
                 }
-                else if(result == 99)
+                else if (result == 99)
                 {
                     return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
                 }
@@ -93,7 +95,7 @@ namespace IpManager.Services.Store
                     return new ResponseUnit<bool>() { message = "이미 등록된 데이터입니다.", data = false, code = 200 };
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 LoggerService.FileErrorMessage(ex.ToString());
                 return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
@@ -118,7 +120,7 @@ namespace IpManager.Services.Store
                     if (userModel is null)
                         return new ResponseList<StoreListDTO>() { message = "잘못된 요청입니다.", data = null, code = 404 };
 
-                    
+
                     int countryId = userModel.CountryId ?? -1;
                     if (countryId == -1)
                         return new ResponseList<StoreListDTO>() { message = "할당된 지역이 없습니다.", data = null, code = 200 };
@@ -196,13 +198,14 @@ namespace IpManager.Services.Store
         /// <param name="search"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public async Task<ResponseList<StoreListDTO>?> GetPcRoomSearchAddressListService(int userpid, int userType, string? search)
+        public async Task<ResponseList<StoreListDTO>?> GetPcRoomSearchAddressListService(int userpid, int userType,
+            string? search)
         {
             try
             {
                 List<StoreListDTO>? model = default;
 
-                if(userType == 0)
+                if (userType == 0)
                 {
                     // Visitor 자기 지역만
                     var userModel = await UserRepository.GetUserInfoAsyncById(userpid);
@@ -214,19 +217,23 @@ namespace IpManager.Services.Store
                         return new ResponseList<StoreListDTO>() { message = "할당된 지역이 없습니다.", data = null, code = 200 };
 
                     if (String.IsNullOrWhiteSpace(search))
-                        return new ResponseList<StoreListDTO>() { message = "검색조건이 올바르지 않습니다.", data = null, code = 200 };
+                        return new ResponseList<StoreListDTO>()
+                            { message = "검색조건이 올바르지 않습니다.", data = null, code = 200 };
 
-                    model = await StoreRepository.GetPcRoomMySearchAddressLisyAsync(search.Trim(), countryId).ConfigureAwait(false);
+                    model = await StoreRepository.GetPcRoomMySearchAddressLisyAsync(search.Trim(), countryId)
+                        .ConfigureAwait(false);
                 }
                 else
                 {
                     // Manager 전체
                     if (String.IsNullOrWhiteSpace(search))
-                        return new ResponseList<StoreListDTO>() { message = "검색조건이 올바르지 않습니다.", data = null, code = 200 };
+                        return new ResponseList<StoreListDTO>()
+                            { message = "검색조건이 올바르지 않습니다.", data = null, code = 200 };
 
-                    model = await StoreRepository.GetPcRoomAllSearchAddressListAsync(search.Trim()).ConfigureAwait(false);
+                    model = await StoreRepository.GetPcRoomAllSearchAddressListAsync(search.Trim())
+                        .ConfigureAwait(false);
                 }
-               
+
                 if (model is null)
                     return new ResponseList<StoreListDTO>() { message = "조회된 데이터가 없습니다.", data = null, code = 200 };
                 else
@@ -254,7 +261,7 @@ namespace IpManager.Services.Store
 
                 StoreDetailDTO? model = default;
 
-                if(userType == 0)
+                if (userType == 0)
                 {
                     // Visitor 자기 지역만
                     var userModel = await UserRepository.GetUserInfoAsyncById(userpid);
@@ -264,39 +271,44 @@ namespace IpManager.Services.Store
                     int countryId = userModel.CountryId ?? -1;
 
                     // 해당 countryId에 할당된 PC방이 있는지?
-                    List<StoreListDTO>? PcroomList = await StoreRepository.GetPcRoomCountryListAsync(countryId).ConfigureAwait(false);
+                    List<StoreListDTO>? PcroomList =
+                        await StoreRepository.GetPcRoomCountryListAsync(countryId).ConfigureAwait(false);
                     if (PcroomList is null || PcroomList.Count == 0)
-                        return new ResponseUnit<StoreDetailDTO>() { message = "데이터가 존재하지 않습니다.", data = null, code = 200 };
-                            
+                        return new ResponseUnit<StoreDetailDTO>()
+                            { message = "데이터가 존재하지 않습니다.", data = null, code = 200 };
+
                     // 이게 진짜 데이터
                     model = await StoreRepository.GetPcRoomInfoDTO(pid).ConfigureAwait(false);
-                    if(model is null)
-                        return new ResponseUnit<StoreDetailDTO>() { message = "데이터가 존재하지 않습니다.", data = null, code = 200 };
+                    if (model is null)
+                        return new ResponseUnit<StoreDetailDTO>()
+                            { message = "데이터가 존재하지 않습니다.", data = null, code = 200 };
 
                     // countryId가 조회된 PC방 정보의 countryId에 포함되어있는지?
                     var filter = PcroomList.FirstOrDefault(m => m.countryTbId == model.countryTbId);
-                    if(filter is null) // 여기서 걸리면 잘못조회한거임
-                        return new ResponseUnit<StoreDetailDTO>() { message = "데이터가 존재하지 않습니다.", data = null, code = 200 };
+                    if (filter is null) // 여기서 걸리면 잘못조회한거임
+                        return new ResponseUnit<StoreDetailDTO>()
+                            { message = "데이터가 존재하지 않습니다.", data = null, code = 200 };
                 }
                 else
                 {
                     // Manager 전체
                     model = await StoreRepository.GetPcRoomInfoDTO(pid).ConfigureAwait(false);
                 }
-                
+
                 if (model is null)
                     return new ResponseUnit<StoreDetailDTO>() { message = "조회된 데이터가 없습니다.", data = null, code = 200 };
                 else
                     return new ResponseUnit<StoreDetailDTO>() { message = "조회가 성공하였습니다.", data = model, code = 200 };
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 LoggerService.FileErrorMessage(ex.ToString());
-                return new ResponseUnit<StoreDetailDTO>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, code = 500 };
+                return new ResponseUnit<StoreDetailDTO>()
+                    { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, code = 500 };
             }
         }
 
-     
+
 
         /// <summary>
         /// PC방 지역별 그룹핑 개수 카운팅
@@ -311,7 +323,7 @@ namespace IpManager.Services.Store
 
                 List<StoreRegionDTO>? RegionList = default;
 
-                if(userType == 0)
+                if (userType == 0)
                 {
                     // Visitor 자기 지역만
                     var userModel = await UserRepository.GetUserInfoAsyncById(userpid).ConfigureAwait(false);
@@ -333,12 +345,14 @@ namespace IpManager.Services.Store
                 if (RegionList is null)
                     return new ResponseList<StoreRegionDTO>() { message = "데이터가 존재하지 않습니다.", data = null, code = 200 };
                 else
-                    return new ResponseList<StoreRegionDTO>() { message = "조회가 성공하였습니다.", data = RegionList, code = 200 };
+                    return new ResponseList<StoreRegionDTO>()
+                        { message = "조회가 성공하였습니다.", data = RegionList, code = 200 };
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 LoggerService.FileErrorMessage(ex.ToString());
-                return new ResponseList<StoreRegionDTO>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, code = 500 };
+                return new ResponseList<StoreRegionDTO>()
+                    { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, code = 500 };
             }
         }
 
@@ -347,34 +361,35 @@ namespace IpManager.Services.Store
         /// </summary>
         /// <param name="countryid"></param>
         /// <returns></returns>
-        public async Task<ResponseList<StoreListDTO>?> GetPcRoomCountryListService(int countryid, int userpid, int userType)
+        public async Task<ResponseList<StoreListDTO>?> GetPcRoomCountryListService(int countryid, int userpid,
+            int userType)
         {
             try
             {
                 if (countryid <= 0)
                     return new ResponseList<StoreListDTO>() { message = "잘못된 요청입니다.", data = null, code = 200 };
 
-                if(userpid == 0)
+                if (userpid == 0)
                     return new ResponseList<StoreListDTO>() { message = "잘못된 요청입니다.", data = null, code = 200 };
 
                 List<StoreListDTO>? model = default;
 
-                if(userType == 0)
+                if (userType == 0)
                 {
                     // 어차피 Visitor 같은 경우 countryId가 하나이기 때문에 조회 조건으로 온 countryId가 그 User의 countryId와 다르면 return 시키면됨.
 
                     // Visitor 자기 지역만
                     var userModel = await UserRepository.GetUserInfoAsyncById(userpid).ConfigureAwait(false);
-                    if(userModel is null)
+                    if (userModel is null)
                         return new ResponseList<StoreListDTO>() { message = "잘못된 요청입니다.", data = null, code = 200 };
 
-                    if(userModel.CountryId != countryid)
+                    if (userModel.CountryId != countryid)
                         return new ResponseList<StoreListDTO>() { message = "잘못된 요청입니다.", data = null, code = 200 };
                 }
-                
+
                 // Manager 전체
                 model = await StoreRepository.GetPcRoomCountryListAsync(countryid).ConfigureAwait(false);
-                
+
                 if (model is null)
                     return new ResponseList<StoreListDTO>() { message = "조회된 데이터가 없습니다.", data = null, code = 200 };
                 else
@@ -409,11 +424,11 @@ namespace IpManager.Services.Store
                 {
                     // Visitor 자기 지역만
                     var userModel = await UserRepository.GetUserInfoAsyncById(userpid).ConfigureAwait(false);
-                    if(userModel is null)
+                    if (userModel is null)
                         return new ResponseList<StoreListDTO>() { message = "잘못된 요청입니다.", data = null, code = 200 };
 
                     int countryId = userModel.CountryId ?? -1;
-                    if(countryId == -1)
+                    if (countryId == -1)
                         return new ResponseList<StoreListDTO>() { message = "잘못된 요청입니다.", data = null, code = 200 };
 
                     if (model is null)
@@ -461,7 +476,7 @@ namespace IpManager.Services.Store
                     if (countryId == -1)
                         return new ResponseList<StoreListDTO>() { message = "잘못된 요청입니다.", data = null, code = 200 };
 
-                    if(model is null)
+                    if (model is null)
                         return new ResponseList<StoreListDTO>() { message = "조회된 데이터가 없습니다.", data = null, code = 200 };
 
                     // 자기지역만 filtering
@@ -489,10 +504,10 @@ namespace IpManager.Services.Store
                 if (dto is null)
                     return new ResponseUnit<bool>() { message = "잘못된 요청입니다.", data = false, code = 200 };
 
-                if(dto.pId is 0  || dto.price is 0 || dto.pricePercent is 0)
+                if (dto.pId is 0 || dto.price is 0 || dto.pricePercent is 0)
                     return new ResponseUnit<bool>() { message = "잘못된 요청입니다.", data = false, code = 200 };
 
-                if(String.IsNullOrWhiteSpace(dto.ip))
+                if (String.IsNullOrWhiteSpace(dto.ip))
                     return new ResponseUnit<bool>() { message = "잘못된 요청입니다.", data = false, code = 200 };
 
 
@@ -500,7 +515,7 @@ namespace IpManager.Services.Store
                 if (PcroomTB is null)
                     return new ResponseUnit<bool>() { message = "존재하지 않는 PC방 정보입니다.", data = false, code = 200 };
 
-                
+
                 PcroomTB.Ip = dto.ip; // IP
                 PcroomTB.Port = dto.port; // PORT
                 PcroomTB.Name = dto.name; // 상호명
@@ -578,33 +593,40 @@ namespace IpManager.Services.Store
                     return new ResponseUnit<StorePingDTO>() { message = "잘못된 요청입니다.", data = null, code = 500 };
 
                 // 2) IP 프리픽스 추출 (예: "210.90.142")
-                string prefix;
+                string prefix = dto.ip;
+                int lastPart = 0;
+
+                var segments = dto.ip.Split('.');
+
+                if (segments.Length == 4 &&
+                    int.TryParse(segments[0], out _) &&
+                    int.TryParse(segments[1], out _) &&
+                    int.TryParse(segments[2], out _) &&
+                    int.TryParse(segments[3], out lastPart))
                 {
-                    int dotCount = 0;
-                    int thirdDotIdx = -1;
-                    for (int i = 0; i < dto.ip.Length; i++)
-                    {
-                        if (dto.ip[i] == '.' && ++dotCount == 3)
-                        {
-                            thirdDotIdx = i;
-                            break;
-                        }
-                    }
-                    prefix = thirdDotIdx > 0
-                        ? dto.ip.Substring(0, thirdDotIdx)
-                        : dto.ip;
+                    prefix = $"{segments[0]}.{segments[1]}.{segments[2]}";
+                }
+                else
+                {
+                    // IP가 잘못된 형식일 때
+                    prefix = dto.ip; // fallback
+                    lastPart = 1;
                 }
 
-                // 3) 1~255 범위의 Ping Task 생성
+                // 사용 가능한 IP 범위 계산 (1~254 제한)
+                int start = Math.Max(1, lastPart);
+                int end = Math.Min(254, start + dto.seatNumber - 1);
+                int count = end - start + 1;
+
                 var pingTasks = Enumerable
-                    .Range(1, 255)
+                    .Range(start, count)
                     .Select(i => PingHostAsync($"{prefix}.{i}", dto.port))
                     .ToList();
 
-                // 4) 병렬 실행 및 결과 집계
                 var results = await Task.WhenAll(pingTasks);
                 int usedCount = results.Count(r => r != null);
 
+             
                 var model = new StorePingDTO
                 {
                     used = usedCount,
@@ -617,6 +639,8 @@ namespace IpManager.Services.Store
                     data = model,
                     code = 200
                 };
+                    
+                    
             }
             catch (Exception ex)
             {
@@ -624,9 +648,10 @@ namespace IpManager.Services.Store
                 return new ResponseUnit<StorePingDTO>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, code = 500 };
             }
         }
+    
 
 
-        /// <summary>
+          /// <summary>
         /// PING SEND
         /// </summary>
         /// <param name="ipAddress"></param>

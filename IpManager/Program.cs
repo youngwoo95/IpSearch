@@ -100,7 +100,16 @@ namespace IpManager
 
             builder.Services.AddTransient<ILoggerService, LoggerService>();
 
-            builder.Services.AddSingleton<IpanalyzeContext>();
+            builder.Services.AddDbContextFactory<IpanalyzeContext>(options =>
+                options.UseMySql(
+                    builder.Configuration.GetConnectionString("MySqlConnection"),
+                    ServerVersion.Parse("11.4.5-mariadb"),
+                    mariaSqlOption =>
+                    {
+                        mariaSqlOption.CommandTimeout(60);
+                        mariaSqlOption.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                        mariaSqlOption.MaxBatchSize(100);
+                    }));
             builder.Services.AddTransient<ITokenComm, TokenComm>();
 
             // 프로그램 시작시 로직 반영
