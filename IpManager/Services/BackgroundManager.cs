@@ -97,14 +97,37 @@ namespace IpManager.Services
                             List<PinglogTb> LogTB = new List<PinglogTb>();
                             foreach (var room in PCRoomList)
                             {
-                                string target = GetIpPrefix(room.Ip);
-                                Console.WriteLine($"타겟 접두어: {target}");
+                                string prefix = room.Ip;
+                                int lastPart = 0;
+
+                                var segments = room.Ip.Split('.');
+
+                                if (segments.Length == 4 &&
+                                    int.TryParse(segments[0], out _) &&
+                                    int.TryParse(segments[1], out _) &&
+                                    int.TryParse(segments[2], out _) &&
+                                    int.TryParse(segments[3], out lastPart))
+                                {
+                                    prefix = $"{segments[0]}.{segments[1]}.{segments[2]}";
+                                }
+                                else
+                                {
+                                    prefix = room.Ip;
+                                    lastPart = 1;
+                                }
+
+                                int start = Math.Max(1, lastPart);
+                                int end = Math.Min(254, start + room.Seatnumber - 1);
+                                int count = end - start + 1;
+                                
+                                //string target = GetIpPrefix(room.Ip);
+                                Console.WriteLine($"타겟 접두어: {prefix}");
 
                                 // 0 ~ 255 범위의 IP에 대해 병렬 Ping 작업 생성
                                 var pingTasks = Enumerable
-                                .Range(1, 255)
+                                .Range(start, count)
                                 .Select(i =>
-                                    PingHostAsync($"{target}.{i}", room.Port, stoppingToken)
+                                    PingHostAsync($"{prefix}.{i}", room.Port, stoppingToken)
                                 )
                                 .ToList();
 

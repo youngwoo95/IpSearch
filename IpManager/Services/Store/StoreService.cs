@@ -659,7 +659,7 @@ namespace IpManager.Services.Store
         /// <returns></returns>
         private async Task<string?> PingHostAsync(string ipAddress, int port, CancellationToken cancellationToken = default)
         {
-            using var cts = new CancellationTokenSource(1000);
+            using var cts = new CancellationTokenSource(3000);
             using var tcp = new TcpClient();
 
             // timeout 되면 tcp.Close() 호출 → ConnectAsync가 즉시 실패함
