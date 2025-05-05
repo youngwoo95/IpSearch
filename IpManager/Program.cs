@@ -130,6 +130,7 @@ namespace IpManager
 
             /* 백그라운드 서비스 등록 */
             builder.Services.AddHostedService<BackgroundManager>();
+            builder.Services.AddHostedService<DailyBackgroundManager>();
             builder.Services.AddHostedService<StartupTask>();
             #endregion
 
