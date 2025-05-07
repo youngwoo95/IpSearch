@@ -5,6 +5,7 @@ using IpManager.Repository.Login;
 using IpManager.Repository.Store;
 using Microsoft.OpenApi.Validations;
 using System.Diagnostics;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
@@ -618,20 +619,22 @@ namespace IpManager.Services.Store
                 int end = Math.Min(254, start + dto.seatNumber - 1);
                 int count = end - start + 1;
 
-                var pingTasks = Enumerable
+                // 3) 각 IP에 대해 IsHostAliveAsync 호출 (동시 실행)
+                var aliveChecks = Enumerable
                     .Range(start, count)
-                    .Select(i => PingHostAsync($"{prefix}.{i}", dto.port))
-                    .ToList();
+                    .Select(i => IsHostAliveAsync($"{prefix}.{i}", dto.port, attempts: 3));
 
-                var results = await Task.WhenAll(pingTasks);
-                int usedCount = results.Count(r => r != null);
+                // 4) 결과 집계
+                var results = await Task.WhenAll(aliveChecks);
+                int usedCount = results.Count(alive => alive);
+                int unUsedCount = dto.seatNumber - usedCount;
 
-             
                 var model = new StorePingDTO
                 {
                     used = usedCount,
-                    unUsed = dto.seatNumber - usedCount
+                    unUsed = unUsedCount
                 };
+
 
                 return new ResponseUnit<StorePingDTO>
                 {
@@ -648,10 +651,10 @@ namespace IpManager.Services.Store
                 return new ResponseUnit<StorePingDTO>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, code = 500 };
             }
         }
-    
 
 
-          /// <summary>
+
+        /// <summary>
         /// PING SEND
         /// </summary>
         /// <param name="ipAddress"></param>
@@ -659,25 +662,55 @@ namespace IpManager.Services.Store
         /// <returns></returns>
         private async Task<string?> PingHostAsync(string ipAddress, int port, CancellationToken cancellationToken = default)
         {
-            using var cts = new CancellationTokenSource(3000);
-            using var tcp = new TcpClient();
+            // DNS 해석
+            var addresses = await Dns.GetHostAddressesAsync(ipAddress, cancellationToken);
+            var endpoint = new IPEndPoint(addresses[0], port);
 
-            // timeout 되면 tcp.Close() 호출 → ConnectAsync가 즉시 실패함
-            cts.Token.Register(() => {
-                try { tcp.Close(); } catch { }
-            });
+            using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp)
+            {
+                Blocking = false // 논블로킹 모드
+            };
 
             try
             {
-                // 이 시점에 timeoutMs 이후 바로 OperationCanceledException이 나올 수 있음
-                await tcp.ConnectAsync(ipAddress, port);
-                return ipAddress;
+                // 비동기 Connect 시도 (즉시 반환됨)
+                socket.Connect(endpoint);
             }
-            catch
+            catch (SocketException ex)
+                when (ex.SocketErrorCode == SocketError.WouldBlock ||
+                      ex.SocketErrorCode == SocketError.InProgress)
             {
-                // 타임아웃 혹은 네트워크 오류
-                return null;
+                // 연결이 백그라운드에서 진행 중인 게 정상
             }
+
+            // Poll: 쓰기 가능해지면 연결 성공, timeoutMs*1000 마이크로초 대기
+            // ※ Poll의 두 번째 인자를 마이크로초 단위로 받으므로 10_000_000 = 10초
+            bool success = socket.Poll(10  * 1000, SelectMode.SelectWrite)
+                           && socket.Connected;
+
+            return success ? ipAddress : null;
+        }
+
+        /// <summary>
+        /// 지정된 횟수(attempts)만큼 PingHostAsync를 시도해서, 과반수 이상 성공하면 true 반환.
+        /// </summary>
+        public async Task<bool> IsHostAliveAsync(string ip, int port, int attempts = 3)
+        {
+            int successCount = 0;
+            for (int i = 0; i < attempts; i++)
+            {
+                // PingHostAsync가 null이 아니면 성공으로 간주
+                if (await PingHostAsync(ip, port) != null)
+                    successCount++;
+
+                // 남은 시도 횟수로 과반수를 넘길 수 없는 경우 조기 탈출
+                int remaining = attempts - i - 1;
+                int required = attempts / 2 + 1;
+                if (successCount + remaining < required)
+                    break;
+            }
+            // 과반수 이상 성공했으면 true
+            return successCount >= (attempts / 2 + 1);
         }
     }
 }

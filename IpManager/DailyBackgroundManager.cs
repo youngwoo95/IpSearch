@@ -45,7 +45,7 @@ namespace IpManager
                         // 전날을 구해야함.
                         DateTime today = DateTime.Today;
                         DateTime yesterday = today.AddDays(-1);
-
+                        /*
                         var groupedData = await context.PinglogTbs
                         .Where(x => x.CreateDt >= yesterday && x.CreateDt < today) // 전날 데이터만 조회
                         .GroupBy(m => m.PcroomtbId)
@@ -82,8 +82,35 @@ namespace IpManager
                                     .FirstOrDefault()
                             )
                         }).ToListAsync();
-                            
+                          */
+                        var groupedData = await context.PinglogTbs
+                         .Where(x => x.CreateDt >= yesterday && x.CreateDt < today)
+                         .Join(
+                             context.PcroomTbs.Where(p => p.PricePercent != 0),
+                             log => log.PcroomtbId,
+                             room => room.Pid,
+                             (log, room) => new { log, room }
+                         )
+                         .GroupBy(x => x.log.PcroomtbId)
+                         .Select(g => new
+                         {
+                             PcroomtbId = g.Key,
+                             TodayRate = g.Sum(x => x.log.PcRate) / 48.0,
+                             TodaySales = g.Sum(x => x.log.Price),
 
+                             // 그룹 내에서 PricePercent의 최대(혹은 최소)를 뽑아서 percent로 사용
+                             Percent = g.Max(x => x.room.PricePercent),
+
+                             TodayFoodSales = g.Sum(x => x.log.Price)
+                                              * ((100.0 - g.Max(x => x.room.PricePercent))
+                                                 / g.Max(x => x.room.PricePercent)),
+
+                             TotalSales = g.Sum(x => x.log.Price)
+                                              * (1.0 + ((100.0 - g.Max(x => x.room.PricePercent))
+                                                         / g.Max(x => x.room.PricePercent)))
+                         })
+                         .ToListAsync();
+                        
                         // 가동률 1위
                         var topRateGroup = groupedData
                         .OrderByDescending(m => m.TodayRate)

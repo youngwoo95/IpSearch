@@ -1,6 +1,7 @@
 ﻿using IpManager.Comm.Logger.LogFactory.LoggerSelect;
 using IpManager.DBModel;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 using System.Net.Sockets;
 
 namespace IpManager.Services
@@ -184,76 +185,41 @@ namespace IpManager.Services
         /// <param name="ipAddress"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async Task<string?> PingHostAsync(string ipAddress, int port, CancellationToken cancellationToken)
+        /// <summary>
+        /// PING SEND
+        /// </summary>
+        /// <param name="ipAddress"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async Task<string?> PingHostAsync(string ipAddress, int port, CancellationToken cancellationToken = default)
         {
-            /*
-            var psi = new ProcessStartInfo("tcping.exe", $"-n 1 -w {50} {ipAddress} {port}")
+            // DNS 해석
+            var addresses = await Dns.GetHostAddressesAsync(ipAddress, cancellationToken);
+            var endpoint = new IPEndPoint(addresses[0], port);
+
+            using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp)
             {
-                UseShellExecute = false,
-                CreateNoWindow = true
+                Blocking = false // 논블로킹 모드
             };
-
-            using var proc = Process.Start(psi);
-            if (proc == null)
-                return null;
-
-            // timeoutMs 밀리초 대기
-            bool exited = proc.WaitForExit(40);
-            if (!exited)
-            {
-                try { proc.Kill(); } catch { }
-                return null;
-            }
-
-            return proc.ExitCode == 0 ? ipAddress : null;
-            */
-            
-            /*
-            using var tcp = new TcpClient();
-            var connectTask = tcp.ConnectAsync(ipAddress, port);
-            var timeoutTask = Task.Delay(10);
-
-            // 둘 중 먼저 끝난 Task가 connectTask 여야 성공
-            if (await Task.WhenAny(connectTask, timeoutTask) != connectTask)
-            {
-                // timeout 발생
-                return null;
-            }
-
-            // 연결이 실제로 성립되었는지 확인
-            if (tcp.Connected)
-            {
-                // Optionally: 바로 닫기
-                tcp.Close();
-                return ipAddress;
-            }
-
-            return null;
-            */
-
-            using var cts = new CancellationTokenSource(1000);
-            using var tcp = new TcpClient();
-
-            cts.Token.Register(() =>
-            {
-                try
-                {
-                    tcp.Close();
-                }
-                catch
-                {
-                }
-            });
 
             try
             {
-                await tcp.ConnectAsync(ipAddress, port);
-                return ipAddress;
+                // 비동기 Connect 시도 (즉시 반환됨)
+                socket.Connect(endpoint);
             }
-            catch
+            catch (SocketException ex)
+                when (ex.SocketErrorCode == SocketError.WouldBlock ||
+                      ex.SocketErrorCode == SocketError.InProgress)
             {
-                return null;
+                // 연결이 백그라운드에서 진행 중인 게 정상
             }
+
+            // Poll: 쓰기 가능해지면 연결 성공, timeoutMs*1000 마이크로초 대기
+            // ※ Poll의 두 번째 인자를 마이크로초 단위로 받으므로 10_000_000 = 10초
+            bool success = socket.Poll(10 * 1000, SelectMode.SelectWrite)
+                           && socket.Connected;
+
+            return success ? ipAddress : null;
         }
 
         /// <summary>
