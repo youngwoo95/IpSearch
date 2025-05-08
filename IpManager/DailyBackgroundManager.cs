@@ -45,44 +45,7 @@ namespace IpManager
                         // 전날을 구해야함.
                         DateTime today = DateTime.Today;
                         DateTime yesterday = today.AddDays(-1);
-                        /*
-                        var groupedData = await context.PinglogTbs
-                        .Where(x => x.CreateDt >= yesterday && x.CreateDt < today) // 전날 데이터만 조회
-                        .GroupBy(m => m.PcroomtbId)
-                        .Select(g => new
-                        {
-                            PcroomtbId = g.Key,
-                            TodayRate = g.Sum(x => x.PcRate) / 48, // 매장 일평균 가동률
-                            TodaySales = g.Sum(x => x.Price),       // 매장 일매출 (PC방 요금만)
-
-                            TodayfoodSales = g.Sum(x => x.Price) *
-                                (
-                                   (100.0 - context.PcroomTbs
-                                        .Where(p => p.Pid == g.Key)
-                                        .Select(p => p.PricePercent)
-                                        .FirstOrDefault())
-                                    /
-                                         context.PcroomTbs
-                                        .Where(p => p.Pid == g.Key)
-                                        .Select(p => p.PricePercent)
-                                        .FirstOrDefault()
-                                ),
-
-                            TotalSales = g.Sum(x => x.Price) + // TotalSales = TodaySales + TodayfoodSales
-                            g.Sum(x => x.Price) *
-                            (
-                                (100.0 - context.PcroomTbs
-                                    .Where(p => p.Pid == g.Key)
-                                    .Select(p => p.PricePercent)
-                                    .FirstOrDefault())
-                                /
-                                context.PcroomTbs
-                                    .Where(p => p.Pid == g.Key)
-                                    .Select(p => p.PricePercent)
-                                    .FirstOrDefault()
-                            )
-                        }).ToListAsync();
-                          */
+                       
                         var groupedData = await context.PinglogTbs
                          .Where(x => x.CreateDt >= yesterday && x.CreateDt < today)
                          .Join(
@@ -95,6 +58,7 @@ namespace IpManager
                          .Select(g => new
                          {
                              PcroomtbId = g.Key,
+                             TowntbId = g.Max(x => x.room.TowntbId),   // ← 여기
                              TodayRate = g.Sum(x => x.log.PcRate) / 48.0,
                              TodaySales = g.Sum(x => x.log.Price),
 
@@ -110,7 +74,9 @@ namespace IpManager
                                                          / g.Max(x => x.room.PricePercent)))
                          })
                          .ToListAsync();
-                        
+
+
+
                         // 가동률 1위
                         var topRateGroup = groupedData
                         .OrderByDescending(m => m.TodayRate)
@@ -127,10 +93,10 @@ namespace IpManager
                             continue;
                         }
 
-                        var toptown = await context.TownTbs.FirstOrDefaultAsync(m => m.Pid == topSales.PcroomtbId);
+                        var toptown = await context.TownTbs.FirstOrDefaultAsync(m => m.Pid == topSales.TowntbId);
                         if (toptown == null)
                         {
-                            LoggerService.FileErrorMessage($"TownTb[{topSales.PcroomtbId}] 미존재");
+                            LoggerService.FileErrorMessage($"TownTb[{topSales.TowntbId}] 미존재");
                             continue;
                         }
 

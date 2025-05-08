@@ -671,24 +671,48 @@ namespace IpManager.Services.Store
                 Blocking = false // 논블로킹 모드
             };
 
-            try
-            {
-                // 비동기 Connect 시도 (즉시 반환됨)
-                socket.Connect(endpoint);
-            }
-            catch (SocketException ex)
-                when (ex.SocketErrorCode == SocketError.WouldBlock ||
-                      ex.SocketErrorCode == SocketError.InProgress)
-            {
-                // 연결이 백그라운드에서 진행 중인 게 정상
-            }
+            // 2) 비동기 연결 시도
+            var connectTask = socket.ConnectAsync(endpoint);
 
-            // Poll: 쓰기 가능해지면 연결 성공, timeoutMs*1000 마이크로초 대기
-            // ※ Poll의 두 번째 인자를 마이크로초 단위로 받으므로 10_000_000 = 10초
-            bool success = socket.Poll(10  * 1000, SelectMode.SelectWrite)
-                           && socket.Connected;
+            // 3) 3초 타임아웃 Task
+            var timeoutTask = Task.Delay(TimeSpan.FromSeconds(1));
 
-            return success ? ipAddress : null;
+            // 4) 둘 중 먼저 끝난 Task 판별
+            var completed = await Task.WhenAny(connectTask, timeoutTask);
+
+            // 5) connectTask가 먼저 완료되고, 실제로 연결이 성립됐으면 성공
+            if (completed == connectTask && socket.Connected)
+                return ipAddress;
+
+            // 그 외에는 실패
+            return null;
+            // DNS 해석
+            //var addresses = await Dns.GetHostAddressesAsync(ipAddress, cancellationToken);
+            //var endpoint = new IPEndPoint(addresses[0], port);
+
+            //using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp)
+            //{
+            //    Blocking = false // 논블로킹 모드
+            //};
+
+            //try
+            //{
+            //    // 비동기 Connect 시도 (즉시 반환됨)
+            //    socket.Connect(endpoint);
+            //}
+            //catch (SocketException ex)
+            //    when (ex.SocketErrorCode == SocketError.WouldBlock ||
+            //          ex.SocketErrorCode == SocketError.InProgress)
+            //{
+            //    // 연결이 백그라운드에서 진행 중인 게 정상
+            //}
+
+            //// Poll: 쓰기 가능해지면 연결 성공, timeoutMs*1000 마이크로초 대기
+            //// ※ Poll의 두 번째 인자를 마이크로초 단위로 받으므로 10_000_000 = 10초
+            //bool success = socket.Poll(10  * 1000, SelectMode.SelectWrite)
+            //               && socket.Connected;
+
+            //return success ? ipAddress : null;
         }
 
         /// <summary>
