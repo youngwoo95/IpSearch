@@ -50,7 +50,6 @@ namespace IpManager.Services
                         delay = TimeSpan.Zero;
                     }
 
-                    //TimeSpan delay = TimeSpan.FromSeconds(5);
 
                     Console.WriteLine($"다음 실행 시간: {nextRun:yyyy-MM-dd HH:mm:ss}");
                     #endregion
@@ -72,23 +71,27 @@ namespace IpManager.Services
                     {
                         Console.WriteLine($"정각 실행: {nextRun:yyyy-MM-dd HH:mm:ss}");
 
-                        DateTime CurrentTime = DateTime.Now; // 실제로 DB에 박힐 데이터
-                        string ThisTime = CurrentTime.ToString("HH") + (CurrentTime.Minute < 30 ? ":00:00" : ":30:00");
-
+                        DateTime CurrentTime = DateTime.Now;
+                        int slotMinute = CurrentTime.Minute < 30 ? 0 : 30;
+                        // 2) TimeOnly 으로 변환
+                        TimeOnly targetSlot = new TimeOnly(now.Hour, slotMinute, 0);
 
                         using (var scope = ScopeFactory.CreateScope())
                         {
                             var context = scope.ServiceProvider.GetRequiredService<IpanalyzeContext>();
 
-                            // 로직 동작시간과 같은걸 찾음
-                            var existingTimes = await context.TimeTbs
-                                    .Where(x => x.Time.HasValue)
-                                    .ToListAsync(); // 여기서 DB 쿼리 수행
-
-                            TimeTb? TimeTB = existingTimes.Where(m => m.Time!.Value.ToString("HH:mm:ss") == ThisTime).FirstOrDefault();
-
-                            Console.WriteLine(TimeTB!.Pid);
-                            Console.WriteLine(TimeTB.Time);
+                            var timeTb = await context.TimeTbs.Where(t => t.Time == targetSlot).FirstOrDefaultAsync();
+                            if (timeTb == null)
+                            {
+                                LoggerService.FileErrorMessage($"[{targetSlot:HH:mm:ss}] 슬롯이 없습니다.");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"Pid:  {timeTb.Pid}");
+                                Console.WriteLine($"Time: {timeTb.Time:HH:mm:ss}");
+                            }
+                            Console.WriteLine(timeTb!.Pid);
+                            Console.WriteLine(timeTb.Time);
 
                             /* PING 쏘는 로직 */
                             // PC방 리스트를 받는다.
@@ -150,7 +153,7 @@ namespace IpManager.Services
                                     CountrytbId = room.CountrytbId,
                                     CitytbId = room.CitytbId,
                                     TowntbId = room.TowntbId,
-                                    TimetbId = TimeTB.Pid, // TIMETB ID
+                                    TimetbId = timeTb.Pid, // TIMETB ID
                                 });
                             }
 

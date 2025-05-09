@@ -662,57 +662,38 @@ namespace IpManager.Services.Store
         /// <returns></returns>
         private async Task<string?> PingHostAsync(string ipAddress, int port, CancellationToken cancellationToken = default)
         {
-            // DNS 해석
-            var addresses = await Dns.GetHostAddressesAsync(ipAddress, cancellationToken);
+            var addresses = await Dns.GetHostAddressesAsync(ipAddress,cancellationToken);
+            if (addresses.Length == 0) return null;
             var endpoint = new IPEndPoint(addresses[0], port);
 
-            using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp)
+            using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+
+            try
             {
-                Blocking = false // 논블로킹 모드
-            };
+                // 1) 핸드셰이크 시도
+                await socket.ConnectAsync(endpoint, cts.Token);
 
-            // 2) 비동기 연결 시도
-            var connectTask = socket.ConnectAsync(endpoint);
+                // 2) 스트림 생성
+                using var stream = new NetworkStream(socket, ownsSocket: false);
 
-            // 3) 3초 타임아웃 Task
-            var timeoutTask = Task.Delay(TimeSpan.FromSeconds(1));
+                // 3) 쓰기 테스트: 0바이트를 보내거나, 실제 프로토콜 바이트 하나를 보내 봅니다.
+                //    여기서는 0바이트로도 쓰기가 가능하면 write 경로가 열려 있다고 간주.
+                await stream.WriteAsync(Array.Empty<byte>(), 0, 0, cts.Token);
 
-            // 4) 둘 중 먼저 끝난 Task 판별
-            var completed = await Task.WhenAny(connectTask, timeoutTask);
-
-            // 5) connectTask가 먼저 완료되고, 실제로 연결이 성립됐으면 성공
-            if (completed == connectTask && socket.Connected)
+                // 쓰기 성공 시
                 return ipAddress;
-
-            // 그 외에는 실패
-            return null;
-            // DNS 해석
-            //var addresses = await Dns.GetHostAddressesAsync(ipAddress, cancellationToken);
-            //var endpoint = new IPEndPoint(addresses[0], port);
-
-            //using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp)
-            //{
-            //    Blocking = false // 논블로킹 모드
-            //};
-
-            //try
-            //{
-            //    // 비동기 Connect 시도 (즉시 반환됨)
-            //    socket.Connect(endpoint);
-            //}
-            //catch (SocketException ex)
-            //    when (ex.SocketErrorCode == SocketError.WouldBlock ||
-            //          ex.SocketErrorCode == SocketError.InProgress)
-            //{
-            //    // 연결이 백그라운드에서 진행 중인 게 정상
-            //}
-
-            //// Poll: 쓰기 가능해지면 연결 성공, timeoutMs*1000 마이크로초 대기
-            //// ※ Poll의 두 번째 인자를 마이크로초 단위로 받으므로 10_000_000 = 10초
-            //bool success = socket.Poll(10  * 1000, SelectMode.SelectWrite)
-            //               && socket.Connected;
-
-            //return success ? ipAddress : null;
+            }
+            catch (OperationCanceledException)
+            {
+                // 타임아웃
+                return null;
+            }
+            catch (SocketException)
+            {
+                // 연결 실패 혹은 쓰기 실패
+                return null;
+            }
         }
 
         /// <summary>
