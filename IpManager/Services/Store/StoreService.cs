@@ -610,7 +610,6 @@ namespace IpManager.Services.Store
                 else
                 {
                     // IP가 잘못된 형식일 때
-                    prefix = dto.ip; // fallback
                     lastPart = 1;
                 }
 
@@ -619,14 +618,34 @@ namespace IpManager.Services.Store
                 int end = Math.Min(254, start + dto.seatNumber - 1);
                 int count = end - start + 1;
 
-                // 3) 각 IP에 대해 IsHostAliveAsync 호출 (동시 실행)
-                var aliveChecks = Enumerable
-                    .Range(start, count)
-                    .Select(i => IsHostAliveAsync($"{prefix}.{i}", dto.port, attempts: 3));
+                // 3) PingHostAsync 호출 (동시성 제한 optional)
+
+                // idealConcurrency 계산
+                int idealConcurrency = Math.Min(
+                    Environment.ProcessorCount * 3,  // CPU 코어 수 * 3
+                    dto.seatNumber                   // 전체 대상 개수
+                );
+                // 최소 10, 최대 50으로 클램핑
+                idealConcurrency = Math.Clamp(idealConcurrency, 10, 50);
+                var semaphore = new SemaphoreSlim(idealConcurrency); // 최대 20개 동시 실행
+                var tasks = Enumerable.Range(start, count)
+                    .Select(async i =>
+                    {
+                        await semaphore.WaitAsync().ConfigureAwait(false);
+                        try
+                        {
+                            return await PingHostAsync($"{prefix}.{i}", dto.port);
+                        }
+                        finally
+                        {
+                            semaphore.Release();
+                        }
+                    });
+
 
                 // 4) 결과 집계
-                var results = await Task.WhenAll(aliveChecks);
-                int usedCount = results.Count(alive => alive);
+                var results = await Task.WhenAll(tasks).ConfigureAwait(false);
+                int usedCount = results.Count(r => r != null);
                 int unUsedCount = dto.seatNumber - usedCount;
 
                 var model = new StorePingDTO
@@ -662,24 +681,34 @@ namespace IpManager.Services.Store
         /// <returns></returns>
         private async Task<string?> PingHostAsync(string ipAddress, int port, CancellationToken cancellationToken = default)
         {
-            var addresses = await Dns.GetHostAddressesAsync(ipAddress,cancellationToken);
-            if (addresses.Length == 0) return null;
-            var endpoint = new IPEndPoint(addresses[0], port);
+            // 1) IP 리터럴 분기
+            IPAddress address;
+            if (!IPAddress.TryParse(ipAddress, out address))
+            {
+                // 호스트네임일 때만 DNS 조회
+                var addresses = await Dns.GetHostAddressesAsync(ipAddress, cancellationToken);
+                if (addresses.Length == 0)
+                    return null;
+                address = addresses[0];
+            }
+
+            var endpoint = new IPEndPoint(address, port);
 
             using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
             try
             {
                 // 1) 핸드셰이크 시도
-                await socket.ConnectAsync(endpoint, cts.Token);
+                await socket.ConnectAsync(endpoint, linkedCts.Token);
 
                 // 2) 스트림 생성
                 using var stream = new NetworkStream(socket, ownsSocket: false);
 
                 // 3) 쓰기 테스트: 0바이트를 보내거나, 실제 프로토콜 바이트 하나를 보내 봅니다.
                 //    여기서는 0바이트로도 쓰기가 가능하면 write 경로가 열려 있다고 간주.
-                await stream.WriteAsync(Array.Empty<byte>(), 0, 0, cts.Token);
+                await stream.WriteAsync(new byte[] { 0 }, 0, 1, linkedCts.Token);
 
                 // 쓰기 성공 시
                 return ipAddress;
@@ -696,26 +725,6 @@ namespace IpManager.Services.Store
             }
         }
 
-        /// <summary>
-        /// 지정된 횟수(attempts)만큼 PingHostAsync를 시도해서, 과반수 이상 성공하면 true 반환.
-        /// </summary>
-        public async Task<bool> IsHostAliveAsync(string ip, int port, int attempts = 3)
-        {
-            int successCount = 0;
-            for (int i = 0; i < attempts; i++)
-            {
-                // PingHostAsync가 null이 아니면 성공으로 간주
-                if (await PingHostAsync(ip, port) != null)
-                    successCount++;
-
-                // 남은 시도 횟수로 과반수를 넘길 수 없는 경우 조기 탈출
-                int remaining = attempts - i - 1;
-                int required = attempts / 2 + 1;
-                if (successCount + remaining < required)
-                    break;
-            }
-            // 과반수 이상 성공했으면 true
-            return successCount >= (attempts / 2 + 1);
-        }
+        
     }
 }

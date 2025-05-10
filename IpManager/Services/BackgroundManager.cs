@@ -23,6 +23,10 @@ namespace IpManager.Services
             try
             {
                 Console.WriteLine("백그라운드 타이머 시작 / 간격 30분");
+                
+                // 서비스 시작부 - 전역 동시처리 한계
+                int globalMax = Math.Clamp(Environment.ProcessorCount * 3, 10, 50);
+                var globalSemaphore = new SemaphoreSlim(globalMax);
 
                 while (!stoppingToken.IsCancellationRequested)
                 {
@@ -116,7 +120,6 @@ namespace IpManager.Services
                                 }
                                 else
                                 {
-                                    prefix = room.Ip;
                                     lastPart = 1;
                                 }
 
@@ -127,16 +130,23 @@ namespace IpManager.Services
                                 //string target = GetIpPrefix(room.Ip);
                                 Console.WriteLine($"타겟 접두어: {prefix}");
 
-                                // 0 ~ 255 범위의 IP에 대해 병렬 Ping 작업 생성
-                                var pingTasks = Enumerable
-                                .Range(start, count)
-                                .Select(i =>
-                                    PingHostAsync($"{prefix}.{i}", room.Port, stoppingToken)
-                                )
-                                .ToList();
+                                // 최소 10, 최대 50으로 클램핑
+                                var tasks = Enumerable.Range(start, count)
+                                .Select(async i =>
+                                {
+                                    await globalSemaphore.WaitAsync(stoppingToken);
+                                    try
+                                    {
+                                        return await PingHostAsync($"{prefix}.{i}", room.Port,stoppingToken);
+                                    }
+                                    finally
+                                    {
+                                        globalSemaphore.Release();
+                                    }
+                                });
 
                                 // 병렬로 실행 후 결과 집계
-                                var results = await Task.WhenAll(pingTasks);
+                                var results = await Task.WhenAll(tasks).ConfigureAwait(false);
 
                                 var resultipCount = results.Where(r => !String.IsNullOrWhiteSpace(r)).Count();
 
@@ -160,10 +170,6 @@ namespace IpManager.Services
                             await context.PinglogTbs.AddRangeAsync(LogTB);
                             await context.SaveChangesAsync().ConfigureAwait(false); // 저장
                             Console.WriteLine("저장완료");
-
-                            // 여기서 12시인 경우 로직도 있어야할듯.
-
-                           
                         }
                     }
                     catch (TaskCanceledException)
@@ -196,24 +202,34 @@ namespace IpManager.Services
         /// <returns></returns>
         private async Task<string?> PingHostAsync(string ipAddress, int port, CancellationToken cancellationToken = default)
         {
-            var addresses = await Dns.GetHostAddressesAsync(ipAddress, cancellationToken);
-            if (addresses.Length == 0) return null;
-            var endpoint = new IPEndPoint(addresses[0], port);
+            // 1) IP 리터럴 분기
+            IPAddress address;
+            if (!IPAddress.TryParse(ipAddress, out address))
+            {
+                // 호스트네임일 때만 DNS 조회
+                var addresses = await Dns.GetHostAddressesAsync(ipAddress, cancellationToken);
+                if (addresses.Length == 0)
+                    return null;
+                address = addresses[0];
+            }
+
+            var endpoint = new IPEndPoint(address, port);
 
             using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
             try
             {
                 // 1) 핸드셰이크 시도
-                await socket.ConnectAsync(endpoint, cts.Token);
+                await socket.ConnectAsync(endpoint, linkedCts.Token);
 
                 // 2) 스트림 생성
                 using var stream = new NetworkStream(socket, ownsSocket: false);
 
                 // 3) 쓰기 테스트: 0바이트를 보내거나, 실제 프로토콜 바이트 하나를 보내 봅니다.
                 //    여기서는 0바이트로도 쓰기가 가능하면 write 경로가 열려 있다고 간주.
-                await stream.WriteAsync(Array.Empty<byte>(), 0, 0, cts.Token);
+                await stream.WriteAsync(new byte[] { 0 }, 0, 1, linkedCts.Token);
 
                 // 쓰기 성공 시
                 return ipAddress;
