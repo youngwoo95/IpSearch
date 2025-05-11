@@ -621,12 +621,11 @@ namespace IpManager.Services.Store
                 // 3) PingHostAsync 호출 (동시성 제한 optional)
 
                 // idealConcurrency 계산
-                int idealConcurrency = Math.Min(
-                    Environment.ProcessorCount * 3,  // CPU 코어 수 * 3
+                int idealConcurrency = Math.Min(Environment.ProcessorCount * 2,  // CPU 코어 수 * 2
                     dto.seatNumber                   // 전체 대상 개수
                 );
                 // 최소 10, 최대 50으로 클램핑
-                idealConcurrency = Math.Clamp(idealConcurrency, 10, 50);
+                idealConcurrency = Math.Clamp(idealConcurrency, 5, 20);
                 var semaphore = new SemaphoreSlim(idealConcurrency); // 최대 20개 동시 실행
                 var tasks = Enumerable.Range(start, count)
                     .Select(async i =>
@@ -681,11 +680,10 @@ namespace IpManager.Services.Store
         /// <returns></returns>
         private async Task<string?> PingHostAsync(string ipAddress, int port, CancellationToken cancellationToken = default)
         {
-            // 1) IP 리터럴 분기
+            // IP 리터럴 분기 (기존 코드)
             IPAddress address;
             if (!IPAddress.TryParse(ipAddress, out address))
             {
-                // 호스트네임일 때만 DNS 조회
                 var addresses = await Dns.GetHostAddressesAsync(ipAddress, cancellationToken);
                 if (addresses.Length == 0)
                     return null;
@@ -694,35 +692,42 @@ namespace IpManager.Services.Store
 
             var endpoint = new IPEndPoint(address, port);
 
-            using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(4));
-            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
-
-            try
+            // 3회 시도
+            for (int attempt = 1; attempt <= 3; attempt++)
             {
-                // 1) 핸드셰이크 시도
-                await socket.ConnectAsync(endpoint, linkedCts.Token);
+                // 시도별 타임아웃 분리
+                var timeout = attempt switch
+                {
+                    1 => TimeSpan.FromMilliseconds(300),
+                    2 => TimeSpan.FromSeconds(1),
+                    _ => TimeSpan.FromSeconds(2),
+                };
+                using var timeoutCts = new CancellationTokenSource(timeout);
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+                using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+           
+                try
+                {
+                    // 1) 핸드셰이크
+                    await socket.ConnectAsync(endpoint, linkedCts.Token);
 
-                // 2) 스트림 생성
-                using var stream = new NetworkStream(socket, ownsSocket: false);
+                    // 2) 스트림 생성 및 쓰기 테스트
+                    using var stream = new NetworkStream(socket, ownsSocket: false);
+                    await stream.WriteAsync(new byte[] { 0 }, 0, 1, linkedCts.Token);
 
-                // 3) 쓰기 테스트: 0바이트를 보내거나, 실제 프로토콜 바이트 하나를 보내 봅니다.
-                //    여기서는 0바이트로도 쓰기가 가능하면 write 경로가 열려 있다고 간주.
-                await stream.WriteAsync(new byte[] { 0 }, 0, 1, linkedCts.Token);
+                    // 성공 시 즉시 IP 반환
+                    return ipAddress;
+                }
+                catch
+                {
+                    // 실패 시 살짝 대기 후 다음 시도
+                    if (attempt < 3)
+                        await Task.Delay(50, cancellationToken);
+                }
+            }
 
-                // 쓰기 성공 시
-                return ipAddress;
-            }
-            catch (OperationCanceledException)
-            {
-                // 타임아웃
-                return null;
-            }
-            catch (SocketException)
-            {
-                // 연결 실패 혹은 쓰기 실패
-                return null;
-            }
+            // 두 번 모두 실패
+            return null;
         }
 
         
