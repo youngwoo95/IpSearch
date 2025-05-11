@@ -75,24 +75,35 @@ namespace IpManager.Services
                     {
                         Console.WriteLine($"정각 실행: {nextRun:yyyy-MM-dd HH:mm:ss}");
 
-                        DateTime CurrentTime = DateTime.Now;
-                        int slotMinute = CurrentTime.Minute < 30 ? 0 : 30;
-                        // 2) TimeOnly 으로 변환
-                        TimeOnly targetSlot = new TimeOnly(CurrentTime.Hour, slotMinute, 0);
+                        var wakeTime = DateTime.Now;
+                        var slotMinute = wakeTime.Minute < 30 ? 0 : 30;
+                        var slotHour = wakeTime.Hour;
+
+                        // 2) TimeSpan 생성
+                        var targetSpan = new TimeSpan(slotHour, slotMinute, 0);
+                        Console.WriteLine($"[DEBUG] targetSpan = {targetSpan}");
 
                         using (var scope = ScopeFactory.CreateScope())
                         {
                             var context = scope.ServiceProvider.GetRequiredService<IpanalyzeContext>();
-    
-                            var timeTb = await context.TimeTbs.Where(t => t.Time == targetSlot).FirstOrDefaultAsync();
+
+                            // 3) EF 쿼리: TimeSpan 비교
+                            // 2) 시·분 프로퍼티로 비교
+                            var timeTb = await context.TimeTbs
+                                .Where(t =>
+                                    t.Time.Value.Hour == slotHour &&
+                                    t.Time.Value.Minute == slotMinute
+                                )
+                                .FirstOrDefaultAsync();
+
                             if (timeTb == null)
                             {
-                                LoggerService.FileErrorMessage($"[{targetSlot:HH:mm:ss}] 슬롯이 없습니다.");
+                                LoggerService.FileErrorMessage($"[{slotHour}:{slotMinute}] 슬롯이 없습니다.");
                             }
                             else
                             {
                                 Console.WriteLine($"Pid:  {timeTb.Pid}");
-                                Console.WriteLine($"Time: {timeTb.Time:HH:mm:ss}");
+                                Console.WriteLine($"Time: {slotHour}:{slotMinute}");
                             }
                             Console.WriteLine(timeTb!.Pid);
                             Console.WriteLine(timeTb.Time);
@@ -216,7 +227,7 @@ namespace IpManager.Services
             var endpoint = new IPEndPoint(address, port);
 
             using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(4));
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
             try
