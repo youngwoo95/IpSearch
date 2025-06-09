@@ -25,6 +25,14 @@ namespace IpManager.Controllers
             this.LoginService = _loginservice;
         }
 
+        [HttpGet]
+        [Route("v1/test")]
+        [Produces("application/json")]
+        public async Task<IActionResult> Test()
+        {
+            return Ok("테스트성공");
+        }
+
         /// <summary>
         /// 회원가입
         /// </summary>

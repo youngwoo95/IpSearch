@@ -28,13 +28,13 @@ namespace IpManager.Repository.DashBoard
         {
             try
             {
-                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+                await using var context = _dbContextFactory.CreateDbContext();
                 
-                var pcroomtb = await context.PcroomTbs.Where(m => m.DelYn != true).ToListAsync();
+                var pcroomtb = await context.PcroomTbs.Where(m => m.DelYn == false).ToListAsync();
 
                 // 먼저 조건에 맞는 데이터를 메모리로 로드
                 var data = await context.PinglogTbs
-                    .Where(m => m.DelYn != true &&
+                    .Where(m => m.DelYn == false &&
                                 m.CreateDt.Value.Date == TargetDate.Date &&
                                 m.CreateDt <= TargetDate)
                     .ToListAsync();

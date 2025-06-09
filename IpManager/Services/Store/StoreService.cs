@@ -3,12 +3,14 @@ using IpManager.DBModel;
 using IpManager.DTO.Store;
 using IpManager.Repository.Login;
 using IpManager.Repository.Store;
+using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Validations;
 using System.Diagnostics;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace IpManager.Services.Store
@@ -588,71 +590,50 @@ namespace IpManager.Services.Store
         {
             try
             {
-                // 해당 IP를 얻기위해 조회
-                StoreDetailDTO? dto = await StoreRepository.GetPcRoomInfoDTO(pid).ConfigureAwait(false);
+                var dto = await StoreRepository.GetPcRoomInfoDTO(pid).ConfigureAwait(false);
                 if (dto is null)
-                    return new ResponseUnit<StorePingDTO>() { message = "잘못된 요청입니다.", data = null, code = 500 };
+                    return new ResponseUnit<StorePingDTO> { message = "잘못된 요청입니다.", code = 500 };
 
-                // 2) IP 프리픽스 추출 (예: "210.90.142")
-                string prefix = dto.ip;
-                int lastPart = 0;
-
-                var segments = dto.ip.Split('.');
-
-                if (segments.Length == 4 &&
-                    int.TryParse(segments[0], out _) &&
-                    int.TryParse(segments[1], out _) &&
-                    int.TryParse(segments[2], out _) &&
-                    int.TryParse(segments[3], out lastPart))
+                var seg = dto.ip.Split('.');
+                if (seg.Length != 4 || !int.TryParse(seg[3], out int lastPart))
                 {
-                    prefix = $"{segments[0]}.{segments[1]}.{segments[2]}";
-                }
-                else
-                {
-                    // IP가 잘못된 형식일 때
+                    seg = new[] { "0", "0", "0", "1" };
                     lastPart = 1;
                 }
+                string prefix = $"{seg[0]}.{seg[1]}.{seg[2]}";
+                int start = lastPart;
+                int total = Math.Min(dto.seatNumber, 254 - start + 1);
+                int end = start + total - 1;
 
-                // 사용 가능한 IP 범위 계산 (1~254 제한)
-                int start = Math.Max(1, lastPart);
-                int end = Math.Min(254, start + dto.seatNumber - 1);
-                int count = end - start + 1;
+                // TCP 포트 스캔을 비동기로 병렬 수행
+                int openCount = 0;
+                var addresses = Enumerable.Range(start, total)
+                                          .Select(i => $"{prefix}.{i}");
 
-                // 3) PingHostAsync 호출 (동시성 제한 optional)
-
-                // idealConcurrency 계산
-                int idealConcurrency = Math.Min(Environment.ProcessorCount * 2,  // CPU 코어 수 * 2
-                    dto.seatNumber                   // 전체 대상 개수
-                );
-                // 최소 10, 최대 50으로 클램핑
-                idealConcurrency = Math.Clamp(idealConcurrency, 5, 20);
-                var semaphore = new SemaphoreSlim(idealConcurrency); // 최대 20개 동시 실행
-                var tasks = Enumerable.Range(start, count)
-                    .Select(async i =>
+                await Parallel.ForEachAsync(addresses,
+                    new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount * 2 },
+                    async (addr, ct) =>
                     {
-                        await semaphore.WaitAsync().ConfigureAwait(false);
+                        using var tcp = new TcpClient();
                         try
                         {
-                            return await PingHostAsync($"{prefix}.{i}", dto.port);
+                            var connectTask = tcp.ConnectAsync(addr, dto.port);
+                            if (await Task.WhenAny(connectTask, Task.Delay(100, ct)) == connectTask)
+                            {
+                                Interlocked.Increment(ref openCount);
+                            }
                         }
-                        finally
+                        catch
                         {
-                            semaphore.Release();
+                            // 연결 실패 시 무시
                         }
                     });
 
-
-                // 4) 결과 집계
-                var results = await Task.WhenAll(tasks).ConfigureAwait(false);
-                int usedCount = results.Count(r => r != null);
-                int unUsedCount = dto.seatNumber - usedCount;
-
                 var model = new StorePingDTO
                 {
-                    used = usedCount,
-                    unUsed = unUsedCount
+                    used = openCount,
+                    unUsed = total - openCount
                 };
-
 
                 return new ResponseUnit<StorePingDTO>
                 {
@@ -660,76 +641,78 @@ namespace IpManager.Services.Store
                     data = model,
                     code = 200
                 };
-                    
-                    
+
+
+
+                /*
+                var dto = await StoreRepository.GetPcRoomInfoDTO(pid).ConfigureAwait(false);
+                if (dto is null)
+                    return new ResponseUnit<StorePingDTO> { message = "잘못된 요청입니다.", code = 500 };
+
+                var seg = dto.ip.Split('.');
+                if (seg.Length != 4 || !int.TryParse(seg[3], out int lastPart))
+                {
+                    seg = new[] { "0", "0", "0", "1" };
+                    lastPart = 1;
+                }
+                string prefix = $"{seg[0]}.{seg[1]}.{seg[2]}";
+                int start = lastPart;
+                int count = Math.Min(dto.seatNumber, 254 - start + 1);
+                int end = start + count - 1;
+
+                // 올바른 범위 지정
+                //string args = $"-p {dto.port} {prefix}.{start}-{end} -Pn -oG -";
+                string args = $"-n -T4 --max-retries 1 --host-timeout 5s -p {dto.port} {prefix}.{start}-{end} -Pn -oG -";
+                var psi = new ProcessStartInfo(
+                    // nmap.exe 절대 경로로 바꿔 보세요, 또는 PATH 문제인지 확인
+                    fileName: "nmap",
+                    arguments: args
+                )
+                {
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using var proc = Process.Start(psi)
+                    ?? throw new InvalidOperationException("nmap 실행 실패");
+                string output = await proc.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
+                string error = await proc.StandardError.ReadToEndAsync().ConfigureAwait(false);
+                proc.WaitForExit();
+
+                if (!string.IsNullOrEmpty(error))
+                    LoggerService.FileErrorMessage($"nmap error: {error}");
+
+                int openCount = Regex.Matches(output, @"\bPorts:.*?/open/").Count;
+
+                var model = new StorePingDTO
+                {
+                    used = openCount,
+                    unUsed = count - openCount
+                };
+
+                return new ResponseUnit<StorePingDTO>
+                {
+                    message = "요청이 정상 처리되었습니다.",
+                    data = model,
+                    code = 200
+                };
+                  */
             }
             catch (Exception ex)
             {
                 LoggerService.FileErrorMessage(ex.ToString());
-                return new ResponseUnit<StorePingDTO>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, code = 500 };
-            }
-        }
-
-
-
-        /// <summary>
-        /// PING SEND
-        /// </summary>
-        /// <param name="ipAddress"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        private async Task<string?> PingHostAsync(string ipAddress, int port, CancellationToken cancellationToken = default)
-        {
-            // IP 리터럴 분기 (기존 코드)
-            IPAddress address;
-            if (!IPAddress.TryParse(ipAddress, out address))
-            {
-                var addresses = await Dns.GetHostAddressesAsync(ipAddress, cancellationToken);
-                if (addresses.Length == 0)
-                    return null;
-                address = addresses[0];
-            }
-
-            var endpoint = new IPEndPoint(address, port);
-
-            // 3회 시도
-            for (int attempt = 1; attempt <= 3; attempt++)
-            {
-                // 시도별 타임아웃 분리
-                var timeout = attempt switch
+                return new ResponseUnit<StorePingDTO>
                 {
-                    1 => TimeSpan.FromMilliseconds(300),
-                    2 => TimeSpan.FromSeconds(1),
-                    _ => TimeSpan.FromSeconds(2),
+                    message = "서버에서 요청을 처리하지 못하였습니다.",
+                    code = 500
                 };
-                using var timeoutCts = new CancellationTokenSource(timeout);
-                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
-                using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-           
-                try
-                {
-                    // 1) 핸드셰이크
-                    await socket.ConnectAsync(endpoint, linkedCts.Token);
-
-                    // 2) 스트림 생성 및 쓰기 테스트
-                    using var stream = new NetworkStream(socket, ownsSocket: false);
-                    await stream.WriteAsync(new byte[] { 0 }, 0, 1, linkedCts.Token);
-
-                    // 성공 시 즉시 IP 반환
-                    return ipAddress;
-                }
-                catch
-                {
-                    // 실패 시 살짝 대기 후 다음 시도
-                    if (attempt < 3)
-                        await Task.Delay(50, cancellationToken);
-                }
             }
-
-            // 두 번 모두 실패
-            return null;
         }
 
-        
+
+
+
     }
 }
