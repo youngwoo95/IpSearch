@@ -49,7 +49,7 @@ namespace IpManager.Services.Store
                     Addr = dto.addr,
                     Seatnumber = dto.seatNumber,
                     Price = dto.price,
-                    //PricePercent = dto.pricePercent,
+                    PricePercent = dto.pricePercent,
                     PcSpec = dto.pcSpec,
                     Telecom = dto.telecom,
                     Memo = dto.memo,
@@ -89,7 +89,7 @@ namespace IpManager.Services.Store
                 {
                     return new ResponseUnit<bool>() { message = "이미 등록된 데이터입니다.", data = false, code = 200 };
                 }
-                else if (result == 99)
+                else if (result == -99)
                 {
                     return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
                 }
