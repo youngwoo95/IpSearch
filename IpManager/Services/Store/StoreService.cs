@@ -618,7 +618,7 @@ namespace IpManager.Services.Store
                         try
                         {
                             var connectTask = tcp.ConnectAsync(addr, dto.port);
-                            if (await Task.WhenAny(connectTask, Task.Delay(100, ct)) == connectTask)
+                            if (await Task.WhenAny(connectTask, Task.Delay(500, ct)) == connectTask)
                             {
                                 Interlocked.Increment(ref openCount);
                             }

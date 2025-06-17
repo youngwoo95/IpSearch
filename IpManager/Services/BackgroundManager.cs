@@ -49,15 +49,15 @@ namespace IpManager.Services
                     #region 개발하는 동안 주석 
                     // 남은 대기 시간 계산
                     TimeSpan delay = nextRun - now;
-                    if (delay < TimeSpan.Zero)
-                    {
-                        delay = TimeSpan.Zero;
-                    }
+                    //if (delay < TimeSpan.Zero)
+                    //{
+                    //    delay = TimeSpan.Zero;
+                    //}
 
 
                     Console.WriteLine($"다음 실행 시간: {nextRun:yyyy-MM-dd HH:mm:ss}");
                     #endregion
-                    //delay = TimeSpan.FromSeconds(10); // 얘를지우고 위를 살리면됨.
+                    delay = TimeSpan.FromSeconds(10); // 얘를지우고 위를 살리면됨.
 
                     // 다음 정각까지 대기
                     try
@@ -116,66 +116,63 @@ namespace IpManager.Services
                             List<PinglogTb> LogTB = new List<PinglogTb>();
                             foreach (var room in PCRoomList)
                             {
-                                string prefix = room.Ip;
-                                int lastPart = 0;
-
+                                // IP 분할
                                 var segments = room.Ip.Split('.');
+                                int lastPart = 1;
+                                string prefix;
 
-                                if (segments.Length == 4 &&
-                                    int.TryParse(segments[0], out _) &&
-                                    int.TryParse(segments[1], out _) &&
-                                    int.TryParse(segments[2], out _) &&
-                                    int.TryParse(segments[3], out lastPart))
+                                if (segments.Length == 4
+                                    && int.TryParse(segments[3], out var parsed))
                                 {
                                     prefix = $"{segments[0]}.{segments[1]}.{segments[2]}";
+                                    lastPart = parsed;
                                 }
                                 else
                                 {
+                                    // 잘못된 IP 포맷일 때 기본 처리
+                                    prefix = room.Ip;
                                     lastPart = 1;
                                 }
 
+                                // 스캔 범위 계산 (1번부터 최대 254번까지)
                                 int start = Math.Max(1, lastPart);
-                                int end = Math.Min(254, start + room.Seatnumber - 1);
-                                int count = end - start + 1;
-                                
-                                //string target = GetIpPrefix(room.Ip);
-                                Console.WriteLine($"타겟 접두어: {prefix}");
+                                int total = Math.Min(room.Seatnumber, 254 - start + 1);
 
-                                // 최소 10, 최대 50으로 클램핑
-                                var tasks = Enumerable.Range(start, count)
-                                .Select(async i =>
-                                {
-                                    await globalSemaphore.WaitAsync(stoppingToken);
-                                    try
+                                // 스캔할 주소 리스트
+                                var addresses = Enumerable.Range(start, total)
+                                                          .Select(i => $"{prefix}.{i}");
+
+                                // 병렬 포트 스캔 (Ping) 수행
+                                int openCount = 0;
+                                await Parallel.ForEachAsync(addresses,
+                                    new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount * 2 },
+                                    async (addr, ct) =>
                                     {
-                                        return await PingHostAsync($"{prefix}.{i}", room.Port,stoppingToken);
-                                    }
-                                    finally
-                                    {
-                                        globalSemaphore.Release();
-                                    }
-                                });
+                                        var result = await PingHostAsync(addr, room.Port, ct);
+                                        // PingHostAsync가 유효 IP 문자열을 리턴하거나 bool을 리턴한다고 가정
+                                        if (!string.IsNullOrWhiteSpace(result))
+                                        {
+                                            Interlocked.Increment(ref openCount);
+                                        }
+                                    });
 
-                                // 병렬로 실행 후 결과 집계
-                                var results = await Task.WhenAll(tasks).ConfigureAwait(false);
-
-                                var resultipCount = results.Where(r => !String.IsNullOrWhiteSpace(r)).Count();
-
+                                // 로그 엔티티 추가
                                 LogTB.Add(new PinglogTb
                                 {
-                                    UsedPc = resultipCount, // 사용대수
-                                    Price = (room.Price/2)*resultipCount, // 총금액 = 요금제/2 * 사용대수
-                                    PcCount = room.Seatnumber, // PC방 인덱스
-                                    PcRate = ((float)resultipCount / room.Seatnumber) * 100, // 가동률
+                                    UsedPc = openCount,                              // 사용 중인 PC 수
+                                    Price = (room.Price / 2) * openCount,           // 요금제/2 * 사용대수
+                                    PcCount = room.Seatnumber,                        // 총 PC 수
+                                    PcRate = ((float)openCount / room.Seatnumber) * 100, // 가동률(%)
                                     CreateDt = DateTime.Now,
                                     UpdateDt = DateTime.Now,
                                     DelYn = false,
-                                    PcroomtbId = room.Pid, // ROOM TB PID
+                                    PcroomtbId = room.Pid,
                                     CountrytbId = room.CountrytbId,
                                     CitytbId = room.CitytbId,
                                     TowntbId = room.TowntbId,
-                                    TimetbId = timeTb.Pid, // TIMETB ID
+                                    TimetbId = timeTb.Pid // timeTb는 외부에서 할당된 현재 시간 기준 테이블 ID
                                 });
+                                Console.WriteLine(prefix.ToString());
                             }
 
                             await context.PinglogTbs.AddRangeAsync(LogTB);
