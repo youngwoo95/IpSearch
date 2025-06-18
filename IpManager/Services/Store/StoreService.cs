@@ -641,64 +641,6 @@ namespace IpManager.Services.Store
                     data = model,
                     code = 200
                 };
-
-
-
-                /*
-                var dto = await StoreRepository.GetPcRoomInfoDTO(pid).ConfigureAwait(false);
-                if (dto is null)
-                    return new ResponseUnit<StorePingDTO> { message = "잘못된 요청입니다.", code = 500 };
-
-                var seg = dto.ip.Split('.');
-                if (seg.Length != 4 || !int.TryParse(seg[3], out int lastPart))
-                {
-                    seg = new[] { "0", "0", "0", "1" };
-                    lastPart = 1;
-                }
-                string prefix = $"{seg[0]}.{seg[1]}.{seg[2]}";
-                int start = lastPart;
-                int count = Math.Min(dto.seatNumber, 254 - start + 1);
-                int end = start + count - 1;
-
-                // 올바른 범위 지정
-                //string args = $"-p {dto.port} {prefix}.{start}-{end} -Pn -oG -";
-                string args = $"-n -T4 --max-retries 1 --host-timeout 5s -p {dto.port} {prefix}.{start}-{end} -Pn -oG -";
-                var psi = new ProcessStartInfo(
-                    // nmap.exe 절대 경로로 바꿔 보세요, 또는 PATH 문제인지 확인
-                    fileName: "nmap",
-                    arguments: args
-                )
-                {
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-
-                using var proc = Process.Start(psi)
-                    ?? throw new InvalidOperationException("nmap 실행 실패");
-                string output = await proc.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
-                string error = await proc.StandardError.ReadToEndAsync().ConfigureAwait(false);
-                proc.WaitForExit();
-
-                if (!string.IsNullOrEmpty(error))
-                    LoggerService.FileErrorMessage($"nmap error: {error}");
-
-                int openCount = Regex.Matches(output, @"\bPorts:.*?/open/").Count;
-
-                var model = new StorePingDTO
-                {
-                    used = openCount,
-                    unUsed = count - openCount
-                };
-
-                return new ResponseUnit<StorePingDTO>
-                {
-                    message = "요청이 정상 처리되었습니다.",
-                    data = model,
-                    code = 200
-                };
-                  */
             }
             catch (Exception ex)
             {

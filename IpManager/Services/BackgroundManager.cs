@@ -49,15 +49,15 @@ namespace IpManager.Services
                     #region 개발하는 동안 주석 
                     // 남은 대기 시간 계산
                     TimeSpan delay = nextRun - now;
-                    //if (delay < TimeSpan.Zero)
-                    //{
-                    //    delay = TimeSpan.Zero;
-                    //}
+                    if (delay < TimeSpan.Zero)
+                    {
+                        delay = TimeSpan.Zero;
+                    }
 
 
                     Console.WriteLine($"다음 실행 시간: {nextRun:yyyy-MM-dd HH:mm:ss}");
                     #endregion
-                    delay = TimeSpan.FromSeconds(10); // 얘를지우고 위를 살리면됨.
+                    //delay = TimeSpan.FromSeconds(10); // 얘를지우고 위를 살리면됨.
 
                     // 다음 정각까지 대기
                     try
@@ -113,51 +113,50 @@ namespace IpManager.Services
                             var PCRoomList = await context.PcroomTbs.Where(m => m.DelYn != true).ToListAsync();
 
                             // 여기에 담아서 한번에 Add해야할듯. -- 메모리 최적화
-                            List<PinglogTb> LogTB = new List<PinglogTb>();
                             foreach (var room in PCRoomList)
                             {
-                                // IP 분할
-                                var segments = room.Ip.Split('.');
-                                int lastPart = 1;
-                                string prefix;
-
-                                if (segments.Length == 4
-                                    && int.TryParse(segments[3], out var parsed))
+                                // 1) IPv4 포맷 검사; 유효하지 않으면 다음 room 으로 스킵
+                                if (!IPAddress.TryParse(room.Ip, out var ipAddress)
+                                    || ipAddress.AddressFamily != AddressFamily.InterNetwork)
                                 {
-                                    prefix = $"{segments[0]}.{segments[1]}.{segments[2]}";
-                                    lastPart = parsed;
-                                }
-                                else
-                                {
-                                    // 잘못된 IP 포맷일 때 기본 처리
-                                    prefix = room.Ip;
-                                    lastPart = 1;
+                                    // (원하면 로그 남기기)
+                                    Console.WriteLine($"잘못된 IP 포맷 스킵: {room.Ip}");
+                                    continue;
                                 }
 
-                                // 스캔 범위 계산 (1번부터 최대 254번까지)
-                                int start = Math.Max(1, lastPart);
+                                // 2) IP 바이트 분해
+                                var bytes = ipAddress.GetAddressBytes();  // [A, B, C, D]
+                                string prefix = $"{bytes[0]}.{bytes[1]}.{bytes[2]}";
+                                
+                                int start = bytes[3];
                                 int total = Math.Min(room.Seatnumber, 254 - start + 1);
+                                int end = start + total - 1;
 
-                                // 스캔할 주소 리스트
+                                // TCP 포트 스캔을 비동기로 병렬 수행
+                                int openCount = 0;
                                 var addresses = Enumerable.Range(start, total)
                                                           .Select(i => $"{prefix}.{i}");
 
-                                // 병렬 포트 스캔 (Ping) 수행
-                                int openCount = 0;
                                 await Parallel.ForEachAsync(addresses,
                                     new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount * 2 },
                                     async (addr, ct) =>
                                     {
-                                        var result = await PingHostAsync(addr, room.Port, ct);
-                                        // PingHostAsync가 유효 IP 문자열을 리턴하거나 bool을 리턴한다고 가정
-                                        if (!string.IsNullOrWhiteSpace(result))
+                                        using var tcp = new TcpClient();
+                                        try
                                         {
-                                            Interlocked.Increment(ref openCount);
+                                            var connectTask = tcp.ConnectAsync(addr, room.Port);
+                                            if (await Task.WhenAny(connectTask, Task.Delay(500, ct)) == connectTask)
+                                            {
+                                                Interlocked.Increment(ref openCount);
+                                            }
+                                        }
+                                        catch
+                                        {
+                                            // 연결 실패 시 무시
                                         }
                                     });
-
                                 // 로그 엔티티 추가
-                                LogTB.Add(new PinglogTb
+                                await context.PinglogTbs.AddAsync(new PinglogTb
                                 {
                                     UsedPc = openCount,                              // 사용 중인 PC 수
                                     Price = (room.Price / 2) * openCount,           // 요금제/2 * 사용대수
@@ -172,12 +171,9 @@ namespace IpManager.Services
                                     TowntbId = room.TowntbId,
                                     TimetbId = timeTb.Pid // timeTb는 외부에서 할당된 현재 시간 기준 테이블 ID
                                 });
+                                await context.SaveChangesAsync().ConfigureAwait(false); // 저장
                                 Console.WriteLine(prefix.ToString());
                             }
-
-                            await context.PinglogTbs.AddRangeAsync(LogTB);
-                            await context.SaveChangesAsync().ConfigureAwait(false); // 저장
-                            Console.WriteLine("저장완료");
                         }
                     }
                     catch (TaskCanceledException)
