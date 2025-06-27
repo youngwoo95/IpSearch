@@ -30,33 +30,16 @@ namespace IpManager.Services
 
                 while (!stoppingToken.IsCancellationRequested)
                 {
-                    // 현재 시간 구하기
+                    // 1) 다음 실행 시각 계산 (xx:00/xx:30)
                     DateTime now = DateTime.Now;
-                    DateTime nextRun;
+                    DateTime nextRun = (now.Minute < 30)
+                        ? new DateTime(now.Year, now.Month, now.Day, now.Hour, 30, 0)
+                        : new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0).AddHours(1);
 
-                    // 현재 시간이 xx:00 ~ xx:29:59 인 경우 다음 정각은 xx:30:00,
-                    // 현재 시간이 xx:30 ~ xx:59:59 인 경우 다음 정각은 (xx+1):00:00
-                    if (now.Minute < 30)
-                    {
-                        nextRun = new DateTime(now.Year, now.Month, now.Day, now.Hour, 30, 0);
-                    }
-                    else
-                    {
-                        // xx:30 이상이면 다음 시각의 정각
-                        nextRun = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0).AddHours(1);
-                    }
-
-                    #region 개발하는 동안 주석 
-                    // 남은 대기 시간 계산
                     TimeSpan delay = nextRun - now;
-                    if (delay < TimeSpan.Zero)
-                    {
-                        delay = TimeSpan.Zero;
-                    }
-
-
+                    if (delay < TimeSpan.Zero) delay = TimeSpan.Zero;
                     Console.WriteLine($"다음 실행 시간: {nextRun:yyyy-MM-dd HH:mm:ss}");
-                    #endregion
+
                     //delay = TimeSpan.FromSeconds(10); // 얘를지우고 위를 살리면됨.
 
                     // 다음 정각까지 대기
@@ -73,107 +56,115 @@ namespace IpManager.Services
                     // 정각에 실행될 코드 및 예정된 정각 시간 출력
                     try
                     {
-                        Console.WriteLine($"정각 실행: {nextRun:yyyy-MM-dd HH:mm:ss}");
+                        Console.WriteLine($"정각 실행: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
+                        // 2-1) TimeOnly 목표값 생성
                         var wakeTime = DateTime.Now;
-                        var slotMinute = wakeTime.Minute < 30 ? 0 : 30;
-                        var slotHour = wakeTime.Hour;
+                        int slotHour;
+                        int slotMinute;
 
-                        // 2) TimeSpan 생성
-                        var targetSpan = new TimeSpan(slotHour, slotMinute, 0);
-                        Console.WriteLine($"[DEBUG] targetSpan = {targetSpan}");
-
-                        using (var scope = ScopeFactory.CreateScope())
+                        if (wakeTime.Minute < 30)
                         {
-                            var context = scope.ServiceProvider.GetRequiredService<IpanalyzeContext>();
+                            slotHour = wakeTime.Hour;
+                            slotMinute = 30;
+                        }
+                        else
+                        {
+                            slotHour = (wakeTime.Hour + 1) % 24;
+                            slotMinute = 0;
+                        }
 
-                            // 3) EF 쿼리: TimeSpan 비교
-                            // 2) 시·분 프로퍼티로 비교
-                            var timeTb = await context.TimeTbs
-                                .Where(t =>
-                                    t.Time.Value.Hour == slotHour &&
-                                    t.Time.Value.Minute == slotMinute
-                                )
-                                .FirstOrDefaultAsync();
+                        var targetTime = new TimeOnly(slotHour, slotMinute);
+                        Console.WriteLine($"[DEBUG] 찾을 슬롯(TimeOnly): {targetTime}");
 
-                            if (timeTb == null)
+                        using var scope = ScopeFactory.CreateScope();
+                        var context = scope.ServiceProvider.GetRequiredService<IpanalyzeContext>();
+
+                        // 2-2) DB에 저장된 슬롯 전체 로그 (디버깅용)
+                        var allSlots = await context.TimeTbs
+                            .Select(t => t.Time)
+                            .ToListAsync(stoppingToken);
+                        Console.WriteLine("[DEBUG] DB에 있는 모든 슬롯:");
+                        allSlots.ForEach(ts => Console.WriteLine(ts));
+
+                        // 2-3) TimeOnly 직접 비교
+                        var timeTb = await context.TimeTbs
+                            .FirstOrDefaultAsync(t => t.Time == targetTime, stoppingToken);
+
+                        if (timeTb == null)
+                        {
+                            LoggerService.FileErrorMessage($"슬롯이 없습니다: {targetTime}");
+                            continue;
+                        }
+
+                        Console.WriteLine($"[FOUND] Pid: {timeTb.Pid}, Time: {timeTb.Time}");
+
+
+                        /* PING 쏘는 로직 */
+                        // PC방 리스트를 받는다.
+                        var PCRoomList = await context.PcroomTbs.Where(m => m.DelYn != true).ToListAsync();
+
+                        // 여기에 담아서 한번에 Add해야할듯. -- 메모리 최적화
+                        foreach (var room in PCRoomList)
+                        {
+                            // 1) IPv4 포맷 검사; 유효하지 않으면 다음 room 으로 스킵
+                            if (!IPAddress.TryParse(room.Ip, out var ipAddress)
+                                || ipAddress.AddressFamily != AddressFamily.InterNetwork)
                             {
-                                LoggerService.FileErrorMessage($"[{slotHour}:{slotMinute}] 슬롯이 없습니다.");
+                                // (원하면 로그 남기기)
+                                Console.WriteLine($"잘못된 IP 포맷 스킵: {room.Ip}");
+                                continue;
                             }
-                            else
-                            {
-                                Console.WriteLine($"Pid:  {timeTb.Pid}");
-                                Console.WriteLine($"Time: {slotHour}:{slotMinute}");
-                            }
-                            Console.WriteLine(timeTb!.Pid);
-                            Console.WriteLine(timeTb.Time);
 
-                            /* PING 쏘는 로직 */
-                            // PC방 리스트를 받는다.
-                            var PCRoomList = await context.PcroomTbs.Where(m => m.DelYn != true).ToListAsync();
+                            // 2) IP 바이트 분해
+                            var bytes = ipAddress.GetAddressBytes();  // [A, B, C, D]
+                            string prefix = $"{bytes[0]}.{bytes[1]}.{bytes[2]}";
 
-                            // 여기에 담아서 한번에 Add해야할듯. -- 메모리 최적화
-                            foreach (var room in PCRoomList)
-                            {
-                                // 1) IPv4 포맷 검사; 유효하지 않으면 다음 room 으로 스킵
-                                if (!IPAddress.TryParse(room.Ip, out var ipAddress)
-                                    || ipAddress.AddressFamily != AddressFamily.InterNetwork)
+                            int start = bytes[3];
+                            int total = Math.Min(room.Seatnumber, 254 - start + 1);
+                            int end = start + total - 1;
+
+                            // TCP 포트 스캔을 비동기로 병렬 수행
+                            int openCount = 0;
+                            var addresses = Enumerable.Range(start, total)
+                                                      .Select(i => $"{prefix}.{i}");
+
+                            await Parallel.ForEachAsync(addresses,
+                                new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount * 2 },
+                                async (addr, ct) =>
                                 {
-                                    // (원하면 로그 남기기)
-                                    Console.WriteLine($"잘못된 IP 포맷 스킵: {room.Ip}");
-                                    continue;
-                                }
-
-                                // 2) IP 바이트 분해
-                                var bytes = ipAddress.GetAddressBytes();  // [A, B, C, D]
-                                string prefix = $"{bytes[0]}.{bytes[1]}.{bytes[2]}";
-                                
-                                int start = bytes[3];
-                                int total = Math.Min(room.Seatnumber, 254 - start + 1);
-                                int end = start + total - 1;
-
-                                // TCP 포트 스캔을 비동기로 병렬 수행
-                                int openCount = 0;
-                                var addresses = Enumerable.Range(start, total)
-                                                          .Select(i => $"{prefix}.{i}");
-
-                                await Parallel.ForEachAsync(addresses,
-                                    new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount * 2 },
-                                    async (addr, ct) =>
+                                    using var tcp = new TcpClient();
+                                    try
                                     {
-                                        using var tcp = new TcpClient();
-                                        try
+                                        var connectTask = tcp.ConnectAsync(addr, room.Port);
+                                        if (await Task.WhenAny(connectTask, Task.Delay(500, ct)) == connectTask)
                                         {
-                                            var connectTask = tcp.ConnectAsync(addr, room.Port);
-                                            if (await Task.WhenAny(connectTask, Task.Delay(500, ct)) == connectTask)
-                                            {
-                                                Interlocked.Increment(ref openCount);
-                                            }
+                                            Interlocked.Increment(ref openCount);
                                         }
-                                        catch
-                                        {
-                                            // 연결 실패 시 무시
-                                        }
-                                    });
-                                // 로그 엔티티 추가
-                                await context.PinglogTbs.AddAsync(new PinglogTb
-                                {
-                                    UsedPc = openCount,                              // 사용 중인 PC 수
-                                    Price = (room.Price / 2) * openCount,           // 요금제/2 * 사용대수
-                                    PcCount = room.Seatnumber,                        // 총 PC 수
-                                    PcRate = ((float)openCount / room.Seatnumber) * 100, // 가동률(%)
-                                    CreateDt = DateTime.Now,
-                                    UpdateDt = DateTime.Now,
-                                    DelYn = false,
-                                    PcroomtbId = room.Pid,
-                                    CountrytbId = room.CountrytbId,
-                                    CitytbId = room.CitytbId,
-                                    TowntbId = room.TowntbId,
-                                    TimetbId = timeTb.Pid // timeTb는 외부에서 할당된 현재 시간 기준 테이블 ID
+                                    }
+                                    catch
+                                    {
+                                        // 연결 실패 시 무시
+                                    }
                                 });
-                                await context.SaveChangesAsync().ConfigureAwait(false); // 저장
-                                Console.WriteLine(prefix.ToString());
-                            }
+                            // 로그 엔티티 추가
+                            await context.PinglogTbs.AddAsync(new PinglogTb
+                            {
+                                UsedPc = openCount,                              // 사용 중인 PC 수
+                                Price = (room.Price / 2) * openCount,           // 요금제/2 * 사용대수
+                                PcCount = room.Seatnumber,                        // 총 PC 수
+                                PcRate = ((float)openCount / room.Seatnumber) * 100, // 가동률(%)
+                                CreateDt = DateTime.Now,
+                                UpdateDt = DateTime.Now,
+                                DelYn = false,
+                                PcroomtbId = room.Pid,
+                                CountrytbId = room.CountrytbId,
+                                CitytbId = room.CitytbId,
+                                TowntbId = room.TowntbId,
+                                TimetbId = timeTb.Pid // timeTb는 외부에서 할당된 현재 시간 기준 테이블 ID
+                            });
+                            await context.SaveChangesAsync().ConfigureAwait(false); // 저장
+                            Console.WriteLine(prefix.ToString());
                         }
                     }
                     catch (TaskCanceledException)

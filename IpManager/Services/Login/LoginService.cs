@@ -5,6 +5,7 @@ using IpManager.Repository.Country;
 using IpManager.Repository.Login;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
+using System.Diagnostics.Metrics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -55,7 +56,7 @@ namespace IpManager.Services.Login
 
                 // 사용허가 검사
                 int LoginPermission = await UserRepository.GetLoginPermission(dto.loginId).ConfigureAwait(false);
-                if (LoginPermission < 1)
+                if (LoginPermission != 1)
                     return new ResponseUnit<TokenDTO>() { message = "승인되지 않은 아이디입니다.", data = null, code = 200 };
 
                 LoginTb? model = await UserRepository.GetLoginAsync(dto.loginId, dto.loginPw).ConfigureAwait(false);
@@ -372,17 +373,11 @@ namespace IpManager.Services.Login
                 if(dto.pId == 0)
                     return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, code = 200 };
 
-                if(dto.uId is null)
-                    return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, code = 200 };
-
                 if (dto.pwd is null)
                     return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, code = 200 };
 
                 var UserModelCheck = await UserRepository.GetUserInfoAsyncById(dto.pId).ConfigureAwait(false);
                 if (UserModelCheck is null)
-                    return new ResponseUnit<bool>() { message = "해당 아이디가 존재하지 않습니다.", data = false, code = 200 };
-
-                if(UserModelCheck.Uid != dto.uId)
                     return new ResponseUnit<bool>() { message = "해당 아이디가 존재하지 않습니다.", data = false, code = 200 };
 
                 CountryTb? CountryModel = await CountryRepository.GetCountryInfoAsync(dto.countryName.Trim()).ConfigureAwait(false);
@@ -393,15 +388,24 @@ namespace IpManager.Services.Login
                     {
                         return new ResponseUnit<bool>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = false, code = 500 };
                     }
+
+                    UserModelCheck.CountryId = CountryModel.Pid;
                 }
 
+                // 4) 선택적으로 pwd 변경
+                if (!string.IsNullOrEmpty(dto.pwd))
+                    UserModelCheck.Pwd = dto.pwd;
 
-                UserModelCheck.CountryId = CountryModel.Pid;
-                UserModelCheck.Pwd = dto.pwd;
-                UserModelCheck.AdminYn = dto.adminYn;
-                UserModelCheck.UseYn = dto.useYn;
+                // 5) 선택적으로 AdminYn, UseYn 변경
+                if (dto.adminYn.HasValue)
+                    UserModelCheck.AdminYn = dto.adminYn.Value;
+
+                if (dto.useYn.HasValue)
+                    UserModelCheck.UseYn = dto.useYn.Value;
+
+                // 6) 공통 업데이트
                 UserModelCheck.UpdateDt = DateTime.Now;
-              
+
                 int result = await UserRepository.EditUserAsync(UserModelCheck).ConfigureAwait(false);
                 if (result != -1)
                     return new ResponseUnit<bool>() { message = "수정이 완료되었습니다.", data = true, code = 200 };
