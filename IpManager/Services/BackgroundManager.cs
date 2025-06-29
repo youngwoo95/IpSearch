@@ -58,24 +58,10 @@ namespace IpManager.Services
                     {
                         Console.WriteLine($"정각 실행: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
 
-                        // 2-1) TimeOnly 목표값 생성
-                        var wakeTime = DateTime.Now;
-                        int slotHour;
-                        int slotMinute;
-
-                        if (wakeTime.Minute < 30)
-                        {
-                            slotHour = wakeTime.Hour;
-                            slotMinute = 30;
-                        }
-                        else
-                        {
-                            slotHour = (wakeTime.Hour + 1) % 24;
-                            slotMinute = 0;
-                        }
-
-                        var targetTime = new TimeOnly(slotHour, slotMinute);
+                        // ▶ 올바른 슬롯 계산: nextRun이 가리키는 시각 그대로 사용
+                        var targetTime = TimeOnly.FromTimeSpan(nextRun.TimeOfDay);
                         Console.WriteLine($"[DEBUG] 찾을 슬롯(TimeOnly): {targetTime}");
+
 
                         using var scope = ScopeFactory.CreateScope();
                         var context = scope.ServiceProvider.GetRequiredService<IpanalyzeContext>();

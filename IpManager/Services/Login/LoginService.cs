@@ -3,6 +3,7 @@ using IpManager.DBModel;
 using IpManager.DTO.Login;
 using IpManager.Repository.Country;
 using IpManager.Repository.Login;
+using Microsoft.EntityFrameworkCore.Update;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using System.Diagnostics.Metrics;
@@ -373,9 +374,6 @@ namespace IpManager.Services.Login
                 if(dto.pId == 0)
                     return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, code = 200 };
 
-                if (dto.pwd is null)
-                    return new ResponseUnit<bool>() { message = "필수값이 누락되었습니다.", data = false, code = 200 };
-
                 var UserModelCheck = await UserRepository.GetUserInfoAsyncById(dto.pId).ConfigureAwait(false);
                 if (UserModelCheck is null)
                     return new ResponseUnit<bool>() { message = "해당 아이디가 존재하지 않습니다.", data = false, code = 200 };
@@ -402,6 +400,9 @@ namespace IpManager.Services.Login
 
                 if (dto.useYn.HasValue)
                     UserModelCheck.UseYn = dto.useYn.Value;
+
+                if (dto.countryName is not null)
+                    UserModelCheck.CountryId = CountryModel.Pid;
 
                 // 6) 공통 업데이트
                 UserModelCheck.UpdateDt = DateTime.Now;
