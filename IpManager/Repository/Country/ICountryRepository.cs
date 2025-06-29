@@ -11,6 +11,12 @@ namespace IpManager.Repository.Country
         public Task<List<CountryTb>?> GetCountryListAsync();
 
         /// <summary>
+        /// 도시 리스트 반환
+        /// </summary>
+        /// <returns></returns>
+        public Task<List<CountryTb>?> GetRegionListAsync();
+
+        /// <summary>
         /// 지역명에 해당하는 CountryTB 반환
         /// </summary>
         /// <returns></returns>

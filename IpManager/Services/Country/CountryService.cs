@@ -44,6 +44,59 @@ namespace IpManager.Services.Country
             }
         }
 
+        public async Task<ResponseList<RegionDataDTO>?> GetRegionListService()
+        {
+            try
+            {
+                var model = await CountryRepository.GetRegionListAsync().ConfigureAwait(false);
+                if(model is null)
+                    return new ResponseList<RegionDataDTO>
+                    {
+                        code = 200,
+                        message = "요청이 정상 처리되었습니다",
+                        data = null
+                    };
+
+
+                // 2) 엔티티를 DTO로 매핑
+                var dtoList = model.Select(c => new RegionDataDTO
+                {
+                    countryId = c.Pid,      // CountryTb.Pid
+                    countryName = c.Name,     // CountryTb.Name
+
+                    cityDatas = c.CityTbs     // City 컬렉션
+                        .Select(city => new cityDataDTO
+                        {
+                            cityId = city.Pid,
+                            cityName = city.Name,
+
+                            townDatas = city.TownTbs  // Town 컬렉션
+                                .Select(town => new townDataDTO
+                                {
+                                    townId = town.Pid,
+                                    townName = town.Name
+                                })
+                                .ToList()
+                        })
+                        .ToList()
+                })
+                .ToList();
+
+                return new ResponseList<RegionDataDTO>
+                {
+                    code = 200,
+                    message = "요청이 정상 처리되었습니다",
+                    data = dtoList
+                };
+
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileLogMessage(ex.ToString());
+                return new ResponseList<RegionDataDTO>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, code = 500 };
+            }
+        }
+
         /// <summary>
         /// 도시정보 삭제
         /// </summary>
@@ -74,5 +127,6 @@ namespace IpManager.Services.Country
             }
         }
 
+      
     }
 }

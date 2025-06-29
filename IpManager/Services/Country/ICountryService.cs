@@ -16,5 +16,8 @@ namespace IpManager.Services.Country
         /// <param name="countrypid"></param>
         /// <returns></returns>
         public Task<ResponseUnit<bool>> DeleteCountryListService(List<int> countrypid);
+
+        public Task<ResponseList<RegionDataDTO>?> GetRegionListService();
+
     }
 }

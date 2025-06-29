@@ -67,6 +67,30 @@ namespace IpManager.Repository.Country
             }
         }
 
+        public async Task<List<CountryTb>?> GetRegionListAsync()
+        {
+            try
+            {
+                await using var context = _dbContextFactory.CreateDbContext();
+
+                var model = await context.CountryTbs
+             .AsNoTracking()
+             .Where(c => c.DelYn != true)
+             .Include(c => c.CityTbs
+                 .Where(city => city.DelYn != true))
+                 .ThenInclude(city => city.TownTbs.Where(t => t.DelYn != true))
+             .ToListAsync();
+
+                return model;
+
+            }
+            catch (Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return null;
+            }
+        }
+
         /// <summary>
         /// 도시정보 삭제
         /// </summary>
@@ -183,5 +207,7 @@ namespace IpManager.Repository.Country
                 return null;
             }
         }
+
+        
     }
 }

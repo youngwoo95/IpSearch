@@ -60,6 +60,31 @@ Description = "권한제한 있음 - Manager, Visitor만 가능")]
             }
         }
 
+        [Authorize(Roles = "Master,Manager,Visitor")]
+        [HttpGet]
+        [Route("sign/v1/GetRegionInfo")]
+        [Produces("application/json")]
+        public async Task<IActionResult> GetRegionInfo()
+        {
+            try
+            {
+                var model = await CountryService.GetRegionListService().ConfigureAwait(false);
+                if (model is null)
+                    return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+
+                if (model.code == 200)
+                    return Ok(model);
+                else
+                    return BadRequest();
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+            }
+        }
+
+
         /// <summary>
         /// 삭제
         /// </summary>
