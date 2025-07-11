@@ -16,6 +16,36 @@
     public class PeriodAnayzeList
     {
         /// <summary>
+        /// 도시 시퀀스
+        /// </summary>
+        public int countryId { get; set; }
+
+        /// <summary>
+        /// 도시 명
+        /// </summary>
+        public string? countryName { get; set; }
+
+        /// <summary>
+        /// 시군구 시퀀스
+        /// </summary>
+        public int cityId { get; set; }
+
+        /// <summary>
+        /// 시군구 명
+        /// </summary>
+        public string? cityName { get; set; }
+
+        /// <summary>
+        /// 읍면동 시퀀스
+        /// </summary>
+        public int townId { get; set; }
+
+        /// <summary>
+        /// 읍면동 명
+        /// </summary>
+        public string? townName { get; set; }
+
+        /// <summary>
         /// PC방 명칭
         /// </summary>
         public string? pcName { get; set; }
@@ -58,6 +88,36 @@
 
     public class ReturnValue
     {
+        /// <summary>
+        /// 도시 시퀀스
+        /// </summary>
+        public int countryId { get; set; }
+
+        /// <summary>
+        /// 도시 명
+        /// </summary>
+        public string? countryName { get; set; }
+
+        /// <summary>
+        /// 시군구 시퀀스
+        /// </summary>
+        public int cityId { get; set; }
+
+        /// <summary>
+        /// 시군구 명
+        /// </summary>
+        public string? cityName { get; set; }
+
+        /// <summary>
+        /// 읍면동 시퀀스
+        /// </summary>
+        public int townId { get; set; }
+
+        /// <summary>
+        /// 읍면동 명
+        /// </summary>
+        public string? townName { get; set; }
+
         /// <summary>
         /// PC방 명칭
         /// </summary>

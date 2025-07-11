@@ -204,20 +204,30 @@ namespace IpManager.Repository.DashBoard
                 // 기본 쿼리
                 var query = from p in context.PinglogTbs
                             join pc in context.PcroomTbs on p.PcroomtbId equals pc.Pid
+                            join Country in context.CountryTbs on pc.CountrytbId equals Country.Pid 
+                            join City in context.CityTbs on pc.CitytbId equals City.Pid
+                            join Town in context.TownTbs on pc.TowntbId equals Town.Pid
                             join t in context.TimeTbs on p.TimetbId equals t.Pid
                             where p.DelYn != true &&
+                                  pc.DelYn != true &&
+                                  Country.DelYn != true &&
+                                  City.DelYn != true &&
+                                  Town.DelYn != true &&
                                   p.CreateDt.HasValue &&
                                   p.CreateDt.Value.Date == targetDate.Date
                             select new
                             {
                                 PcroomId = p.PcroomtbId,
+                                CountryId = Country.Pid,
+                                CountryName = Country.Name,
+                                CityId = City.Pid,
+                                CityName = City.Name,
+                                TownId = Town.Pid,
+                                TownName = Town.Name,
                                 PcroomName = pc.Name,
                                 TimeString = t.Time.HasValue ? t.Time.Value.ToString("HH:mm") : "",
                                 p.UsedPc,
                                 // 가정: PC방 테이블에 국가, 구, 도시 정보가 있을 경우
-                                CountryId = pc.CountrytbId,
-                                TownId = pc.TowntbId,
-                                CityId = pc.CitytbId
                             };
 
                 // 조건별로 동적 필터 추가
@@ -242,16 +252,30 @@ namespace IpManager.Repository.DashBoard
                 var pingLogs = await query.ToListAsync();
 
                 var groupedData = pingLogs
-                    .GroupBy(x => new { x.PcroomId, x.PcroomName })
+                    .GroupBy(x => new { x.PcroomId, x.PcroomName,
+                        x.CountryId,
+                        x.CountryName,
+                        x.CityId,
+                        x.CityName,
+                        x.TownId,
+                        x.TownName
+                    })
                     .Select(g => new
                     {
                         PcroomId = g.Key.PcroomId,
                         PcroomName = g.Key.PcroomName,
-                        TimeMap = g.GroupBy(x => x.TimeString)
-                                   .ToDictionary(
-                                       tg => tg.Key,
-                                       tg => tg.Sum(x => x.UsedPc)
-                                   )
+                        CountryId = g.Key.CountryId,
+                        CountryName = g.Key.CountryName,
+                        CityId = g.Key.CityId,
+                        CityName = g.Key.CityName,
+                        TownId = g.Key.TownId,
+                        TownName = g.Key.TownName,
+                        TimeMap = g
+                        .GroupBy(y => y.TimeString)
+                        .ToDictionary(
+                           tg => tg.Key,
+                           tg => tg.Sum(y => y.UsedPc)
+                        )
                     })
                     .ToList();
 
@@ -260,6 +284,12 @@ namespace IpManager.Repository.DashBoard
                 {
                     pcRoomId = pc.PcroomId,
                     pcRoomName = pc.PcroomName,
+                    countryId = pc.CountryId,
+                    countryName = pc.CountryName,
+                    cityId = pc.CityId,
+                    cityName = pc.CityName,
+                    townId = pc.TownId,
+                    townName = pc.TownName,
                     analyList = allTimes.Select(timeTb => {
                         // key, display 모두 HH:mm 으로 통일
                         var key = timeTb.Time.Value.ToString("HH:mm");
@@ -284,6 +314,148 @@ namespace IpManager.Repository.DashBoard
         {
             try
             {
+                await using var ctx = _dbContextFactory.CreateDbContext();
+                startDate = startDate.Date;
+                endDate = endDate.Date;
+
+                // 1) PC방 + 지역(FK) 메타정보 한 번에 로드
+                var pcList = await ctx.PcroomTbs
+                    .AsNoTracking()
+                    .Where(r => !r.DelYn.Value
+                                && (string.IsNullOrEmpty(pcName) || r.Name.Contains(pcName))
+                                && (!countrytbid.HasValue || r.CountrytbId == countrytbid)
+                                && (!citytbid.HasValue || r.CitytbId == citytbid)
+                                && (!towntbid.HasValue || r.TowntbId == towntbid))
+                    .Join(ctx.CountryTbs.Where(co => co.DelYn != true), pc => pc.CountrytbId, co => co.Pid,
+                          (pc, co) => new { pc, co })
+                    .Join(ctx.CityTbs.Where(ci => ci.DelYn != true), tmp => tmp.pc.CitytbId, ci => ci.Pid,
+                          (tmp, ci) => new { tmp.pc, tmp.co, ci })
+                    .Join(ctx.TownTbs.Where(ti => ti.DelYn != true), tmp => tmp.pc.TowntbId, to => to.Pid,
+                          (tmp, to) => new
+                          {
+                              Pcroom = tmp.pc,
+                              CountryId = tmp.co.Pid,
+                              CountryName = tmp.co.Name,
+                              CityId = tmp.ci.Pid,
+                              CityName = tmp.ci.Name,
+                              TownId = to.Pid,
+                              TownName = to.Name
+                          })
+                    .Select(x => new
+                    {
+                        x.Pcroom.Pid,
+                        x.Pcroom.Name,
+                        x.Pcroom.Seatnumber,
+                        x.Pcroom.PricePercent,
+                        x.CountryId,
+                        x.CountryName,
+                        x.CityId,
+                        x.CityName,
+                        x.TownId,
+                        x.TownName
+                    })
+                    .ToListAsync();
+
+                // 2) 로그를 DB에서 “날짜·PC방별”로 집계
+                var stats = await ctx.PinglogTbs
+                    .AsNoTracking()
+                    .Where(p => !p.DelYn.Value
+                                && p.CreateDt.HasValue
+                                && p.CreateDt.Value.Date >= startDate
+                                && p.CreateDt.Value.Date <= endDate)
+                    .GroupBy(p => new {
+                        Date = p.CreateDt.Value.Date,
+                        RoomId = p.PcroomtbId
+                    })
+                    .Select(g => new {
+                        g.Key.Date,
+                        g.Key.RoomId,
+                        SumUsedPc = g.Sum(x => x.UsedPc),
+                        SumPrice = g.Sum(x => x.Price)
+                    })
+                    .ToListAsync();
+
+                // 3) 전체 날짜 리스트 생성
+                var allDates = Enumerable
+                    .Range(0, (endDate - startDate).Days + 1)
+                    .Select(d => startDate.AddDays(d))
+                    .ToList();
+
+                // 4) 날짜별·PC방별 → PeriodList
+                var periodLists = allDates
+                    .Select(date =>
+                    {
+                        var items = from pc in pcList
+                                    join s in stats
+                                      on (pc.Pid, date) equals (s.RoomId, s.Date)
+                                      into gj
+                                    from s in gj.DefaultIfEmpty()
+                                    select new PeriodAnayzeList
+                                    {
+                                        countryId = pc.CountryId,
+                                        countryName = pc.CountryName,
+                                        cityId = pc.CityId,
+                                        cityName = pc.CityName,
+                                        townId = pc.TownId,
+                                        townName = pc.TownName,
+                                        pcName = pc.Name,
+                                        usedPc = (s?.SumUsedPc ?? 0) / 48.0,
+                                        seatNumber = pc.Seatnumber,
+                                        averageRate = pc.Seatnumber == 0
+                                                      ? 0
+                                                      : ((s?.SumUsedPc ?? 0) / 48.0) / pc.Seatnumber * 100,
+                                        pcPrice = s?.SumPrice ?? 0,
+                                        foodPrice = Math.Round((s?.SumPrice ?? 0) * ((100.0 - pc.PricePercent) / pc.PricePercent)),
+                                        totalPrice = (s?.SumPrice ?? 0)
+                                                      + Math.Round((s?.SumPrice ?? 0) * ((100.0 - pc.PricePercent) / pc.PricePercent)),
+                                        pricePercent = pc.PricePercent + "%"
+                                    };
+
+                        return new PeriodList
+                        {
+                            AnalyzeDT = date.ToString("yyyy-MM-dd"),
+                            AnalyzeList = items.ToList()
+                        };
+                    })
+                    .Where(pl => pl.AnalyzeList.Any())
+                    .ToList();
+
+                // 5) 최종 평균(ReturnValue) — 여기서도 지역 정보 유지
+                int dayCount = periodLists.Count;
+                var returnValues = periodLists
+                    .SelectMany(pl => pl.AnalyzeList)
+                    .GroupBy(x => new {
+                        x.countryId,
+                        x.countryName,
+                        x.cityId,
+                        x.cityName,
+                        x.townId,
+                        x.townName,
+                        x.pcName,
+                        x.seatNumber,
+                        x.pricePercent
+                    })
+                    .Select(g => new ReturnValue
+                    {
+                        countryId = g.Key.countryId,
+                        countryName = g.Key.countryName,
+                        cityId = g.Key.cityId,
+                        cityName = g.Key.cityName,
+                        townId = g.Key.townId,
+                        townName = g.Key.townName,
+                        pcName = g.Key.pcName,
+                        usedPc = $"{(g.Sum(x => x.usedPc ?? 0) / dayCount):F2}/{g.Key.seatNumber}",
+                        averageRate = $"{(g.Sum(x => x.averageRate ?? 0) / dayCount):F2}%",
+                        pcPrice = $"{(g.Sum(x => x.pcPrice ?? 0) / dayCount):F2}원",
+                        foodPrice = $"{(g.Sum(x => x.foodPrice ?? 0) / dayCount):F2}원",
+                        totalPrice = $"{(g.Sum(x => x.totalPrice ?? 0) / dayCount):F2}원",
+                        pricePercent = g.Key.pricePercent
+                    })
+                    .ToList();
+
+                return returnValues;
+
+                /*
                 await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
                 
                 // 1. 기간 설정 (날짜만 비교하기 위해 Date 사용)
@@ -299,7 +471,13 @@ namespace IpManager.Repository.DashBoard
 
                 // 3. 전체 PC룸 정보 조회 (PCTable 혹은 PcroomTbs)
                 IQueryable<PcroomTb> query = from room in context.PcroomTbs
-                                             where room.DelYn != true
+                                             join Country in context.CountryTbs on room.CountrytbId equals Country.Pid
+                                             join City in context.CityTbs on room.CitytbId equals City.Pid
+                                             join Town in context.TownTbs on room.TowntbId equals Town.Pid
+                                             where room.DelYn != true &&
+                                             Country.DelYn != true &&
+                                             City.DelYn != true &&
+                                             Town.DelYn != true 
                                              select room;
 
                 if (!string.IsNullOrEmpty(pcName))
@@ -416,7 +594,7 @@ namespace IpManager.Repository.DashBoard
 
                 return aggregatedReturnValues;
           
-
+                */
             }
             catch (Exception ex)
             {
@@ -435,6 +613,155 @@ namespace IpManager.Repository.DashBoard
         {
             try
             {
+                await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
+
+                // 해당 월의 첫 번째 날 (00:00:00)
+                DateTime StartDate = new DateTime(TargetDate.Year, TargetDate.Month, 1);
+
+                // 해당 월의 마지막 날 계산 (마지막 날의 23시 59분 59초)
+                int lastDay = DateTime.DaysInMonth(TargetDate.Year, TargetDate.Month);
+                DateTime EndDate = new DateTime(TargetDate.Year, TargetDate.Month, lastDay, 23, 59, 59);
+
+
+                // 1) PC방 + 지역(FK) 메타정보 한 번에 로드
+                var pcList = await context.PcroomTbs
+                    .AsNoTracking()
+                    .Where(r => !r.DelYn.Value
+                                && (string.IsNullOrEmpty(pcName) || r.Name.Contains(pcName))
+                                && (!countrytbid.HasValue || r.CountrytbId == countrytbid)
+                                && (!citytbid.HasValue || r.CitytbId == citytbid)
+                                && (!towntbid.HasValue || r.TowntbId == towntbid))
+                    .Join(context.CountryTbs.Where(co => co.DelYn != true), pc => pc.CountrytbId, co => co.Pid,
+                          (pc, co) => new { pc, co })
+                    .Join(context.CityTbs.Where(ci => ci.DelYn != true), tmp => tmp.pc.CitytbId, ci => ci.Pid,
+                          (tmp, ci) => new { tmp.pc, tmp.co, ci })
+                    .Join(context.TownTbs.Where(ti => ti.DelYn != true), tmp => tmp.pc.TowntbId, to => to.Pid,
+                          (tmp, to) => new
+                          {
+                              Pcroom = tmp.pc,
+                              CountryId = tmp.co.Pid,
+                              CountryName = tmp.co.Name,
+                              CityId = tmp.ci.Pid,
+                              CityName = tmp.ci.Name,
+                              TownId = to.Pid,
+                              TownName = to.Name
+                          })
+                    .Select(x => new
+                    {
+                        x.Pcroom.Pid,
+                        x.Pcroom.Name,
+                        x.Pcroom.Seatnumber,
+                        x.Pcroom.PricePercent,
+                        x.CountryId,
+                        x.CountryName,
+                        x.CityId,
+                        x.CityName,
+                        x.TownId,
+                        x.TownName
+                    })
+                    .ToListAsync();
+
+
+                // 2) 로그를 DB에서 “날짜·PC방별”로 집계
+                var stats = await context.PinglogTbs
+                    .AsNoTracking()
+                    .Where(p => !p.DelYn.Value
+                                && p.CreateDt.HasValue
+                                && p.CreateDt.Value.Date >= StartDate
+                                && p.CreateDt.Value.Date <= EndDate)
+                    .GroupBy(p => new {
+                        Date = p.CreateDt.Value.Date,
+                        RoomId = p.PcroomtbId
+                    })
+                    .Select(g => new {
+                        g.Key.Date,
+                        g.Key.RoomId,
+                        SumUsedPc = g.Sum(x => x.UsedPc),
+                        SumPrice = g.Sum(x => x.Price)
+                    })
+                    .ToListAsync();
+
+                // 3) 전체 날짜 리스트 생성
+                var allDates = Enumerable
+                    .Range(0, (EndDate - StartDate).Days + 1)
+                    .Select(d => StartDate.AddDays(d))
+                    .ToList();
+
+                // 4) 날짜별·PC방별 → PeriodList
+                var periodLists = allDates
+                    .Select(date =>
+                    {
+                        var items = from pc in pcList
+                                    join s in stats
+                                      on (pc.Pid, date) equals (s.RoomId, s.Date)
+                                      into gj
+                                    from s in gj.DefaultIfEmpty()
+                                    select new PeriodAnayzeList
+                                    {
+                                        countryId = pc.CountryId,
+                                        countryName = pc.CountryName,
+                                        cityId = pc.CityId,
+                                        cityName = pc.CityName,
+                                        townId = pc.TownId,
+                                        townName = pc.TownName,
+                                        pcName = pc.Name,
+                                        usedPc = (s?.SumUsedPc ?? 0) / 48.0,
+                                        seatNumber = pc.Seatnumber,
+                                        averageRate = pc.Seatnumber == 0
+                                                      ? 0
+                                                      : ((s?.SumUsedPc ?? 0) / 48.0) / pc.Seatnumber * 100,
+                                        pcPrice = s?.SumPrice ?? 0,
+                                        foodPrice = Math.Round((s?.SumPrice ?? 0) * ((100.0 - pc.PricePercent) / pc.PricePercent)),
+                                        totalPrice = (s?.SumPrice ?? 0)
+                                                      + Math.Round((s?.SumPrice ?? 0) * ((100.0 - pc.PricePercent) / pc.PricePercent)),
+                                        pricePercent = pc.PricePercent + "%"
+                                    };
+
+                        return new PeriodList
+                        {
+                            AnalyzeDT = date.ToString("yyyy-MM-dd"),
+                            AnalyzeList = items.ToList()
+                        };
+                    })
+                    .Where(pl => pl.AnalyzeList.Any())
+                    .ToList();
+
+                // 5) 최종 평균(ReturnValue) — 여기서도 지역 정보 유지
+                int dayCount = periodLists.Count;
+                var returnValues = periodLists
+                    .SelectMany(pl => pl.AnalyzeList)
+                    .GroupBy(x => new {
+                        x.countryId,
+                        x.countryName,
+                        x.cityId,
+                        x.cityName,
+                        x.townId,
+                        x.townName,
+                        x.pcName,
+                        x.seatNumber,
+                        x.pricePercent
+                    })
+                    .Select(g => new ReturnValue
+                    {
+                        countryId = g.Key.countryId,
+                        countryName = g.Key.countryName,
+                        cityId = g.Key.cityId,
+                        cityName = g.Key.cityName,
+                        townId = g.Key.townId,
+                        townName = g.Key.townName,
+                        pcName = g.Key.pcName,
+                        usedPc = $"{(g.Sum(x => x.usedPc ?? 0) / dayCount):F2}/{g.Key.seatNumber}",
+                        averageRate = $"{(g.Sum(x => x.averageRate ?? 0) / dayCount):F2}%",
+                        pcPrice = $"{(g.Sum(x => x.pcPrice ?? 0) / dayCount):F2}원",
+                        foodPrice = $"{(g.Sum(x => x.foodPrice ?? 0) / dayCount):F2}원",
+                        totalPrice = $"{(g.Sum(x => x.totalPrice ?? 0) / dayCount):F2}원",
+                        pricePercent = g.Key.pricePercent
+                    })
+                    .ToList();
+
+                return returnValues;
+
+                /*
                 await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
                 
                 // 해당 월의 첫 번째 날 (00:00:00)
@@ -573,7 +900,7 @@ namespace IpManager.Repository.DashBoard
                     .ToList();
 
                 return aggregatedReturnValues;
-
+                */
             }
             catch (Exception ex)
             {
@@ -595,6 +922,114 @@ namespace IpManager.Repository.DashBoard
         {
             try
             {
+                await using var ctx = _dbContextFactory.CreateDbContext();
+                var date = TargetDate.Date;
+
+                // 1) PC방 + 지역(FK) 메타정보 로드 (DelYn 필터 포함)
+                var pcList = await ctx.PcroomTbs
+                    .AsNoTracking()
+                    .Where(r => !r.DelYn.Value
+                                && (string.IsNullOrEmpty(pcName) || r.Name.Contains(pcName))
+                                && (!countrytbid.HasValue || r.CountrytbId == countrytbid)
+                                && (!citytbid.HasValue || r.CitytbId == citytbid)
+                                && (!towntbid.HasValue || r.TowntbId == towntbid))
+                    .Join(ctx.CountryTbs.Where(co => !co.DelYn.Value),
+                          pc => pc.CountrytbId, co => co.Pid,
+                          (pc, co) => new { pc, co })
+                    .Join(ctx.CityTbs.Where(ci => !ci.DelYn.Value),
+                          tmp => tmp.pc.CitytbId, ci => ci.Pid,
+                          (tmp, ci) => new { tmp.pc, tmp.co, ci })
+                    .Join(ctx.TownTbs.Where(to => !to.DelYn.Value),
+                          tmp => tmp.pc.TowntbId, to => to.Pid,
+                          (tmp, to) => new {
+                              tmp.pc.Pid,
+                              tmp.pc.Name,
+                              tmp.pc.Seatnumber,
+                              tmp.pc.PricePercent,
+                              CountryId = tmp.co.Pid,
+                              CountryName = tmp.co.Name,
+                              CityId = tmp.ci.Pid,
+                              CityName = tmp.ci.Name,
+                              TownId = to.Pid,
+                              TownName = to.Name
+                          })
+                    .ToListAsync();
+
+                // 2) 하루치 로그를 PC방별로 집계
+                var stats = await ctx.PinglogTbs
+                    .AsNoTracking()
+                    .Where(p => !p.DelYn.Value
+                                && p.CreateDt.HasValue
+                                && p.CreateDt.Value.Date == date)
+                    .GroupBy(p => p.PcroomtbId)
+                    .Select(g => new {
+                        RoomId = g.Key,
+                        SumUsedPc = g.Sum(x => x.UsedPc),
+                        SumPrice = g.Sum(x => x.Price)
+                    })
+                    .ToListAsync();
+
+                // 3) 메모리에서 조인 후 PeriodAnayzeList 생성
+                var dailyList = from pc in pcList
+                                join s in stats on pc.Pid equals s.RoomId into gj
+                                from s in gj.DefaultIfEmpty()
+                                select new PeriodAnayzeList
+                                {
+                                    countryId = pc.CountryId,
+                                    countryName = pc.CountryName,
+                                    cityId = pc.CityId,
+                                    cityName = pc.CityName,
+                                    townId = pc.TownId,
+                                    townName = pc.TownName,
+                                    pcName = pc.Name,
+                                    usedPc = (s?.SumUsedPc ?? 0) / 48.0,
+                                    seatNumber = pc.Seatnumber,
+                                    averageRate = pc.Seatnumber == 0
+                                                  ? 0
+                                                  : ((s?.SumUsedPc ?? 0) / 48.0) / pc.Seatnumber * 100,
+                                    pcPrice = s?.SumPrice ?? 0,
+                                    foodPrice = Math.Round((s?.SumPrice ?? 0)
+                                                     * ((100.0 - pc.PricePercent) / pc.PricePercent)),
+                                    totalPrice = (s?.SumPrice ?? 0)
+                                                  + Math.Round((s?.SumPrice ?? 0)
+                                                     * ((100.0 - pc.PricePercent) / pc.PricePercent)),
+                                    pricePercent = pc.PricePercent + "%"
+                                };
+
+                // 4) 하루치 ReturnValue 생성 (dayCount=1 이므로 평균=실제값)
+                var returnValues = dailyList
+                    .GroupBy(x => new {
+                        x.countryId,
+                        x.countryName,
+                        x.cityId,
+                        x.cityName,
+                        x.townId,
+                        x.townName,
+                        x.pcName,
+                        x.seatNumber,
+                        x.pricePercent
+                    })
+                    .Select(g => new ReturnValue
+                    {
+                        countryId = g.Key.countryId,
+                        countryName = g.Key.countryName,
+                        cityId = g.Key.cityId,
+                        cityName = g.Key.cityName,
+                        townId = g.Key.townId,
+                        townName = g.Key.townName,
+                        pcName = g.Key.pcName,
+                        usedPc = $"{g.Sum(x => x.usedPc ?? 0):F2}/{g.Key.seatNumber}",
+                        averageRate = $"{g.Sum(x => x.averageRate ?? 0):F2}%",
+                        pcPrice = $"{g.Sum(x => x.pcPrice ?? 0):F2}원",
+                        foodPrice = $"{g.Sum(x => x.foodPrice ?? 0):F2}원",
+                        totalPrice = $"{g.Sum(x => x.totalPrice ?? 0):F2}원",
+                        pricePercent = g.Key.pricePercent
+                    })
+                    .ToList();
+
+                return returnValues;
+
+                /*
                 await using var context = _dbContextFactory.CreateDbContext(); // ✅ 핵심 변경 포인트
                 // 2. 전체 기간의 PingLogTbs 데이터를 조회
                 var data = await context.PinglogTbs
@@ -720,7 +1155,7 @@ namespace IpManager.Repository.DashBoard
                     .ToList();
 
                 return aggregatedReturnValues;
-
+                */
             }
             catch (Exception ex)
             {
