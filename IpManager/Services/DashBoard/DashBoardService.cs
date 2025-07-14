@@ -130,5 +130,25 @@ namespace IpManager.Services.DashBoard
                 return new ResponseList<ReturnValue>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, code = 500 };
             }
         }
+
+        public async Task<ResponseList<XlsxDTO>?> GetXslxDataService(DateTime startDate, DateTime endDate,List<int> pcId, string? pcName, int? countrytbid, int? towntbid, int? citytbid)
+        {
+            try
+            {
+                var result = await DashBoardRepository.GetXlsxDataList(startDate, endDate, pcId, pcName, countrytbid, towntbid, citytbid).ConfigureAwait(false);
+
+                return new ResponseList<XlsxDTO>() 
+                { 
+                    message = result is null ? "조회결과가 없습니다." : "조회가 성공하였습니다.", 
+                    data = result, 
+                    code = result is null ? 200 : 200 
+                };
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return new ResponseList<XlsxDTO>() { message = "서버에서 요청을 처리하지 못하였습니다.", data = null, code = 500 };
+            }
+        }
     }
 }

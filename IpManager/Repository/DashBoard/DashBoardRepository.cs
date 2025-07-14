@@ -1163,5 +1163,131 @@ namespace IpManager.Repository.DashBoard
                 return null;
             }
         }
+
+        public async Task<List<XlsxDTO>?> GetXlsxDataList(DateTime startDate, DateTime endDate, List<int> pcId, string? pcName, int? countrytbId, int? towntbId, int? citytbid)
+        {
+            try
+            {
+                startDate = startDate.Date;
+                endDate = endDate.Date;
+
+                await using var ctx = _dbContextFactory.CreateDbContext();
+
+                // 1) PC방 + 지역 메타정보 로드 (pcId 필터 추가)
+                var pcList = await ctx.PcroomTbs
+                    .AsNoTracking()
+                    .Where(r => !r.DelYn.Value
+                                // pcId가 null이 아니면, 리스트에 포함된 Pid만 남김
+                                && (pcId == null || pcId.Contains(r.Pid))
+                                && (string.IsNullOrEmpty(pcName) || r.Name.Contains(pcName))
+                                && (!countrytbId.HasValue || r.CountrytbId == countrytbId)
+                                && (!citytbid.HasValue || r.CitytbId == citytbid)
+                                && (!towntbId.HasValue || r.TowntbId == towntbId))
+                    .Join(ctx.CountryTbs.Where(co => co.DelYn != true),
+                          pc => pc.CountrytbId, co => co.Pid,
+                          (pc, co) => new { pc, co })
+                    .Join(ctx.CityTbs.Where(ci => ci.DelYn != true),
+                          tmp => tmp.pc.CitytbId, ci => ci.Pid,
+                          (tmp, ci) => new { tmp.pc, tmp.co, ci })
+                    .Join(ctx.TownTbs.Where(ti => ti.DelYn != true),
+                          tmp => tmp.pc.TowntbId, to => to.Pid,
+                          (tmp, to) => new
+                          {
+                              PcId = tmp.pc.Pid,
+                              PcName = tmp.pc.Name,
+                              SeatNumber = tmp.pc.Seatnumber,
+                              PricePercent = tmp.pc.PricePercent,
+                              CountryId = tmp.co.Pid,
+                              CountryName = tmp.co.Name,
+                              CityId = tmp.ci.Pid,
+                              CityName = tmp.ci.Name,
+                              TownId = to.Pid,
+                              TownName = to.Name
+                          })
+                    .ToListAsync();
+
+                // 2) 로그를 날짜·PC방별로 집계
+                var stats = await ctx.PinglogTbs
+                    .AsNoTracking()
+                    .Where(p => !p.DelYn.Value
+                                && p.CreateDt.HasValue
+                                && p.CreateDt.Value.Date >= startDate
+                                && p.CreateDt.Value.Date <= endDate)
+                    .GroupBy(p => new {
+                        Date = p.CreateDt.Value.Date,
+                        RoomId = p.PcroomtbId
+                    })
+                    .Select(g => new {
+                        g.Key.Date,
+                        g.Key.RoomId,
+                        SumUsedPc = g.Sum(x => x.UsedPc),
+                        SumPrice = g.Sum(x => x.Price)
+                    })
+                    .ToListAsync();
+
+                // 3) 전체 날짜 리스트 생성
+                var allDates = Enumerable
+                    .Range(0, (endDate - startDate).Days + 1)
+                    .Select(d => startDate.AddDays(d))
+                    .ToList();
+
+                // 4) 날짜×PC방별로 flat 레코드 생성 (PcId 포함)
+                var flat = allDates
+                    .SelectMany(date => pcList.Select(pc =>
+                    {
+                        var stat = stats.FirstOrDefault(s => s.RoomId == pc.PcId && s.Date == date);
+                        if (stat == null)
+                            return null;
+
+                        double usedPc = stat.SumUsedPc / 48.0;
+                        double avgRate = pc.SeatNumber == 0
+                            ? 0
+                            : usedPc / pc.SeatNumber * 100.0;
+                        double pcPrice = stat.SumPrice;
+                        double foodPrice = Math.Round(pcPrice * ((100.0 - pc.PricePercent) / pc.PricePercent));
+                        double totalPrice = pcPrice + foodPrice;
+
+                        var data = new analyzeData
+                        {
+                            analyzeDT = date.ToString("yyyy-MM-dd"),
+                            countryId = pc.CountryId,
+                            countryName = pc.CountryName,
+                            cityId = pc.CityId,
+                            cityName = pc.CityName,
+                            townId = pc.TownId,
+                            townName = pc.TownName,
+                            usedPc = usedPc,
+                            averageRate = avgRate,
+                            pcPrice = pcPrice,
+                            foodPrice = foodPrice,
+                            totalPrice = totalPrice,
+                            seatNumber = pc.SeatNumber,
+                            pricePercent = pc.PricePercent + "%"
+                        };
+
+                        return new { pc.PcId, pc.PcName, Data = data };
+                    }))
+                    .Where(x => x != null)
+                    .ToList()!;
+
+                // 5) PC방별로 그룹핑하여 XlsxDTO 생성 (pcId 채워줌)
+                var result = flat
+                    .GroupBy(x => new { x.PcId, x.PcName })
+                    .Select(g => new XlsxDTO
+                    {
+                        pcId = g.Key.PcId,
+                        pcName = g.Key.PcName,
+                        datas = g.Select(x => x.Data).ToList()
+                    })
+                    .ToList();
+
+                return result;
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return null;
+            }
+        }
     }
 }

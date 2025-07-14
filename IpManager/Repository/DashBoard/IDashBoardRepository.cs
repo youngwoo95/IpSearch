@@ -41,5 +41,9 @@ namespace IpManager.Repository.DashBoard
         /// <param name="TargetDate"></param>
         /// <returns></returns>
         public Task<List<ReturnValue>?> GetDaysDataAnalysis(DateTime TargetDate, string? pcName, int? countrytbid, int? towntbid, int? citytbid);
+
+
+        public Task<List<XlsxDTO>?> GetXlsxDataList(DateTime startDate, DateTime endDate, List<int> pcId, string? pcName, int? countrytbId, int? towntbId, int? citytbid);
+
     }
 }

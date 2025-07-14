@@ -41,5 +41,7 @@ namespace IpManager.Services.DashBoard
         /// </summary>
         /// <returns></returns>
         public Task<ResponseList<ReturnValue>?> GetDaysDataService(DateTime TargetDate, string? pcName, int? countrytbid, int? towntbid, int? citytbid);
+
+        public Task<ResponseList<XlsxDTO>?> GetXslxDataService(DateTime startDate, DateTime endDate,List<int> pcId, string? pcName, int? countrytbid, int? towntbid, int? citytbid);
     }
 }

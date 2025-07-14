@@ -102,6 +102,29 @@ namespace IpManager.Controllers
             }
         }
 
+        [Authorize(Roles = "Master, Manager, Visitor")]
+        [HttpGet]
+        [Route("sign/v1/xlsxList")]
+        public async Task<IActionResult> GetXlsxDataList([FromQuery][Required]DateTime startDate, [FromQuery][Required] DateTime endDate, [FromQuery][Required] List<int> pcId, [FromQuery] string? pcName, [FromQuery] int? countrytbId, [FromQuery] int? towntbid, [FromQuery] int? citytbid)
+        {
+            try
+            {
+                var model = await DashBoardService.GetXslxDataService(startDate, endDate,pcId, pcName, countrytbId, towntbid, citytbid).ConfigureAwait(false);
+
+                if (model is null)
+                    return BadRequest();
+
+                else if(model.code == 200)
+                    return Ok(model);
+                else
+                    return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+            }
+            catch(Exception ex)
+            {
+                LoggerService.FileErrorMessage(ex.ToString());
+                return Problem("서버에서 처리할 수 없는 요청입니다.", statusCode: 500);
+            }
+        }
 
         /// <summary>
         /// 기간별 분석
