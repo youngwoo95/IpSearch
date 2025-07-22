@@ -446,9 +446,9 @@ namespace IpManager.Repository.DashBoard
                         pcName = g.Key.pcName,
                         usedPc = $"{(g.Sum(x => x.usedPc ?? 0) / dayCount):F2}/{g.Key.seatNumber}",
                         averageRate = $"{(g.Sum(x => x.averageRate ?? 0) / dayCount):F2}%",
-                        pcPrice = $"{(g.Sum(x => x.pcPrice ?? 0) / dayCount):F2}원",
-                        foodPrice = $"{(g.Sum(x => x.foodPrice ?? 0) / dayCount):F2}원",
-                        totalPrice = $"{(g.Sum(x => x.totalPrice ?? 0) / dayCount):F2}원",
+                        pcPrice = $"{g.Sum(x => x.pcPrice ?? 0):F2}원",
+                        foodPrice = $"{g.Sum(x => x.foodPrice ?? 0):F2}원",
+                        totalPrice = $"{g.Sum(x => x.totalPrice ?? 0):F2}원",
                         pricePercent = g.Key.pricePercent
                     })
                     .ToList();
@@ -752,9 +752,9 @@ namespace IpManager.Repository.DashBoard
                         pcName = g.Key.pcName,
                         usedPc = $"{(g.Sum(x => x.usedPc ?? 0) / dayCount):F2}/{g.Key.seatNumber}",
                         averageRate = $"{(g.Sum(x => x.averageRate ?? 0) / dayCount):F2}%",
-                        pcPrice = $"{(g.Sum(x => x.pcPrice ?? 0) / dayCount):F2}원",
-                        foodPrice = $"{(g.Sum(x => x.foodPrice ?? 0) / dayCount):F2}원",
-                        totalPrice = $"{(g.Sum(x => x.totalPrice ?? 0) / dayCount):F2}원",
+                        pcPrice = $"{g.Sum(x => x.pcPrice ?? 0):F2}원",
+                        foodPrice = $"{g.Sum(x => x.foodPrice ?? 0):F2}원",
+                        totalPrice = $"{g.Sum(x => x.totalPrice ?? 0):F2}원",
                         pricePercent = g.Key.pricePercent
                     })
                     .ToList();
